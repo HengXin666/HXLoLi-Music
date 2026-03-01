@@ -3,22 +3,22 @@
         "id": "b4f1a9cf6842",
         "title": "ツナグキズナ (相连的羁绊)",
         "artist": "Team.ねこかん[猫]",
-        "audioUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).mp3",
-        "assUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass",
+        "audioUrl": "/static/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).mp3",
+        "assUrl": "/static/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass",
         "assFonts": [
             "TakaoPGothic"
         ],
-        "coverUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg",
+        "coverUrl": "/static/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg",
         "fonts": [
-            "/music/fonts/NotoSansSC-Regular.ttf"
+            "/static/music/fonts/NotoSansSC-Regular.ttf"
         ]
     },
     {
         "id": "a51ba6db6573",
         "title": "いとうかなこ - ファティマ ",
         "artist": "Unknown",
-        "audioUrl": "/music/いとうかなこ - ファティマ .mp3",
-        "assUrl": "/music/いとうかなこ - ファティマ .ass",
+        "audioUrl": "/static/music/いとうかなこ - ファティマ .mp3",
+        "assUrl": "/static/music/いとうかなこ - ファティマ .ass",
         "assFonts": [
             "@FOT-Greco Std B",
             "@方正楷体_GBK",
@@ -30,7 +30,7 @@
             "方正韵动中黑_GBK"
         ],
         "fonts": [
-            "/music/fonts/NotoSansSC-Regular.ttf"
+            "/static/music/fonts/NotoSansSC-Regular.ttf"
         ]
     }
 ]
