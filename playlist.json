@@ -8,6 +8,14 @@
         "assFonts": [
             "TakaoPGothic"
         ],
+        "assBounds": {
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 624,
+            "btmYMax": 1038,
+            "left": 326,
+            "right": 1646
+        },
         "coverUrl": "/static/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg",
         "fonts": [
             "/static/music/fonts/NotoSansSC-Regular.ttf"
@@ -29,6 +37,14 @@
             "方正楷体_GBK",
             "方正韵动中黑_GBK"
         ],
+        "assBounds": {
+            "topYMin": 4,
+            "topYMax": 192,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1762
+        },
         "fonts": [
             "/static/music/fonts/NotoSansSC-Regular.ttf"
         ]
