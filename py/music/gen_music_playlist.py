@@ -343,9 +343,9 @@ def find_fonts_in_dir(directory: Path) -> list[Path]:
 
 
 def path_to_url(filepath: Path) -> str:
-    """将文件路径转换为 URL"""
-    rel = filepath.relative_to(STATIC_MUSIC_DIR)
-    return f"{BASE_URL}/music/{rel.as_posix()}"
+    """将文件路径转换为 URL (相对于仓库根目录)"""
+    rel = filepath.relative_to(PROJECT_ROOT)
+    return f"{BASE_URL}/{rel.as_posix()}"
 
 
 # ========== ASS 预扫描 (用 ffmpeg + libass 计算边界框) ==========

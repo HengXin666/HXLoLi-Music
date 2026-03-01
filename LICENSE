@@ -1,0 +1,55 @@
+# License / ライセンス
+
+本仓库采用**分离许可证**模式。  
+本リポジトリは**分離ライセンス**モデルを採用しています。
+
+---
+
+## 代码部分 / コード部分
+
+以下内容采用 MIT 许可证：  
+以下の内容は MIT ライセンスの下で提供されます：
+
+- `py/` 目录下的所有 Python 脚本 / `py/` ディレクトリ内の全 Python スクリプト
+- `.github/workflows/` 下的 CI/CD 配置 / `.github/workflows/` 内の CI/CD 設定
+- `playlist.json` 生成逻辑 / `playlist.json` 生成ロジック
+
+```
+MIT License
+
+Copyright (c) 2025 HXLoLi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 音乐资源部分 / 音楽リソース部分
+
+`static/music/` 目录下的所有资源文件（包括但不限于音频、歌词、封面图片）的版权归其**原始权利人**所有。  
+`static/music/` ディレクトリ内の全リソースファイル（音声、歌詞、カバー画像を含むがこれに限らない）の著作権は、**原著作権者**に帰属します。
+
+这些资源文件：  
+これらのリソースファイルは：
+
+- ❌ **不**在任何开源许可证下发布 / いかなるオープンソースライセンスの下でも公開されて**いません**
+- ❌ **不**授权任何形式的再分发或商业使用 / いかなる形式の再配布や商用利用も許可されて**いません**
+- ✅ 仅供个人学习和欣赏使用 / 個人的な学習と鑑賞目的のみに使用されます
+
+**All Rights Reserved by the original copyright holders.**
