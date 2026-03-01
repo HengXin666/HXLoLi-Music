@@ -30,6 +30,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: 安装 ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
       - name: 安装 uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
