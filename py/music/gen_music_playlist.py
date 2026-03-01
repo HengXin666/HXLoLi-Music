@@ -54,6 +54,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_MUSIC_DIR = PROJECT_ROOT / "static" / "music"
 FONTS_DIR = STATIC_MUSIC_DIR / "fonts"
 OUTPUT_FILE = PROJECT_ROOT / "playlist.json"
+CACHE_FILE = PROJECT_ROOT / ".playlist_cache.json"
 
 # 支持的音频文件扩展名
 AUDIO_EXTENSIONS = {'.mp3', '.flac', '.ogg', '.m4a', '.wav', '.opus'}
@@ -82,14 +83,89 @@ MIME_TO_EXT = {
 }
 
 
+# ========== 缓存机制 ==========
+# 缓存文件记录每个资源文件的 MD5 及上次的计算结果
+# 只有文件内容变更 (哈希变化) 时才重新计算, 避免重复调用 ffmpeg 等重操作
+
+_cache_data: dict = {}  # 运行时缓存, 由 load_cache() 填充
+_cache_dirty = False     # 标记缓存是否有更新, 用于决定是否写入文件
+
+
+def load_cache() -> None:
+    """从磁盘加载缓存文件"""
+    global _cache_data
+    if CACHE_FILE.exists():
+        try:
+            _cache_data = json.loads(CACHE_FILE.read_text(encoding='utf-8'))
+            print(f"[缓存] 已加载缓存: {len(_cache_data)} 条记录")
+        except (json.JSONDecodeError, Exception) as e:
+            print(f"[缓存] 缓存文件损坏, 将重新生成: {e}")
+            _cache_data = {}
+    else:
+        print("[缓存] 无缓存文件, 将全量计算")
+        _cache_data = {}
+
+
+def save_cache() -> None:
+    """将缓存写入磁盘"""
+    if not _cache_dirty:
+        return
+    try:
+        CACHE_FILE.write_text(
+            json.dumps(_cache_data, ensure_ascii=False, indent=2) + '\n',
+            encoding='utf-8',
+        )
+        print(f"[缓存] 已保存缓存: {len(_cache_data)} 条记录")
+    except Exception as e:
+        print(f"[缓存] 保存缓存失败: {e}")
+
+
+def file_md5(filepath: Path) -> str:
+    """计算文件内容的 MD5 哈希 (用于缓存判断)"""
+    h = hashlib.md5()
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def get_cache(namespace: str, key: str, file_hash: str) -> dict | None:
+    """从缓存中获取数据
+
+    Args:
+        namespace: 缓存命名空间 (如 'metadata', 'ass_fonts', 'ass_bounds')
+        key: 缓存键 (通常是文件相对路径)
+        file_hash: 当前文件的 MD5 哈希
+
+    Returns:
+        缓存的数据 dict, 如果缓存未命中或哈希不匹配则返回 None
+    """
+    cache_key = f"{namespace}:{key}"
+    entry = _cache_data.get(cache_key)
+    if entry and entry.get('hash') == file_hash:
+        return entry.get('data')
+    return None
+
+
+def set_cache(namespace: str, key: str, file_hash: str, data: dict) -> None:
+    """写入缓存数据"""
+    global _cache_dirty
+    cache_key = f"{namespace}:{key}"
+    _cache_data[cache_key] = {
+        'hash': file_hash,
+        'data': data,
+    }
+    _cache_dirty = True
+
+
 def get_file_id(filepath: Path) -> str:
     """生成文件唯一 ID (基于相对路径的 hash)"""
     rel = filepath.relative_to(STATIC_MUSIC_DIR)
     return hashlib.md5(str(rel).encode()).hexdigest()[:12]
 
 
-def extract_metadata(filepath: Path) -> dict:
-    """从音频文件中提取元数据 (标题、艺术家、时长)"""
+def _extract_metadata_impl(filepath: Path) -> dict:
+    """从音频文件中提取元数据 (标题、艺术家、时长) — 实际计算逻辑"""
     title = filepath.stem  # 默认使用文件名
     artist = "Unknown"
     duration = 0
@@ -139,10 +215,24 @@ def extract_metadata(filepath: Path) -> dict:
     return {"title": str(title), "artist": str(artist), "duration": duration}
 
 
-def extract_cover_from_audio(audio_path: Path) -> Path | None:
+def extract_metadata(filepath: Path, audio_hash: str) -> dict:
+    """提取音频元数据, 优先使用缓存"""
+    cache_key = str(filepath.relative_to(STATIC_MUSIC_DIR))
+    cached = get_cache('metadata', cache_key, audio_hash)
+    if cached is not None:
+        print(f"    └─ 元数据: 使用缓存")
+        return cached
+
+    result = _extract_metadata_impl(filepath)
+    set_cache('metadata', cache_key, audio_hash, result)
+    return result
+
+
+def extract_cover_from_audio(audio_path: Path, audio_hash: str) -> Path | None:
     """从音频文件中提取嵌入的封面图片，保存到同目录下
 
     如果同名封面已经存在则跳过。
+    使用缓存: 如果音频文件未变更且封面文件仍存在, 则跳过提取。
     返回封面文件路径，无封面则返回 None。
     """
     if not HAS_MUTAGEN:
@@ -155,6 +245,19 @@ def extract_cover_from_audio(audio_path: Path) -> Path | None:
     for ext in COVER_EXTENSIONS:
         if (parent / (stem + ext)).exists():
             return parent / (stem + ext)
+
+    # 检查缓存: 上次提取过且音频没变, 说明确实没有嵌入封面
+    cache_key = str(audio_path.relative_to(STATIC_MUSIC_DIR))
+    cached = get_cache('cover_extract', cache_key, audio_hash)
+    if cached is not None:
+        cover_name = cached.get('cover_name')
+        if cover_name:
+            cover_path = parent / cover_name
+            if cover_path.exists():
+                return cover_path
+        else:
+            # 上次就没提取到封面, 且音频没变
+            return None
 
     try:
         audio = MutagenFile(str(audio_path))
@@ -212,16 +315,19 @@ def extract_cover_from_audio(audio_path: Path) -> Path | None:
             cover_path = parent / (stem + ext)
             cover_path.write_bytes(img_data)
             print(f"    └─ 提取封面: {cover_path.name} ({len(img_data)} bytes)")
+            set_cache('cover_extract', cache_key, audio_hash, {'cover_name': cover_path.name})
             return cover_path
 
     except Exception as e:
         print(f"  [警告] 提取封面失败 {audio_path.name}: {e}")
 
+    # 没有嵌入封面, 也写入缓存避免下次重复尝试
+    set_cache('cover_extract', cache_key, audio_hash, {'cover_name': None})
     return None
 
 
-def extract_ass_fonts(ass_path: Path) -> list[str]:
-    """从 ASS 文件中解析 Style 行使用的字体名列表
+def _extract_ass_fonts_impl(ass_path: Path) -> list[str]:
+    """从 ASS 文件中解析 Style 行使用的字体名列表 — 实际计算逻辑
 
     返回去重后的字体名列表 (保留原始大小写)
     """
@@ -253,6 +359,19 @@ def extract_ass_fonts(ass_path: Path) -> list[str]:
         print(f"  [警告] 解析 ASS 字体失败 {ass_path.name}: {e}")
 
     return sorted(fonts)
+
+
+def extract_ass_fonts(ass_path: Path, ass_hash: str) -> list[str]:
+    """提取 ASS 字体列表, 优先使用缓存"""
+    cache_key = str(ass_path.relative_to(STATIC_MUSIC_DIR))
+    cached = get_cache('ass_fonts', cache_key, ass_hash)
+    if cached is not None:
+        print(f"    └─ ASS 字体: 使用缓存")
+        return cached.get('fonts', [])
+
+    fonts = _extract_ass_fonts_impl(ass_path)
+    set_cache('ass_fonts', cache_key, ass_hash, {'fonts': fonts})
+    return fonts
 
 
 def ensure_cjk_fallback_font() -> bool:
@@ -433,8 +552,8 @@ def _merge_bounds(a: dict, b: dict) -> dict:
     }
 
 
-def prescan_ass_bounds(ass_path: Path, duration_sec: float) -> dict | None:
-    """用 ffmpeg 渲染 ASS 字幕并扫描像素, 计算全局 TwoBlockBounds.
+def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None:
+    """用 ffmpeg 渲染 ASS 字幕并扫描像素, 计算全局 TwoBlockBounds — 实际计算逻辑
 
     类似 C++ 版 preprocessLyricBoundingBoxes:
     - 固定 1920x1080 画布
@@ -526,6 +645,31 @@ def prescan_ass_bounds(ass_path: Path, duration_sec: float) -> dict | None:
     return global_bounds
 
 
+def prescan_ass_bounds(ass_path: Path, duration_sec: float, ass_hash: str) -> dict | None:
+    """预扫描 ASS 字幕边界框, 优先使用缓存
+
+    缓存键包含 ASS 哈希和时长, 任一变更则重新计算
+    """
+    cache_key = str(ass_path.relative_to(STATIC_MUSIC_DIR))
+    # 将时长编入哈希, 因为同一 ASS 文件配不同时长音频会影响扫描帧数
+    combined_hash = f"{ass_hash}:{duration_sec:.2f}"
+    cached = get_cache('ass_bounds', cache_key, combined_hash)
+    if cached is not None:
+        bounds = cached.get('bounds')
+        if bounds:
+            print(f"    └─ [预扫描] 使用缓存: "
+                  f"top=[{bounds['topYMin']},{bounds['topYMax']}] "
+                  f"btm=[{bounds['btmYMin']},{bounds['btmYMax']}] "
+                  f"lr=[{bounds['left']},{bounds['right']}]")
+        else:
+            print(f"    └─ [预扫描] 使用缓存: 无字幕内容")
+        return bounds
+
+    result = _prescan_ass_bounds_impl(ass_path, duration_sec)
+    set_cache('ass_bounds', cache_key, combined_hash, {'bounds': result})
+    return result
+
+
 def scan_music_dir() -> list[dict]:
     """扫描 static/music/ 目录, 收集所有音频文件信息"""
     if not STATIC_MUSIC_DIR.exists():
@@ -551,14 +695,17 @@ def scan_music_dir() -> list[dict]:
     for audio_path in audio_files:
         print(f"  处理: {audio_path.relative_to(STATIC_MUSIC_DIR)}")
 
+        # 计算音频文件哈希 (用于缓存判断)
+        audio_hash = file_md5(audio_path)
+
         # 提取元数据
-        meta = extract_metadata(audio_path)
+        meta = extract_metadata(audio_path, audio_hash)
 
         # 查找关联的 ASS 歌词
         ass_path = find_matching_ass(audio_path)
 
         # 尝试从音频文件中提取封面 (如果本地没有)
-        cover_path = extract_cover_from_audio(audio_path)
+        cover_path = extract_cover_from_audio(audio_path, audio_hash)
 
         # 如果提取失败，查找已有封面文件
         if not cover_path:
@@ -579,8 +726,11 @@ def scan_music_dir() -> list[dict]:
             track["assUrl"] = path_to_url(ass_path)
             print(f"    └─ 歌词: {ass_path.name}")
 
+            # 计算 ASS 文件哈希
+            ass_hash = file_md5(ass_path)
+
             # 解析 ASS 中使用的字体名
-            ass_fonts = extract_ass_fonts(ass_path)
+            ass_fonts = extract_ass_fonts(ass_path, ass_hash)
             if ass_fonts:
                 track["assFonts"] = ass_fonts
                 print(f"    └─ ASS 字体: {', '.join(ass_fonts)}")
@@ -588,7 +738,7 @@ def scan_music_dir() -> list[dict]:
             # 用 ffmpeg 预扫描 ASS 字幕边界框
             duration = meta.get("duration", 0)
             if duration > 0:
-                bounds = prescan_ass_bounds(ass_path, duration)
+                bounds = prescan_ass_bounds(ass_path, duration, ass_hash)
                 if bounds:
                     track["assBounds"] = bounds
 
@@ -616,6 +766,9 @@ def main():
     print("=" * 50)
     print()
 
+    # 加载缓存
+    load_cache()
+
     # 确保 CJK fallback 字体可用
     ensure_cjk_fallback_font()
     print()
@@ -632,6 +785,9 @@ def main():
 
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         f.write(ts_content)
+
+    # 保存缓存
+    save_cache()
 
     print(f"[完成] 已写入: {OUTPUT_FILE.relative_to(PROJECT_ROOT)}")
     print()
