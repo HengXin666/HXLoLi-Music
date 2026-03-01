@@ -1,0 +1,135 @@
+name: "[LoLi-Music]: 自动生成播放列表"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'static/music/**'
+      - 'py/music/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # --- Job 1: 生成并提交 playlist.json ---
+  generate-playlist:
+    # 跳过 Bot 自己的提交, 避免无限循环
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[LoLi-Bot]')
+    runs-on: ubuntu-latest
+    outputs:
+      changes_detected: ${{ steps.auto-commit.outputs.changes_detected }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 启用 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装 uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: 安装 Python 依赖
+        run: |
+          source $HOME/.cargo/env
+          uv sync
+        working-directory: ./py
+
+      - name: 生成 playlist.json
+        run: |
+          source $HOME/.cargo/env
+          uv run python music/gen_music_playlist.py
+        working-directory: ./py
+        env:
+          PYTHONUNBUFFERED: "1"
+
+      - name: 召唤 萝莉小猫娘 帮忙 push
+        id: auto-commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '[LoLi-Bot]: ご主人さま、プレイリストを更新しましたにゃ♪'
+          commit_user_name: 'Heng_Xin[LoLi-Bot]'
+          commit_user_email: '282000500@qq.com'
+          commit_author: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
+          file_pattern: 'playlist.json'
+
+  # --- Job 2: 向 HXLoLi 主仓库发 PR 同步 MUSIC_COMMIT_ID ---
+  sync-to-main-repo:
+    needs: generate-playlist
+    # 无论 playlist.json 是否变化, 只要 Job 1 成功就同步 (因为可能是音频文件变更但列表没变)
+    if: always() && needs.generate-playlist.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 获取当前仓库最新 commit hash
+        id: get-commit
+        run: |
+          # 获取 HXLoLi-Music 仓库 main 分支的最新 commit SHA
+          LATEST_SHA=$(curl -s \
+            -H "Authorization: token ${{ secrets.MAIN_REPO_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits/main" \
+            | jq -r '.sha')
+          echo "commit_sha=${LATEST_SHA}" >> $GITHUB_OUTPUT
+          echo "🎵 HXLoLi-Music 最新 commit: ${LATEST_SHA}"
+
+      - name: Checkout HXLoLi 主仓库
+        uses: actions/checkout@v4
+        with:
+          repository: HengXin666/HXLoLi
+          token: ${{ secrets.MAIN_REPO_PAT }}
+          ref: main
+
+      - name: 检查是否需要更新
+        id: check-update
+        run: |
+          CURRENT_ID=$(grep -oP "MUSIC_COMMIT_ID = '\K[^']+" data/musicVersion.ts || echo "")
+          NEW_ID="${{ steps.get-commit.outputs.commit_sha }}"
+          echo "当前 MUSIC_COMMIT_ID: ${CURRENT_ID}"
+          echo "最新 commit SHA: ${NEW_ID}"
+          if [ "${CURRENT_ID}" = "${NEW_ID}" ]; then
+            echo "✅ MUSIC_COMMIT_ID 已是最新, 无需更新"
+            echo "need_update=false" >> $GITHUB_OUTPUT
+          else
+            echo "🔄 需要更新 MUSIC_COMMIT_ID"
+            echo "need_update=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 更新 musicVersion.ts
+        if: steps.check-update.outputs.need_update == 'true'
+        run: |
+          NEW_ID="${{ steps.get-commit.outputs.commit_sha }}"
+          cat > data/musicVersion.ts << EOF
+          // HXLoLi-Music 仓库的最新 commit_id (每次音乐仓库更新后需同步修改)
+          export const MUSIC_COMMIT_ID = '${NEW_ID}';
+          EOF
+          # 去除 heredoc 可能带来的前导空格
+          sed -i 's/^          //' data/musicVersion.ts
+          echo "📝 已更新 musicVersion.ts:"
+          cat data/musicVersion.ts
+
+      - name: 创建 PR 到 HXLoLi 主仓库
+        if: steps.check-update.outputs.need_update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MAIN_REPO_PAT }}
+          commit-message: '[LoLi-Bot]: 🎵 同步 HXLoLi-Music commit_id にゃ♪'
+          committer: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
+          author: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
+          branch: bot/sync-music-version
+          delete-branch: true
+          title: '🎵 [LoLi-Bot] 同步 HXLoLi-Music 最新版本'
+          body: |
+            ご主人さま、音楽リポジトリが更新されましたにゃ♪
+
+            **更新内容:**
+            - 同步 `MUSIC_COMMIT_ID` → `${{ steps.get-commit.outputs.commit_sha }}`
+            - 来源: [HXLoLi-Music@main](https://github.com/HengXin666/HXLoLi-Music/commit/${{ steps.get-commit.outputs.commit_sha }})
+
+            > 🤖 此 PR 由 GitHub Actions 自动创建
+          labels: |
+            bot
+            music

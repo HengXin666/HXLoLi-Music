@@ -1,0 +1,52 @@
+[
+    {
+        "id": "b4f1a9cf6842",
+        "title": "ツナグキズナ (相连的羁绊)",
+        "artist": "Team.ねこかん[猫]",
+        "audioUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).mp3",
+        "assUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass",
+        "assFonts": [
+            "TakaoPGothic"
+        ],
+        "assBounds": {
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 624,
+            "btmYMax": 1038,
+            "left": 326,
+            "right": 1646
+        },
+        "coverUrl": "/music/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg",
+        "fonts": [
+            "/music/fonts/NotoSansSC-Regular.ttf"
+        ]
+    },
+    {
+        "id": "a51ba6db6573",
+        "title": "いとうかなこ - ファティマ ",
+        "artist": "Unknown",
+        "audioUrl": "/music/いとうかなこ - ファティマ .mp3",
+        "assUrl": "/music/いとうかなこ - ファティマ .ass",
+        "assFonts": [
+            "@FOT-Greco Std B",
+            "@方正楷体_GBK",
+            "FOT-MatisseV Pro B",
+            "FOT-TsukuGo Pro B",
+            "FOT-TsukuMin Pro E",
+            "方正中粗雅宋_GBK",
+            "方正楷体_GBK",
+            "方正韵动中黑_GBK"
+        ],
+        "assBounds": {
+            "topYMin": 4,
+            "topYMax": 192,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1762
+        },
+        "fonts": [
+            "/music/fonts/NotoSansSC-Regular.ttf"
+        ]
+    }
+]

@@ -1,0 +1,10 @@
+[project]
+name = "hxloli-music"
+version = "0.1.0"
+description = "HXLoLi 音乐资源仓库 - 播放列表生成工具"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mutagen>=1.47.0",
+    "requests>=2.32.5",
+]
