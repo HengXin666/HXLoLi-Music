@@ -1,0 +1,73 @@
+{
+  "metadata:Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).mp3": {
+    "hash": "4b2ee56ef5bf5ff72c5ef71543281e39",
+    "data": {
+      "title": "ツナグキズナ (相连的羁绊)",
+      "artist": "Team.ねこかん[猫]",
+      "duration": 275.31
+    }
+  },
+  "ass_fonts:Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass": {
+    "hash": "a04f29cbbb3b5af2a83825878840363f",
+    "data": {
+      "fonts": [
+        "TakaoPGothic"
+      ]
+    }
+  },
+  "ass_bounds:Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass": {
+    "hash": "a04f29cbbb3b5af2a83825878840363f:275.31",
+    "data": {
+      "bounds": {
+        "topYMin": 0,
+        "topYMax": 0,
+        "btmYMin": 624,
+        "btmYMax": 1038,
+        "left": 326,
+        "right": 1646
+      }
+    }
+  },
+  "metadata:いとうかなこ - ファティマ .mp3": {
+    "hash": "3cf018fbb1e8e8f8ab17c4c407d20da2",
+    "data": {
+      "title": "いとうかなこ - ファティマ ",
+      "artist": "Unknown",
+      "duration": 246.23
+    }
+  },
+  "cover_extract:いとうかなこ - ファティマ .mp3": {
+    "hash": "3cf018fbb1e8e8f8ab17c4c407d20da2",
+    "data": {
+      "cover_name": null
+    }
+  },
+  "ass_fonts:いとうかなこ - ファティマ .ass": {
+    "hash": "607e8b0aaa3567d34b4dd0e09f36870e",
+    "data": {
+      "fonts": [
+        "@FOT-Greco Std B",
+        "@方正楷体_GBK",
+        "FOT-MatisseV Pro B",
+        "FOT-TsukuGo Pro B",
+        "FOT-TsukuMin Pro E",
+        "方正中粗雅宋_GBK",
+        "方正楷体_GBK",
+        "方正韵动中黑_GBK"
+      ]
+    }
+  },
+  "ass_bounds:いとうかなこ - ファティマ .ass": {
+    "hash": "607e8b0aaa3567d34b4dd0e09f36870e:246.23",
+    "data": {
+      "bounds": {
+        "topYMin": 4,
+        "topYMax": 192,
+        "btmYMin": 986,
+        "btmYMax": 1080,
+        "left": 154,
+        "right": 1762
+      }
+    }
+  }
+}
