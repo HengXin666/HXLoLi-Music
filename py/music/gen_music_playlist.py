@@ -481,6 +481,9 @@ def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
 
     上下分区: y < midLine 归上区块, y >= midLine 归下区块.
     像素 RGB 非黑 视为有内容 (ffmpeg 渲染在黑底上, alpha 恒为 255).
+
+    每个区块有独立的 left/right, 避免不同位置的内容互相干扰裁剪窗口.
+    同时保留全局 left/right 用于兼容.
     """
     mid_line = height >> 1
     step = 2  # 隔行扫描加速
@@ -488,8 +491,14 @@ def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
     top_y_max = 0
     btm_y_min = float('inf')
     btm_y_max = 0
+    # 全局 left/right (兼容)
     left = float('inf')
     right = 0
+    # top/btm 独立 left/right
+    left_t = float('inf')
+    right_t = 0
+    left_b = float('inf')
+    right_b = 0
 
     row_bytes = width * 4  # RGBA, 每像素4字节
     for y in range(0, height, step):
@@ -507,15 +516,27 @@ def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
                         top_y_min = y
                     if y + step > top_y_max:
                         top_y_max = y + step
+                    if x < left_t:
+                        left_t = x
+                    if x + step > right_t:
+                        right_t = x + step
                 else:
                     if y < btm_y_min:
                         btm_y_min = y
                     if y + step > btm_y_max:
                         btm_y_max = y + step
+                    if x < left_b:
+                        left_b = x
+                    if x + step > right_b:
+                        right_b = x + step
 
     # 裁剪到画布范围
     if right > width:
         right = width
+    if right_t > width:
+        right_t = width
+    if right_b > width:
+        right_b = width
     if top_y_max > height:
         top_y_max = height
     if btm_y_max > height:
@@ -528,6 +549,10 @@ def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
         'btmYMax': btm_y_max,
         'left': left if left != float('inf') else 0,
         'right': right,
+        'leftT': left_t if left_t != float('inf') else 0,
+        'rightT': right_t,
+        'leftB': left_b if left_b != float('inf') else 0,
+        'rightB': right_b,
     }
 
 
@@ -563,7 +588,7 @@ def _merge_bounds(a: dict, b: dict) -> dict:
     else:
         btm_y_min, btm_y_max = 0, 0
 
-    # 左右
+    # 全局左右 (兼容)
     a_has_lr = a['right'] > 0
     b_has_lr = b['right'] > 0
     if a_has_lr and b_has_lr:
@@ -576,10 +601,38 @@ def _merge_bounds(a: dict, b: dict) -> dict:
     else:
         left, right = 0, 0
 
+    # top 区域独立左右
+    a_has_lr_t = a.get('rightT', 0) > 0
+    b_has_lr_t = b.get('rightT', 0) > 0
+    if a_has_lr_t and b_has_lr_t:
+        left_t = min(a['leftT'], b['leftT'])
+        right_t = max(a['rightT'], b['rightT'])
+    elif a_has_lr_t:
+        left_t, right_t = a['leftT'], a['rightT']
+    elif b_has_lr_t:
+        left_t, right_t = b['leftT'], b['rightT']
+    else:
+        left_t, right_t = 0, 0
+
+    # btm 区域独立左右
+    a_has_lr_b = a.get('rightB', 0) > 0
+    b_has_lr_b = b.get('rightB', 0) > 0
+    if a_has_lr_b and b_has_lr_b:
+        left_b = min(a['leftB'], b['leftB'])
+        right_b = max(a['rightB'], b['rightB'])
+    elif a_has_lr_b:
+        left_b, right_b = a['leftB'], a['rightB']
+    elif b_has_lr_b:
+        left_b, right_b = b['leftB'], b['rightB']
+    else:
+        left_b, right_b = 0, 0
+
     return {
         'topYMin': top_y_min, 'topYMax': top_y_max,
         'btmYMin': btm_y_min, 'btmYMax': btm_y_max,
         'left': left, 'right': right,
+        'leftT': left_t, 'rightT': right_t,
+        'leftB': left_b, 'rightB': right_b,
     }
 
 
@@ -613,7 +666,7 @@ def _smooth_bounds_timeline(
     window_frames = int(window_sec * fps)
     FIELDS_MIN = ['topYMin', 'btmYMin', 'left']    # 取 min 的字段
     FIELDS_MAX = ['topYMax', 'btmYMax', 'right']    # 取 max 的字段
-    EMPTY = {'topYMin': 0, 'topYMax': 0, 'btmYMin': 0, 'btmYMax': 0, 'left': 0, 'right': 0}
+    EMPTY = {'topYMin': 0, 'topYMax': 0, 'btmYMin': 0, 'btmYMax': 0, 'left': 0, 'right': 0, 'leftT': 0, 'rightT': 0, 'leftB': 0, 'rightB': 0}
 
     def has_content(b: dict) -> bool:
         return b['topYMax'] > 0 or b['btmYMax'] > 0 or b['right'] > 0
@@ -684,9 +737,35 @@ def _smooth_bounds_timeline(
         else:
             s['btmYMin'] = 0; s['btmYMax'] = 0
 
-        # 左右 (如果两帧都有内容则 right 一定 > 0)
+        # 全局左右 (如果两帧都有内容则 right 一定 > 0)
         s['left'] = cur['left'] if cur['left'] < prev['left'] else int(prev['left'] + ema_alpha * (cur['left'] - prev['left']))
         s['right'] = cur['right'] if cur['right'] > prev['right'] else int(prev['right'] + ema_alpha * (cur['right'] - prev['right']))
+
+        # top 区域独立左右
+        cur_has_lr_t = cur.get('rightT', 0) > 0
+        prev_has_lr_t = prev.get('rightT', 0) > 0
+        if cur_has_lr_t and prev_has_lr_t:
+            s['leftT'] = cur['leftT'] if cur['leftT'] < prev['leftT'] else int(prev['leftT'] + ema_alpha * (cur['leftT'] - prev['leftT']))
+            s['rightT'] = cur['rightT'] if cur['rightT'] > prev['rightT'] else int(prev['rightT'] + ema_alpha * (cur['rightT'] - prev['rightT']))
+        elif cur_has_lr_t:
+            s['leftT'] = cur['leftT']; s['rightT'] = cur['rightT']
+        elif prev_has_lr_t:
+            s['leftT'] = prev['leftT']; s['rightT'] = prev['rightT']
+        else:
+            s['leftT'] = 0; s['rightT'] = 0
+
+        # btm 区域独立左右
+        cur_has_lr_b = cur.get('rightB', 0) > 0
+        prev_has_lr_b = prev.get('rightB', 0) > 0
+        if cur_has_lr_b and prev_has_lr_b:
+            s['leftB'] = cur['leftB'] if cur['leftB'] < prev['leftB'] else int(prev['leftB'] + ema_alpha * (cur['leftB'] - prev['leftB']))
+            s['rightB'] = cur['rightB'] if cur['rightB'] > prev['rightB'] else int(prev['rightB'] + ema_alpha * (cur['rightB'] - prev['rightB']))
+        elif cur_has_lr_b:
+            s['leftB'] = cur['leftB']; s['rightB'] = cur['rightB']
+        elif prev_has_lr_b:
+            s['leftB'] = prev['leftB']; s['rightB'] = prev['rightB']
+        else:
+            s['leftB'] = 0; s['rightB'] = 0
 
         smoothed.append(s)
 
@@ -722,7 +801,7 @@ def _smooth_bounds_timeline(
             else:
                 cur['btmYMax'] = int(cur['btmYMax'] + ema_alpha * (nxt['btmYMax'] - cur['btmYMax']))
 
-        # 左右
+        # 全局左右
         if nxt['left'] < cur['left']:
             cur['left'] = nxt['left']
         else:
@@ -731,6 +810,28 @@ def _smooth_bounds_timeline(
             cur['right'] = nxt['right']
         else:
             cur['right'] = int(cur['right'] + ema_alpha * (nxt['right'] - cur['right']))
+
+        # top 独立左右
+        if cur.get('rightT', 0) > 0 and nxt.get('rightT', 0) > 0:
+            if nxt['leftT'] < cur['leftT']:
+                cur['leftT'] = nxt['leftT']
+            else:
+                cur['leftT'] = int(cur['leftT'] + ema_alpha * (nxt['leftT'] - cur['leftT']))
+            if nxt['rightT'] > cur['rightT']:
+                cur['rightT'] = nxt['rightT']
+            else:
+                cur['rightT'] = int(cur['rightT'] + ema_alpha * (nxt['rightT'] - cur['rightT']))
+
+        # btm 独立左右
+        if cur.get('rightB', 0) > 0 and nxt.get('rightB', 0) > 0:
+            if nxt['leftB'] < cur['leftB']:
+                cur['leftB'] = nxt['leftB']
+            else:
+                cur['leftB'] = int(cur['leftB'] + ema_alpha * (nxt['leftB'] - cur['leftB']))
+            if nxt['rightB'] > cur['rightB']:
+                cur['rightB'] = nxt['rightB']
+            else:
+                cur['rightB'] = int(cur['rightB'] + ema_alpha * (nxt['rightB'] - cur['rightB']))
 
     # ---- 第 4 步: 构建带时间戳的输出, 并去重相邻相同项 ----
     # 注意: 空帧的 bounds 全为 0, 前端碰到全 0 的点应跳过裁剪
@@ -743,12 +844,15 @@ def _smooth_bounds_timeline(
             'topYMin': s['topYMin'], 'topYMax': s['topYMax'],
             'btmYMin': s['btmYMin'], 'btmYMax': s['btmYMax'],
             'left': s['left'], 'right': s['right'],
+            'leftT': s.get('leftT', 0), 'rightT': s.get('rightT', 0),
+            'leftB': s.get('leftB', 0), 'rightB': s.get('rightB', 0),
         }
         # 相邻相同则跳过 (减少 JSON 体积), 但保留首尾
         if prev_entry is not None and i < n - 1:
             same = all(
                 entry[k] == prev_entry[k]
-                for k in ('topYMin', 'topYMax', 'btmYMin', 'btmYMax', 'left', 'right')
+                for k in ('topYMin', 'topYMax', 'btmYMin', 'btmYMax', 'left', 'right',
+                          'leftT', 'rightT', 'leftB', 'rightB')
             )
             if same:
                 continue

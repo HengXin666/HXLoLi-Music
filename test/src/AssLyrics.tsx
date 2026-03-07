@@ -84,6 +84,9 @@ interface TwoBlockBounds {
   topYMin: number; topYMax: number;
   btmYMin: number; btmYMax: number;
   left: number; right: number;
+  /** top/btm 区域独立的左右边界 (可选, 用于分区域居中裁剪) */
+  leftT?: number; rightT?: number;
+  leftB?: number; rightB?: number;
 }
 
 /** 时间轴 bounds 关键点 (由 Python 预计算) */
@@ -137,13 +140,22 @@ function interpolateBoundsAtTime(timeline: BoundsTimelinePoint[], time: number):
   if (dt <= 0) return a;
 
   const ratio = (time - a.t) / dt;
+  const lerp = (v1: number, v2: number) => Math.round(v1 + (v2 - v1) * ratio);
+  const lerpOpt = (v1: number | undefined, v2: number | undefined) => {
+    if (v1 == null || v2 == null) return undefined;
+    return Math.round(v1 + (v2 - v1) * ratio);
+  };
   return {
-    topYMin: Math.round(a.topYMin + (b.topYMin - a.topYMin) * ratio),
-    topYMax: Math.round(a.topYMax + (b.topYMax - a.topYMax) * ratio),
-    btmYMin: Math.round(a.btmYMin + (b.btmYMin - a.btmYMin) * ratio),
-    btmYMax: Math.round(a.btmYMax + (b.btmYMax - a.btmYMax) * ratio),
-    left:    Math.round(a.left    + (b.left    - a.left)    * ratio),
-    right:   Math.round(a.right   + (b.right   - a.right)   * ratio),
+    topYMin: lerp(a.topYMin, b.topYMin),
+    topYMax: lerp(a.topYMax, b.topYMax),
+    btmYMin: lerp(a.btmYMin, b.btmYMin),
+    btmYMax: lerp(a.btmYMax, b.btmYMax),
+    left:    lerp(a.left,    b.left),
+    right:   lerp(a.right,   b.right),
+    leftT:   lerpOpt((a as any).leftT,  (b as any).leftT),
+    rightT:  lerpOpt((a as any).rightT, (b as any).rightT),
+    leftB:   lerpOpt((a as any).leftB,  (b as any).leftB),
+    rightB:  lerpOpt((a as any).rightB, (b as any).rightB),
   };
 }
 
@@ -152,32 +164,48 @@ function cropAndDraw(srcCanvas: HTMLCanvasElement, dstCanvas: HTMLCanvasElement,
   const hasBtm = boundsHasBtm(bounds);
   if (!hasTop && !hasBtm) return;
 
-  const contentW = bounds.right - bounds.left;
+  // top/btm 各自使用独立的左右边界 (如果有的话)
+  // 这样当 top 居中, btm 在左下角时, 各自裁剪后居中绘制, 不会互相干扰
+  const topLeftX  = (bounds.leftT != null && bounds.rightT != null && bounds.rightT > 0) ? bounds.leftT : bounds.left;
+  const topRightX = (bounds.leftT != null && bounds.rightT != null && bounds.rightT > 0) ? bounds.rightT : bounds.right;
+  const btmLeftX  = (bounds.leftB != null && bounds.rightB != null && bounds.rightB > 0) ? bounds.leftB : bounds.left;
+  const btmRightX = (bounds.leftB != null && bounds.rightB != null && bounds.rightB > 0) ? bounds.rightB : bounds.right;
+
+  const topW = topRightX - topLeftX;
+  const btmW = btmRightX - btmLeftX;
   const topH = hasTop ? (bounds.topYMax - bounds.topYMin) : 0;
   const btmH = hasBtm ? (bounds.btmYMax - bounds.btmYMin) : 0;
   const totalH = topH + btmH;
 
-  if (contentW <= 0 || totalH <= 0) return;
+  if (totalH <= 0) return;
 
   const dstCtx = dstCanvas.getContext('2d');
   if (!dstCtx) return;
-
   dstCtx.clearRect(0, 0, dstCanvas.width, dstCanvas.height);
 
-  const scaleX = dstCanvas.width / contentW;
+  // 统一缩放基于最宽的区域和总高度
+  const maxContentW = Math.max(topW, btmW, 1);
+  const scaleX = dstCanvas.width / maxContentW;
   const scaleY = dstCanvas.height / totalH;
   const scale = Math.min(scaleX, scaleY, 1);
 
-  const drawW = contentW * scale;
-  const drawH = totalH * scale;
-  const offsetX = (dstCanvas.width - drawW) / 2;
-  const offsetY = (dstCanvas.height - drawH) / 2;
+  const drawTotalH = totalH * scale;
+  const offsetY = (dstCanvas.height - drawTotalH) / 2;
 
-  if (hasTop && topH > 0) {
-    dstCtx.drawImage(srcCanvas, bounds.left, bounds.topYMin, contentW, topH, offsetX, offsetY, drawW, topH * scale);
+  // top 区域: 水平居中绘制
+  if (hasTop && topH > 0 && topW > 0) {
+    const drawTopW = topW * scale;
+    const topOffsetX = (dstCanvas.width - drawTopW) / 2;
+    dstCtx.drawImage(srcCanvas, topLeftX, bounds.topYMin, topW, topH,
+                     topOffsetX, offsetY, drawTopW, topH * scale);
   }
-  if (hasBtm && btmH > 0) {
-    dstCtx.drawImage(srcCanvas, bounds.left, bounds.btmYMin, contentW, btmH, offsetX, offsetY + topH * scale, drawW, btmH * scale);
+
+  // btm 区域: 水平居中绘制
+  if (hasBtm && btmH > 0 && btmW > 0) {
+    const drawBtmW = btmW * scale;
+    const btmOffsetX = (dstCanvas.width - drawBtmW) / 2;
+    dstCtx.drawImage(srcCanvas, btmLeftX, bounds.btmYMin, btmW, btmH,
+                     btmOffsetX, offsetY + topH * scale, drawBtmW, btmH * scale);
   }
 }
 
