@@ -91,9 +91,9 @@ interface BoundsTimelinePoint extends TwoBlockBounds {
   t: number;
 }
 
-function boundsHasTop(b: TwoBlockBounds): boolean { return b.topYMin !== Infinity; }
-function boundsHasBtm(b: TwoBlockBounds): boolean { return b.btmYMin !== Infinity; }
-function boundsHasContent(b: TwoBlockBounds): boolean { return boundsHasTop(b) || boundsHasBtm(b); }
+function boundsHasTop(b: TwoBlockBounds): boolean { return b.topYMax > 0; }
+function boundsHasBtm(b: TwoBlockBounds): boolean { return b.btmYMax > 0; }
+function boundsHasContent(b: TwoBlockBounds): boolean { return boundsHasTop(b) || boundsHasBtm(b) || b.right > 0; }
 
 /**
  * 从时间轴 bounds 中按当前时间插值获取 bounds
@@ -101,11 +101,17 @@ function boundsHasContent(b: TwoBlockBounds): boolean { return boundsHasTop(b) |
  * 使用二分查找找到最近的两个关键点, 线性插值得到当前时刻的 bounds
  * 这样可以在不同时间段使用不同的裁剪窗口, 实现实时跟踪
  */
-function interpolateBoundsAtTime(timeline: BoundsTimelinePoint[], time: number): TwoBlockBounds {
+function interpolateBoundsAtTime(timeline: BoundsTimelinePoint[], time: number): TwoBlockBounds | null {
   const n = timeline.length;
-  if (n === 0) return { topYMin: 0, topYMax: 0, btmYMin: 0, btmYMax: 0, left: 0, right: 0 };
-  if (n === 1 || time <= timeline[0].t) return timeline[0];
-  if (time >= timeline[n - 1].t) return timeline[n - 1];
+  if (n === 0) return null;
+  if (n === 1 || time <= timeline[0].t) {
+    const p = timeline[0];
+    return (p.topYMax > 0 || p.btmYMax > 0 || p.right > 0) ? p : null;
+  }
+  if (time >= timeline[n - 1].t) {
+    const p = timeline[n - 1];
+    return (p.topYMax > 0 || p.btmYMax > 0 || p.right > 0) ? p : null;
+  }
 
   // 二分查找: 找到最大的 i 使得 timeline[i].t <= time
   let lo = 0, hi = n - 1;
@@ -117,6 +123,16 @@ function interpolateBoundsAtTime(timeline: BoundsTimelinePoint[], time: number):
 
   const a = timeline[lo];
   const b = timeline[hi];
+  const aHas = a.topYMax > 0 || a.btmYMax > 0 || a.right > 0;
+  const bHas = b.topYMax > 0 || b.btmYMax > 0 || b.right > 0;
+
+  // 如果两端都是空区间, 返回 null (不裁剪)
+  if (!aHas && !bHas) return null;
+  // 如果只有一端有内容, 用有内容的那端 (不在空帧和有效帧之间插值)
+  if (!aHas) return b;
+  if (!bHas) return a;
+
+  // 两端都有内容 → 线性插值
   const dt = b.t - a.t;
   if (dt <= 0) return a;
 
@@ -321,8 +337,24 @@ export default function AssLyrics(): React.ReactElement | null {
           const currentBounds = tl
             ? interpolateBoundsAtTime(tl, adjustedCt)
             : cachedBoundsRef.current;
-          if (currentBounds) {
+          if (currentBounds && boundsHasContent(currentBounds)) {
             cropAndDraw(offscreenCanvasRef.current, displayCanvasRef.current, currentBounds);
+          } else if (tl) {
+            // 空区间: 直接从 offscreen 1:1 复制到 display (不裁剪)
+            const dCtx = displayCanvasRef.current.getContext('2d');
+            if (dCtx) {
+              dCtx.clearRect(0, 0, displayCanvasRef.current.width, displayCanvasRef.current.height);
+              const scale = Math.min(
+                displayCanvasRef.current.width / offscreenCanvasRef.current.width,
+                displayCanvasRef.current.height / offscreenCanvasRef.current.height,
+                1
+              );
+              const dw = offscreenCanvasRef.current.width * scale;
+              const dh = offscreenCanvasRef.current.height * scale;
+              const dx = (displayCanvasRef.current.width - dw) / 2;
+              const dy = (displayCanvasRef.current.height - dh) / 2;
+              dCtx.drawImage(offscreenCanvasRef.current, 0, 0, offscreenCanvasRef.current.width, offscreenCanvasRef.current.height, dx, dy, dw, dh);
+            }
           }
         }
 

@@ -13,3 +13,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# 本地测试
+test/node_modules/
+test/dist/

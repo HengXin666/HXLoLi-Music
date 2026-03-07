@@ -81,26 +81,48 @@ export default function App(): React.ReactElement {
   }, [init]);
 
   // 进度条拖拽
-  // 用 ref 追踪拖拽状态 (避免频繁 setState), 用 state 驱动显示值
+  // 核心思路: 拖拽期间用 ref 冻结 slider 显示值, 松手后执行 seek
   const seekingRef = useRef(false);
   const seekValueRef = useRef(0);
-  const [, forceUpdate] = useState(0);
+  const [seekRender, setSeekRender] = useState(0); // 用于触发重渲染
 
   const handleSeekStart = useCallback(() => {
     seekingRef.current = true;
+    seekValueRef.current = useMusicStore.getState().currentTime;
   }, []);
 
   const handleSeekInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    const val = parseFloat((e.target as HTMLInputElement).value);
     seekingRef.current = true;
-    seekValueRef.current = parseFloat((e.target as HTMLInputElement).value);
-    forceUpdate((n) => n + 1); // 手动触发重渲染以更新 slider 显示
+    seekValueRef.current = val;
+    setSeekRender((n) => n + 1);
   }, []);
 
   const handleSeekEnd = useCallback(() => {
     if (seekingRef.current) {
-      seek(seekValueRef.current);
+      const val = seekValueRef.current;
       seekingRef.current = false;
+      seek(val);
+      setSeekRender((n) => n + 1);
     }
+  }, [seek]);
+
+  // 全局 mouseup 监听: 防止鼠标移出 slider 后释放导致 seek 不提交
+  useEffect(() => {
+    const onGlobalUp = () => {
+      if (seekingRef.current) {
+        const val = seekValueRef.current;
+        seekingRef.current = false;
+        seek(val);
+        setSeekRender((n) => n + 1);
+      }
+    };
+    window.addEventListener('mouseup', onGlobalUp);
+    window.addEventListener('touchend', onGlobalUp);
+    return () => {
+      window.removeEventListener('mouseup', onGlobalUp);
+      window.removeEventListener('touchend', onGlobalUp);
+    };
   }, [seek]);
 
   // 音量
@@ -188,7 +210,7 @@ export default function App(): React.ReactElement {
 
         {/* 进度条 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <span style={timeLabelStyle}>{formatTime(currentTime)}</span>
+          <span style={timeLabelStyle}>{formatTime(seekingRef.current ? seekValueRef.current : currentTime)}</span>
           <input type="range" min={0} max={duration || 0} step={0.1}
             value={seekingRef.current ? seekValueRef.current : currentTime}
             onMouseDown={handleSeekStart}

@@ -15,16 +15,461 @@
       ]
     }
   },
-  "ass_bounds:Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass": {
+  "ass_bounds_v2:Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass": {
     "hash": "a04f29cbbb3b5af2a83825878840363f:275.31",
     "data": {
-      "bounds": {
-        "topYMin": 0,
-        "topYMax": 0,
-        "btmYMin": 624,
-        "btmYMax": 1038,
-        "left": 326,
-        "right": 1646
+      "result": {
+        "bounds": {
+          "topYMin": 0,
+          "topYMax": 0,
+          "btmYMin": 626,
+          "btmYMax": 1032,
+          "left": 324,
+          "right": 1650
+        },
+        "timeline": [
+          {
+            "t": 0.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 13.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1613
+          },
+          {
+            "t": 45.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1611
+          },
+          {
+            "t": 46.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1609
+          },
+          {
+            "t": 46.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1607
+          },
+          {
+            "t": 76.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1604
+          },
+          {
+            "t": 76.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1601
+          },
+          {
+            "t": 77.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1598
+          },
+          {
+            "t": 77.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1596
+          },
+          {
+            "t": 78.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1594
+          },
+          {
+            "t": 78.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1592
+          },
+          {
+            "t": 79.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1591
+          },
+          {
+            "t": 79.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1590
+          },
+          {
+            "t": 80.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1589
+          },
+          {
+            "t": 80.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 324,
+            "right": 1588
+          },
+          {
+            "t": 90.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 91.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 344,
+            "right": 1619
+          },
+          {
+            "t": 152.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1619
+          },
+          {
+            "t": 153.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 348,
+            "right": 1619
+          },
+          {
+            "t": 153.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 349,
+            "right": 1618
+          },
+          {
+            "t": 154.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 350,
+            "right": 1609
+          },
+          {
+            "t": 154.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 351,
+            "right": 1601
+          },
+          {
+            "t": 155.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 352,
+            "right": 1594
+          },
+          {
+            "t": 155.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 353,
+            "right": 1589
+          },
+          {
+            "t": 156.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1584
+          },
+          {
+            "t": 156.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1580
+          },
+          {
+            "t": 157.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1577
+          },
+          {
+            "t": 157.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1574
+          },
+          {
+            "t": 158.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1572
+          },
+          {
+            "t": 158.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1570
+          },
+          {
+            "t": 159.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1568
+          },
+          {
+            "t": 159.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1566
+          },
+          {
+            "t": 160.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1565
+          },
+          {
+            "t": 160.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1564
+          },
+          {
+            "t": 161.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1563
+          },
+          {
+            "t": 161.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 354,
+            "right": 1562
+          },
+          {
+            "t": 169.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 172.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1649
+          },
+          {
+            "t": 218.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1645
+          },
+          {
+            "t": 218.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1642
+          },
+          {
+            "t": 219.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1639
+          },
+          {
+            "t": 219.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1636
+          },
+          {
+            "t": 220.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1634
+          },
+          {
+            "t": 220.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1632
+          },
+          {
+            "t": 221.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1630
+          },
+          {
+            "t": 221.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1629
+          },
+          {
+            "t": 222.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 626,
+            "btmYMax": 1032,
+            "left": 346,
+            "right": 1628
+          },
+          {
+            "t": 233.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 275.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          }
+        ]
       }
     }
   },
@@ -57,16 +502,416 @@
       ]
     }
   },
-  "ass_bounds:いとうかなこ - ファティマ .ass": {
+  "ass_bounds_v2:いとうかなこ - ファティマ .ass": {
     "hash": "607e8b0aaa3567d34b4dd0e09f36870e:246.23",
     "data": {
-      "bounds": {
-        "topYMin": 4,
-        "topYMax": 192,
-        "btmYMin": 986,
-        "btmYMax": 1080,
-        "left": 154,
-        "right": 1762
+      "result": {
+        "bounds": {
+          "topYMin": 0,
+          "topYMax": 192,
+          "btmYMin": 986,
+          "btmYMax": 1080,
+          "left": 154,
+          "right": 1762
+        },
+        "timeline": [
+          {
+            "t": 0.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 13.5,
+            "topYMin": 0,
+            "topYMax": 191,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 19.5,
+            "topYMin": 0,
+            "topYMax": 187,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 27.5,
+            "topYMin": 0,
+            "topYMax": 186,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 28.0,
+            "topYMin": 0,
+            "topYMax": 185,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 28.5,
+            "topYMin": 0,
+            "topYMax": 180,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 29.0,
+            "topYMin": 0,
+            "topYMax": 175,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 29.5,
+            "topYMin": 0,
+            "topYMax": 164,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 30.0,
+            "topYMin": 0,
+            "topYMax": 156,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 30.5,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1761
+          },
+          {
+            "t": 49.5,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 154,
+            "right": 1760
+          },
+          {
+            "t": 50.0,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 160,
+            "right": 1755
+          },
+          {
+            "t": 50.5,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 194,
+            "right": 1720
+          },
+          {
+            "t": 51.0,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 223,
+            "right": 1690
+          },
+          {
+            "t": 51.5,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 247,
+            "right": 1666
+          },
+          {
+            "t": 52.0,
+            "topYMin": 0,
+            "topYMax": 155,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 59.0,
+            "topYMin": 0,
+            "topYMax": 150,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 59.5,
+            "topYMin": 0,
+            "topYMax": 146,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 60.0,
+            "topYMin": 0,
+            "topYMax": 142,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 60.5,
+            "topYMin": 0,
+            "topYMax": 139,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 61.0,
+            "topYMin": 0,
+            "topYMax": 136,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 61.5,
+            "topYMin": 0,
+            "topYMax": 134,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 62.0,
+            "topYMin": 0,
+            "topYMax": 132,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 62.5,
+            "topYMin": 0,
+            "topYMax": 130,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 63.0,
+            "topYMin": 0,
+            "topYMax": 129,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 63.5,
+            "topYMin": 0,
+            "topYMax": 125,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 64.0,
+            "topYMin": 0,
+            "topYMax": 122,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 64.5,
+            "topYMin": 0,
+            "topYMax": 119,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 65.0,
+            "topYMin": 0,
+            "topYMax": 116,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 65.5,
+            "topYMin": 0,
+            "topYMax": 114,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 66.0,
+            "topYMin": 0,
+            "topYMax": 112,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 66.5,
+            "topYMin": 0,
+            "topYMax": 110,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 67.0,
+            "topYMin": 0,
+            "topYMax": 109,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 67.5,
+            "topYMin": 0,
+            "topYMax": 108,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 68.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 68.5,
+            "topYMin": 0,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 264,
+            "right": 1653
+          },
+          {
+            "t": 79.0,
+            "topYMin": 0,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 266,
+            "right": 1650
+          },
+          {
+            "t": 79.5,
+            "topYMin": 0,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 281,
+            "right": 1634
+          },
+          {
+            "t": 80.0,
+            "topYMin": 0,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 302,
+            "right": 1613
+          },
+          {
+            "t": 80.5,
+            "topYMin": 0,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 314,
+            "right": 1602
+          },
+          {
+            "t": 89.0,
+            "topYMin": 1,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 314,
+            "right": 1602
+          },
+          {
+            "t": 89.5,
+            "topYMin": 2,
+            "topYMax": 106,
+            "btmYMin": 986,
+            "btmYMax": 1080,
+            "left": 314,
+            "right": 1602
+          },
+          {
+            "t": 90.5,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 246.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          }
+        ]
       }
     }
   },
@@ -78,12 +923,6 @@
       "duration": 272.3
     }
   },
-  "cover_extract:羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.mp3": {
-    "hash": "0ebb43fff86ad867ba5d5443266e1884",
-    "data": {
-      "cover_name": "羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.jpg"
-    }
-  },
   "ass_fonts:羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass": {
     "hash": "160a860b4c5b5d5e4873f650c9920a59",
     "data": {
@@ -93,16 +932,560 @@
       ]
     }
   },
-  "ass_bounds:羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass": {
+  "ass_bounds_v2:羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass": {
     "hash": "160a860b4c5b5d5e4873f650c9920a59:272.30",
     "data": {
-      "bounds": {
-        "topYMin": 2,
-        "topYMax": 144,
-        "btmYMin": 938,
-        "btmYMax": 1080,
-        "left": 612,
-        "right": 1312
+      "result": {
+        "bounds": {
+          "topYMin": 0,
+          "topYMax": 144,
+          "btmYMin": 938,
+          "btmYMax": 1080,
+          "left": 0,
+          "right": 1318
+        },
+        "timeline": [
+          {
+            "t": 0.0,
+            "topYMin": 0,
+            "topYMax": 143,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 6.0,
+            "topYMin": 0,
+            "topYMax": 141,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 6.5,
+            "topYMin": 0,
+            "topYMax": 140,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 7.0,
+            "topYMin": 0,
+            "topYMax": 139,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 7.5,
+            "topYMin": 0,
+            "topYMax": 138,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 8.0,
+            "topYMin": 0,
+            "topYMax": 137,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 8.5,
+            "topYMin": 0,
+            "topYMax": 134,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 9.0,
+            "topYMin": 0,
+            "topYMax": 131,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 9.5,
+            "topYMin": 0,
+            "topYMax": 128,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 10.0,
+            "topYMin": 0,
+            "topYMax": 126,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 10.5,
+            "topYMin": 0,
+            "topYMax": 124,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 11.0,
+            "topYMin": 0,
+            "topYMax": 121,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 11.5,
+            "topYMin": 0,
+            "topYMax": 119,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 12.0,
+            "topYMin": 0,
+            "topYMax": 117,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 12.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1317
+          },
+          {
+            "t": 47.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1315
+          },
+          {
+            "t": 47.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1306
+          },
+          {
+            "t": 48.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1298
+          },
+          {
+            "t": 48.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1292
+          },
+          {
+            "t": 49.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1287
+          },
+          {
+            "t": 49.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1282
+          },
+          {
+            "t": 50.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1277
+          },
+          {
+            "t": 50.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1269
+          },
+          {
+            "t": 51.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1262
+          },
+          {
+            "t": 51.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1257
+          },
+          {
+            "t": 52.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1252
+          },
+          {
+            "t": 52.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1247
+          },
+          {
+            "t": 53.0,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1243
+          },
+          {
+            "t": 53.5,
+            "topYMin": 0,
+            "topYMax": 115,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 62.0,
+            "topYMin": 0,
+            "topYMax": 114,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 62.5,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 938,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 65.5,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 939,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 66.0,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 940,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 66.5,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 941,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 67.0,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 942,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 72.0,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 943,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 72.5,
+            "topYMin": 0,
+            "topYMax": 113,
+            "btmYMin": 944,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 74.0,
+            "topYMin": 0,
+            "topYMax": 112,
+            "btmYMin": 944,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 74.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 944,
+            "btmYMax": 1079,
+            "left": 0,
+            "right": 1241
+          },
+          {
+            "t": 78.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 944,
+            "btmYMax": 1079,
+            "left": 2,
+            "right": 1241
+          },
+          {
+            "t": 79.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 946,
+            "btmYMax": 1079,
+            "left": 16,
+            "right": 1241
+          },
+          {
+            "t": 79.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 958,
+            "btmYMax": 1077,
+            "left": 112,
+            "right": 1238
+          },
+          {
+            "t": 80.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 969,
+            "btmYMax": 1076,
+            "left": 208,
+            "right": 1236
+          },
+          {
+            "t": 80.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 978,
+            "btmYMax": 1075,
+            "left": 288,
+            "right": 1234
+          },
+          {
+            "t": 81.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 986,
+            "btmYMax": 1074,
+            "left": 353,
+            "right": 1232
+          },
+          {
+            "t": 81.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 992,
+            "btmYMax": 1073,
+            "left": 404,
+            "right": 1230
+          },
+          {
+            "t": 82.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 998,
+            "btmYMax": 1072,
+            "left": 447,
+            "right": 1229
+          },
+          {
+            "t": 82.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 1003,
+            "btmYMax": 1072,
+            "left": 483,
+            "right": 1226
+          },
+          {
+            "t": 83.0,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 1007,
+            "btmYMax": 1072,
+            "left": 514,
+            "right": 1221
+          },
+          {
+            "t": 83.5,
+            "topYMin": 0,
+            "topYMax": 107,
+            "btmYMin": 1010,
+            "btmYMax": 1072,
+            "left": 540,
+            "right": 1216
+          },
+          {
+            "t": 84.0,
+            "topYMin": 0,
+            "topYMax": 102,
+            "btmYMin": 1013,
+            "btmYMax": 1072,
+            "left": 563,
+            "right": 1211
+          },
+          {
+            "t": 84.5,
+            "topYMin": 0,
+            "topYMax": 97,
+            "btmYMin": 1015,
+            "btmYMax": 1072,
+            "left": 581,
+            "right": 1207
+          },
+          {
+            "t": 85.0,
+            "topYMin": 0,
+            "topYMax": 93,
+            "btmYMin": 1017,
+            "btmYMax": 1072,
+            "left": 597,
+            "right": 1204
+          },
+          {
+            "t": 85.5,
+            "topYMin": 0,
+            "topYMax": 88,
+            "btmYMin": 1019,
+            "btmYMax": 1072,
+            "left": 611,
+            "right": 1201
+          },
+          {
+            "t": 86.0,
+            "topYMin": 0,
+            "topYMax": 84,
+            "btmYMin": 1020,
+            "btmYMax": 1072,
+            "left": 626,
+            "right": 1199
+          },
+          {
+            "t": 86.5,
+            "topYMin": 0,
+            "topYMax": 80,
+            "btmYMin": 1021,
+            "btmYMax": 1072,
+            "left": 658,
+            "right": 1197
+          },
+          {
+            "t": 87.0,
+            "topYMin": 0,
+            "topYMax": 75,
+            "btmYMin": 1022,
+            "btmYMax": 1072,
+            "left": 687,
+            "right": 1193
+          },
+          {
+            "t": 87.5,
+            "topYMin": 0,
+            "topYMax": 67,
+            "btmYMin": 1022,
+            "btmYMax": 1072,
+            "left": 722,
+            "right": 1182
+          },
+          {
+            "t": 88.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          },
+          {
+            "t": 272.0,
+            "topYMin": 0,
+            "topYMax": 0,
+            "btmYMin": 0,
+            "btmYMax": 0,
+            "left": 0,
+            "right": 0
+          }
+        ]
       }
     }
   }

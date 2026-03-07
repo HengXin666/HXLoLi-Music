@@ -22,444 +22,426 @@
                 "topYMin": 0,
                 "topYMax": 0,
                 "btmYMin": 0,
-                "btmYMax": 1031,
+                "btmYMax": 0,
                 "left": 0,
+                "right": 0
+            },
+            {
+                "t": 13.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1613
+            },
+            {
+                "t": 45.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1611
+            },
+            {
+                "t": 46.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1609
+            },
+            {
+                "t": 46.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1607
+            },
+            {
+                "t": 76.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1604
+            },
+            {
+                "t": 76.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1601
+            },
+            {
+                "t": 77.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1598
+            },
+            {
+                "t": 77.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1596
+            },
+            {
+                "t": 78.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1594
+            },
+            {
+                "t": 78.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1592
+            },
+            {
+                "t": 79.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1591
+            },
+            {
+                "t": 79.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1590
+            },
+            {
+                "t": 80.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1589
+            },
+            {
+                "t": 80.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 324,
+                "right": 1588
+            },
+            {
+                "t": 90.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 0,
+                "btmYMax": 0,
+                "left": 0,
+                "right": 0
+            },
+            {
+                "t": 91.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 344,
+                "right": 1619
+            },
+            {
+                "t": 152.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
+                "right": 1619
+            },
+            {
+                "t": 153.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 348,
+                "right": 1619
+            },
+            {
+                "t": 153.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 349,
+                "right": 1618
+            },
+            {
+                "t": 154.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 350,
+                "right": 1609
+            },
+            {
+                "t": 154.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 351,
+                "right": 1601
+            },
+            {
+                "t": 155.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 352,
+                "right": 1594
+            },
+            {
+                "t": 155.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 353,
+                "right": 1589
+            },
+            {
+                "t": 156.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1584
+            },
+            {
+                "t": 156.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1580
+            },
+            {
+                "t": 157.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1577
+            },
+            {
+                "t": 157.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1574
+            },
+            {
+                "t": 158.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1572
+            },
+            {
+                "t": 158.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1570
+            },
+            {
+                "t": 159.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1568
+            },
+            {
+                "t": 159.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1566
+            },
+            {
+                "t": 160.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1565
+            },
+            {
+                "t": 160.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1564
+            },
+            {
+                "t": 161.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1563
+            },
+            {
+                "t": 161.5,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 354,
+                "right": 1562
+            },
+            {
+                "t": 169.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 0,
+                "btmYMax": 0,
+                "left": 0,
+                "right": 0
+            },
+            {
+                "t": 172.0,
+                "topYMin": 0,
+                "topYMax": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1649
             },
             {
                 "t": 218.0,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1645
             },
             {
                 "t": 218.5,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1642
             },
             {
                 "t": 219.0,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1639
             },
             {
                 "t": 219.5,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1636
             },
             {
                 "t": 220.0,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1634
             },
             {
                 "t": 220.5,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1632
             },
             {
                 "t": 221.0,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1630
             },
             {
                 "t": 221.5,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1629
             },
             {
                 "t": 222.0,
                 "topYMin": 0,
                 "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
+                "btmYMin": 626,
+                "btmYMax": 1032,
+                "left": 346,
                 "right": 1628
             },
             {
-                "t": 222.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
-                "right": 1627
-            },
-            {
-                "t": 231.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1031,
-                "left": 0,
-                "right": 1626
-            },
-            {
-                "t": 232.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1027,
-                "left": 0,
-                "right": 1621
-            },
-            {
-                "t": 232.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1005,
-                "left": 0,
-                "right": 1585
-            },
-            {
                 "t": 233.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 854,
-                "left": 0,
-                "right": 1347
-            },
-            {
-                "t": 233.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 725,
-                "left": 0,
-                "right": 1144
-            },
-            {
-                "t": 234.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 616,
-                "left": 0,
-                "right": 972
-            },
-            {
-                "t": 234.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 524,
-                "left": 0,
-                "right": 825
-            },
-            {
-                "t": 235.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 445,
-                "left": 0,
-                "right": 701
-            },
-            {
-                "t": 235.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 377,
-                "left": 0,
-                "right": 596
-            },
-            {
-                "t": 236.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 320,
-                "left": 0,
-                "right": 506
-            },
-            {
-                "t": 236.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 271,
-                "left": 0,
-                "right": 430
-            },
-            {
-                "t": 237.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 230,
-                "left": 0,
-                "right": 365
-            },
-            {
-                "t": 237.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 195,
-                "left": 0,
-                "right": 309
-            },
-            {
-                "t": 238.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 165,
-                "left": 0,
-                "right": 262
-            },
-            {
-                "t": 238.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 140,
-                "left": 0,
-                "right": 222
-            },
-            {
-                "t": 239.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 118,
-                "left": 0,
-                "right": 188
-            },
-            {
-                "t": 239.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 100,
-                "left": 0,
-                "right": 159
-            },
-            {
-                "t": 240.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 84,
-                "left": 0,
-                "right": 135
-            },
-            {
-                "t": 240.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 71,
-                "left": 0,
-                "right": 114
-            },
-            {
-                "t": 241.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 60,
-                "left": 0,
-                "right": 97
-            },
-            {
-                "t": 241.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 50,
-                "left": 0,
-                "right": 82
-            },
-            {
-                "t": 242.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 42,
-                "left": 0,
-                "right": 70
-            },
-            {
-                "t": 242.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 35,
-                "left": 0,
-                "right": 59
-            },
-            {
-                "t": 243.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 30,
-                "left": 0,
-                "right": 49
-            },
-            {
-                "t": 243.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 25,
-                "left": 0,
-                "right": 41
-            },
-            {
-                "t": 244.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 21,
-                "left": 0,
-                "right": 34
-            },
-            {
-                "t": 244.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 17,
-                "left": 0,
-                "right": 29
-            },
-            {
-                "t": 245.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 14,
-                "left": 0,
-                "right": 24
-            },
-            {
-                "t": 245.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 11,
-                "left": 0,
-                "right": 20
-            },
-            {
-                "t": 246.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 9,
-                "left": 0,
-                "right": 16
-            },
-            {
-                "t": 246.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 7,
-                "left": 0,
-                "right": 13
-            },
-            {
-                "t": 247.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 5,
-                "left": 0,
-                "right": 10
-            },
-            {
-                "t": 247.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 4,
-                "left": 0,
-                "right": 8
-            },
-            {
-                "t": 248.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 3,
-                "left": 0,
-                "right": 6
-            },
-            {
-                "t": 248.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 2,
-                "left": 0,
-                "right": 4
-            },
-            {
-                "t": 249.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1,
-                "left": 0,
-                "right": 3
-            },
-            {
-                "t": 249.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 0,
-                "left": 0,
-                "right": 2
-            },
-            {
-                "t": 250.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 0,
-                "left": 0,
-                "right": 1
-            },
-            {
-                "t": 250.5,
                 "topYMin": 0,
                 "topYMax": 0,
                 "btmYMin": 0,
@@ -499,7 +481,7 @@
             "方正韵动中黑_GBK"
         ],
         "assBounds": {
-            "topYMin": 2,
+            "topYMin": 0,
             "topYMax": 192,
             "btmYMin": 986,
             "btmYMax": 1080,
@@ -510,707 +492,383 @@
             {
                 "t": 0.0,
                 "topYMin": 0,
-                "topYMax": 191,
+                "topYMax": 0,
                 "btmYMin": 0,
-                "btmYMax": 1079,
+                "btmYMax": 0,
                 "left": 0,
+                "right": 0
+            },
+            {
+                "t": 13.5,
+                "topYMin": 0,
+                "topYMax": 191,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 19.5,
                 "topYMin": 0,
                 "topYMax": 187,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 27.5,
                 "topYMin": 0,
                 "topYMax": 186,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 28.0,
                 "topYMin": 0,
                 "topYMax": 185,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 28.5,
                 "topYMin": 0,
                 "topYMax": 180,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 29.0,
                 "topYMin": 0,
                 "topYMax": 175,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 29.5,
                 "topYMin": 0,
                 "topYMax": 164,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 30.0,
                 "topYMin": 0,
                 "topYMax": 156,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 30.5,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1761
             },
             {
                 "t": 49.5,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 154,
                 "right": 1760
             },
             {
                 "t": 50.0,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 160,
                 "right": 1755
             },
             {
                 "t": 50.5,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 194,
                 "right": 1720
             },
             {
                 "t": 51.0,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 223,
                 "right": 1690
             },
             {
                 "t": 51.5,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 247,
                 "right": 1666
             },
             {
                 "t": 52.0,
                 "topYMin": 0,
                 "topYMax": 155,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 59.0,
                 "topYMin": 0,
                 "topYMax": 150,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 59.5,
                 "topYMin": 0,
                 "topYMax": 146,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 60.0,
                 "topYMin": 0,
                 "topYMax": 142,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 60.5,
                 "topYMin": 0,
                 "topYMax": 139,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 61.0,
                 "topYMin": 0,
                 "topYMax": 136,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 61.5,
                 "topYMin": 0,
                 "topYMax": 134,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 62.0,
                 "topYMin": 0,
                 "topYMax": 132,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 62.5,
                 "topYMin": 0,
                 "topYMax": 130,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 63.0,
                 "topYMin": 0,
                 "topYMax": 129,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 63.5,
                 "topYMin": 0,
                 "topYMax": 125,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 64.0,
                 "topYMin": 0,
                 "topYMax": 122,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 64.5,
                 "topYMin": 0,
                 "topYMax": 119,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 65.0,
                 "topYMin": 0,
                 "topYMax": 116,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 65.5,
                 "topYMin": 0,
                 "topYMax": 114,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 66.0,
                 "topYMin": 0,
                 "topYMax": 112,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 66.5,
                 "topYMin": 0,
                 "topYMax": 110,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 67.0,
                 "topYMin": 0,
                 "topYMax": 109,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 67.5,
                 "topYMin": 0,
                 "topYMax": 108,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 68.0,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 68.5,
                 "topYMin": 0,
                 "topYMax": 106,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
-                "right": 1653
-            },
-            {
-                "t": 69.0,
-                "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 264,
                 "right": 1653
             },
             {
                 "t": 79.0,
                 "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 266,
                 "right": 1650
             },
             {
                 "t": 79.5,
                 "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 281,
                 "right": 1634
             },
             {
                 "t": 80.0,
                 "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
-                "right": 1612
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 302,
+                "right": 1613
             },
             {
                 "t": 80.5,
                 "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
-                "right": 1601
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 314,
+                "right": 1602
             },
             {
                 "t": 89.0,
-                "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1079,
-                "left": 0,
-                "right": 1600
+                "topYMin": 1,
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 314,
+                "right": 1602
             },
             {
                 "t": 89.5,
-                "topYMin": 0,
-                "topYMax": 105,
-                "btmYMin": 0,
-                "btmYMax": 1075,
-                "left": 0,
-                "right": 1595
-            },
-            {
-                "t": 90.0,
-                "topYMin": 0,
-                "topYMax": 103,
-                "btmYMin": 0,
-                "btmYMax": 1052,
-                "left": 0,
-                "right": 1560
+                "topYMin": 2,
+                "topYMax": 106,
+                "btmYMin": 986,
+                "btmYMax": 1080,
+                "left": 314,
+                "right": 1602
             },
             {
                 "t": 90.5,
-                "topYMin": 0,
-                "topYMax": 87,
-                "btmYMin": 0,
-                "btmYMax": 894,
-                "left": 0,
-                "right": 1325
-            },
-            {
-                "t": 91.0,
-                "topYMin": 0,
-                "topYMax": 73,
-                "btmYMin": 0,
-                "btmYMax": 759,
-                "left": 0,
-                "right": 1126
-            },
-            {
-                "t": 91.5,
-                "topYMin": 0,
-                "topYMax": 62,
-                "btmYMin": 0,
-                "btmYMax": 645,
-                "left": 0,
-                "right": 956
-            },
-            {
-                "t": 92.0,
-                "topYMin": 0,
-                "topYMax": 52,
-                "btmYMin": 0,
-                "btmYMax": 548,
-                "left": 0,
-                "right": 812
-            },
-            {
-                "t": 92.5,
-                "topYMin": 0,
-                "topYMax": 43,
-                "btmYMin": 0,
-                "btmYMax": 465,
-                "left": 0,
-                "right": 689
-            },
-            {
-                "t": 93.0,
-                "topYMin": 0,
-                "topYMax": 36,
-                "btmYMin": 0,
-                "btmYMax": 395,
-                "left": 0,
-                "right": 585
-            },
-            {
-                "t": 93.5,
-                "topYMin": 0,
-                "topYMax": 31,
-                "btmYMin": 0,
-                "btmYMax": 336,
-                "left": 0,
-                "right": 496
-            },
-            {
-                "t": 94.0,
-                "topYMin": 0,
-                "topYMax": 26,
-                "btmYMin": 0,
-                "btmYMax": 285,
-                "left": 0,
-                "right": 421
-            },
-            {
-                "t": 94.5,
-                "topYMin": 0,
-                "topYMax": 21,
-                "btmYMin": 0,
-                "btmYMax": 242,
-                "left": 0,
-                "right": 358
-            },
-            {
-                "t": 95.0,
-                "topYMin": 0,
-                "topYMax": 17,
-                "btmYMin": 0,
-                "btmYMax": 205,
-                "left": 0,
-                "right": 303
-            },
-            {
-                "t": 95.5,
-                "topYMin": 0,
-                "topYMax": 14,
-                "btmYMin": 0,
-                "btmYMax": 174,
-                "left": 0,
-                "right": 258
-            },
-            {
-                "t": 96.0,
-                "topYMin": 0,
-                "topYMax": 11,
-                "btmYMin": 0,
-                "btmYMax": 147,
-                "left": 0,
-                "right": 219
-            },
-            {
-                "t": 96.5,
-                "topYMin": 0,
-                "topYMax": 9,
-                "btmYMin": 0,
-                "btmYMax": 125,
-                "left": 0,
-                "right": 185
-            },
-            {
-                "t": 97.0,
-                "topYMin": 0,
-                "topYMax": 7,
-                "btmYMin": 0,
-                "btmYMax": 106,
-                "left": 0,
-                "right": 157
-            },
-            {
-                "t": 97.5,
-                "topYMin": 0,
-                "topYMax": 5,
-                "btmYMin": 0,
-                "btmYMax": 89,
-                "left": 0,
-                "right": 133
-            },
-            {
-                "t": 98.0,
-                "topYMin": 0,
-                "topYMax": 4,
-                "btmYMin": 0,
-                "btmYMax": 75,
-                "left": 0,
-                "right": 112
-            },
-            {
-                "t": 98.5,
-                "topYMin": 0,
-                "topYMax": 3,
-                "btmYMin": 0,
-                "btmYMax": 64,
-                "left": 0,
-                "right": 95
-            },
-            {
-                "t": 99.0,
-                "topYMin": 0,
-                "topYMax": 2,
-                "btmYMin": 0,
-                "btmYMax": 54,
-                "left": 0,
-                "right": 80
-            },
-            {
-                "t": 99.5,
-                "topYMin": 0,
-                "topYMax": 1,
-                "btmYMin": 0,
-                "btmYMax": 45,
-                "left": 0,
-                "right": 68
-            },
-            {
-                "t": 100.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 37,
-                "left": 0,
-                "right": 57
-            },
-            {
-                "t": 100.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 32,
-                "left": 0,
-                "right": 48
-            },
-            {
-                "t": 101.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 27,
-                "left": 0,
-                "right": 40
-            },
-            {
-                "t": 101.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 22,
-                "left": 0,
-                "right": 33
-            },
-            {
-                "t": 102.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 18,
-                "left": 0,
-                "right": 28
-            },
-            {
-                "t": 102.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 15,
-                "left": 0,
-                "right": 23
-            },
-            {
-                "t": 103.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 12,
-                "left": 0,
-                "right": 19
-            },
-            {
-                "t": 103.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 10,
-                "left": 0,
-                "right": 16
-            },
-            {
-                "t": 104.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 8,
-                "left": 0,
-                "right": 13
-            },
-            {
-                "t": 104.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 6,
-                "left": 0,
-                "right": 10
-            },
-            {
-                "t": 105.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 4,
-                "left": 0,
-                "right": 8
-            },
-            {
-                "t": 105.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 3,
-                "left": 0,
-                "right": 6
-            },
-            {
-                "t": 106.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 2,
-                "left": 0,
-                "right": 4
-            },
-            {
-                "t": 106.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1,
-                "left": 0,
-                "right": 3
-            },
-            {
-                "t": 107.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 0,
-                "left": 0,
-                "right": 2
-            },
-            {
-                "t": 107.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 0,
-                "left": 0,
-                "right": 1
-            },
-            {
-                "t": 108.0,
                 "topYMin": 0,
                 "topYMax": 0,
                 "btmYMin": 0,
@@ -1243,11 +901,11 @@
             "方正少儿_GBK"
         ],
         "assBounds": {
-            "topYMin": 2,
+            "topYMin": 0,
             "topYMax": 144,
             "btmYMin": 938,
             "btmYMax": 1080,
-            "left": 606,
+            "left": 0,
             "right": 1318
         },
         "assBoundsTimeline": [
@@ -1255,7 +913,7 @@
                 "t": 0.0,
                 "topYMin": 0,
                 "topYMax": 143,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1264,7 +922,7 @@
                 "t": 6.0,
                 "topYMin": 0,
                 "topYMax": 141,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1273,7 +931,7 @@
                 "t": 6.5,
                 "topYMin": 0,
                 "topYMax": 140,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1282,7 +940,7 @@
                 "t": 7.0,
                 "topYMin": 0,
                 "topYMax": 139,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1291,7 +949,7 @@
                 "t": 7.5,
                 "topYMin": 0,
                 "topYMax": 138,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1300,7 +958,7 @@
                 "t": 8.0,
                 "topYMin": 0,
                 "topYMax": 137,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1309,7 +967,7 @@
                 "t": 8.5,
                 "topYMin": 0,
                 "topYMax": 134,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1318,7 +976,7 @@
                 "t": 9.0,
                 "topYMin": 0,
                 "topYMax": 131,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1327,7 +985,7 @@
                 "t": 9.5,
                 "topYMin": 0,
                 "topYMax": 128,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1336,7 +994,7 @@
                 "t": 10.0,
                 "topYMin": 0,
                 "topYMax": 126,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1345,7 +1003,7 @@
                 "t": 10.5,
                 "topYMin": 0,
                 "topYMax": 124,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1354,7 +1012,7 @@
                 "t": 11.0,
                 "topYMin": 0,
                 "topYMax": 121,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1363,7 +1021,7 @@
                 "t": 11.5,
                 "topYMin": 0,
                 "topYMax": 119,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1372,7 +1030,7 @@
                 "t": 12.0,
                 "topYMin": 0,
                 "topYMax": 117,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1381,7 +1039,7 @@
                 "t": 12.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1317
@@ -1390,7 +1048,7 @@
                 "t": 47.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1315
@@ -1399,7 +1057,7 @@
                 "t": 47.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1306
@@ -1408,7 +1066,7 @@
                 "t": 48.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1298
@@ -1417,7 +1075,7 @@
                 "t": 48.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1292
@@ -1426,7 +1084,7 @@
                 "t": 49.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1287
@@ -1435,7 +1093,7 @@
                 "t": 49.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1282
@@ -1444,7 +1102,7 @@
                 "t": 50.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1277
@@ -1453,7 +1111,7 @@
                 "t": 50.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1269
@@ -1462,7 +1120,7 @@
                 "t": 51.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1262
@@ -1471,7 +1129,7 @@
                 "t": 51.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1257
@@ -1480,7 +1138,7 @@
                 "t": 52.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1252
@@ -1489,7 +1147,7 @@
                 "t": 52.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1247
@@ -1498,7 +1156,7 @@
                 "t": 53.0,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1243
@@ -1507,7 +1165,7 @@
                 "t": 53.5,
                 "topYMin": 0,
                 "topYMax": 115,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1241
@@ -1516,7 +1174,7 @@
                 "t": 62.0,
                 "topYMin": 0,
                 "topYMax": 114,
-                "btmYMin": 0,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1241
@@ -1524,473 +1182,257 @@
             {
                 "t": 62.5,
                 "topYMin": 0,
-                "topYMax": 112,
-                "btmYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 938,
                 "btmYMax": 1079,
                 "left": 0,
                 "right": 1241
             },
             {
-                "t": 63.0,
+                "t": 65.5,
                 "topYMin": 0,
-                "topYMax": 107,
-                "btmYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 939,
                 "btmYMax": 1079,
                 "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 66.0,
+                "topYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 940,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 66.5,
+                "topYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 941,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 67.0,
+                "topYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 942,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 72.0,
+                "topYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 943,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 72.5,
+                "topYMin": 0,
+                "topYMax": 113,
+                "btmYMin": 944,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 74.0,
+                "topYMin": 0,
+                "topYMax": 112,
+                "btmYMin": 944,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 74.5,
+                "topYMin": 0,
+                "topYMax": 107,
+                "btmYMin": 944,
+                "btmYMax": 1079,
+                "left": 0,
+                "right": 1241
+            },
+            {
+                "t": 78.5,
+                "topYMin": 0,
+                "topYMax": 107,
+                "btmYMin": 944,
+                "btmYMax": 1079,
+                "left": 2,
+                "right": 1241
+            },
+            {
+                "t": 79.0,
+                "topYMin": 0,
+                "topYMax": 107,
+                "btmYMin": 946,
+                "btmYMax": 1079,
+                "left": 16,
                 "right": 1241
             },
             {
                 "t": 79.5,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 958,
                 "btmYMax": 1077,
-                "left": 0,
+                "left": 112,
                 "right": 1238
             },
             {
                 "t": 80.0,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 969,
                 "btmYMax": 1076,
-                "left": 0,
+                "left": 208,
                 "right": 1236
             },
             {
                 "t": 80.5,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 978,
                 "btmYMax": 1075,
-                "left": 0,
+                "left": 288,
                 "right": 1234
             },
             {
                 "t": 81.0,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 986,
                 "btmYMax": 1074,
-                "left": 0,
+                "left": 353,
                 "right": 1232
             },
             {
                 "t": 81.5,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 992,
                 "btmYMax": 1073,
-                "left": 0,
+                "left": 404,
                 "right": 1230
             },
             {
                 "t": 82.0,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
+                "btmYMin": 998,
                 "btmYMax": 1072,
-                "left": 0,
+                "left": 447,
                 "right": 1229
             },
             {
                 "t": 82.5,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1003,
+                "btmYMax": 1072,
+                "left": 483,
                 "right": 1226
             },
             {
                 "t": 83.0,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1007,
+                "btmYMax": 1072,
+                "left": 514,
                 "right": 1221
             },
             {
                 "t": 83.5,
                 "topYMin": 0,
                 "topYMax": 107,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1010,
+                "btmYMax": 1072,
+                "left": 540,
                 "right": 1216
             },
             {
                 "t": 84.0,
                 "topYMin": 0,
                 "topYMax": 102,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1013,
+                "btmYMax": 1072,
+                "left": 563,
                 "right": 1211
             },
             {
                 "t": 84.5,
                 "topYMin": 0,
                 "topYMax": 97,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1015,
+                "btmYMax": 1072,
+                "left": 581,
                 "right": 1207
             },
             {
                 "t": 85.0,
                 "topYMin": 0,
                 "topYMax": 93,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1017,
+                "btmYMax": 1072,
+                "left": 597,
                 "right": 1204
             },
             {
                 "t": 85.5,
                 "topYMin": 0,
                 "topYMax": 88,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1019,
+                "btmYMax": 1072,
+                "left": 611,
                 "right": 1201
             },
             {
                 "t": 86.0,
                 "topYMin": 0,
                 "topYMax": 84,
-                "btmYMin": 0,
-                "btmYMax": 1071,
-                "left": 0,
+                "btmYMin": 1020,
+                "btmYMax": 1072,
+                "left": 626,
                 "right": 1199
             },
             {
                 "t": 86.5,
                 "topYMin": 0,
                 "topYMax": 80,
-                "btmYMin": 0,
-                "btmYMax": 1067,
-                "left": 0,
-                "right": 1196
+                "btmYMin": 1021,
+                "btmYMax": 1072,
+                "left": 658,
+                "right": 1197
             },
             {
                 "t": 87.0,
                 "topYMin": 0,
                 "topYMax": 75,
-                "btmYMin": 0,
-                "btmYMax": 1044,
-                "left": 0,
-                "right": 1188
+                "btmYMin": 1022,
+                "btmYMax": 1072,
+                "left": 687,
+                "right": 1193
             },
             {
                 "t": 87.5,
                 "topYMin": 0,
-                "topYMax": 65,
-                "btmYMin": 0,
-                "btmYMax": 887,
-                "left": 0,
-                "right": 1151
+                "topYMax": 67,
+                "btmYMin": 1022,
+                "btmYMax": 1072,
+                "left": 722,
+                "right": 1182
             },
             {
                 "t": 88.0,
-                "topYMin": 0,
-                "topYMax": 54,
-                "btmYMin": 0,
-                "btmYMax": 753,
-                "left": 0,
-                "right": 977
-            },
-            {
-                "t": 88.5,
-                "topYMin": 0,
-                "topYMax": 45,
-                "btmYMin": 0,
-                "btmYMax": 639,
-                "left": 0,
-                "right": 830
-            },
-            {
-                "t": 89.0,
-                "topYMin": 0,
-                "topYMax": 37,
-                "btmYMin": 0,
-                "btmYMax": 543,
-                "left": 0,
-                "right": 706
-            },
-            {
-                "t": 89.5,
-                "topYMin": 0,
-                "topYMax": 32,
-                "btmYMin": 0,
-                "btmYMax": 461,
-                "left": 0,
-                "right": 599
-            },
-            {
-                "t": 90.0,
-                "topYMin": 0,
-                "topYMax": 27,
-                "btmYMin": 0,
-                "btmYMax": 391,
-                "left": 0,
-                "right": 509
-            },
-            {
-                "t": 90.5,
-                "topYMin": 0,
-                "topYMax": 22,
-                "btmYMin": 0,
-                "btmYMax": 332,
-                "left": 0,
-                "right": 432
-            },
-            {
-                "t": 91.0,
-                "topYMin": 0,
-                "topYMax": 18,
-                "btmYMin": 0,
-                "btmYMax": 281,
-                "left": 0,
-                "right": 367
-            },
-            {
-                "t": 91.5,
-                "topYMin": 0,
-                "topYMax": 15,
-                "btmYMin": 0,
-                "btmYMax": 238,
-                "left": 0,
-                "right": 311
-            },
-            {
-                "t": 92.0,
-                "topYMin": 0,
-                "topYMax": 12,
-                "btmYMin": 0,
-                "btmYMax": 202,
-                "left": 0,
-                "right": 264
-            },
-            {
-                "t": 92.5,
-                "topYMin": 0,
-                "topYMax": 10,
-                "btmYMin": 0,
-                "btmYMax": 171,
-                "left": 0,
-                "right": 224
-            },
-            {
-                "t": 93.0,
-                "topYMin": 0,
-                "topYMax": 8,
-                "btmYMin": 0,
-                "btmYMax": 144,
-                "left": 0,
-                "right": 190
-            },
-            {
-                "t": 93.5,
-                "topYMin": 0,
-                "topYMax": 6,
-                "btmYMin": 0,
-                "btmYMax": 122,
-                "left": 0,
-                "right": 161
-            },
-            {
-                "t": 94.0,
-                "topYMin": 0,
-                "topYMax": 4,
-                "btmYMin": 0,
-                "btmYMax": 104,
-                "left": 0,
-                "right": 137
-            },
-            {
-                "t": 94.5,
-                "topYMin": 0,
-                "topYMax": 3,
-                "btmYMin": 0,
-                "btmYMax": 87,
-                "left": 0,
-                "right": 115
-            },
-            {
-                "t": 95.0,
-                "topYMin": 0,
-                "topYMax": 2,
-                "btmYMin": 0,
-                "btmYMax": 73,
-                "left": 0,
-                "right": 98
-            },
-            {
-                "t": 95.5,
-                "topYMin": 0,
-                "topYMax": 1,
-                "btmYMin": 0,
-                "btmYMax": 62,
-                "left": 0,
-                "right": 82
-            },
-            {
-                "t": 96.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 52,
-                "left": 0,
-                "right": 70
-            },
-            {
-                "t": 96.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 43,
-                "left": 0,
-                "right": 59
-            },
-            {
-                "t": 97.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 36,
-                "left": 0,
-                "right": 49
-            },
-            {
-                "t": 97.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 31,
-                "left": 0,
-                "right": 41
-            },
-            {
-                "t": 98.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 26,
-                "left": 0,
-                "right": 34
-            },
-            {
-                "t": 98.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 21,
-                "left": 0,
-                "right": 29
-            },
-            {
-                "t": 99.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 17,
-                "left": 0,
-                "right": 24
-            },
-            {
-                "t": 99.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 14,
-                "left": 0,
-                "right": 20
-            },
-            {
-                "t": 100.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 11,
-                "left": 0,
-                "right": 16
-            },
-            {
-                "t": 100.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 9,
-                "left": 0,
-                "right": 13
-            },
-            {
-                "t": 101.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 7,
-                "left": 0,
-                "right": 10
-            },
-            {
-                "t": 101.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 5,
-                "left": 0,
-                "right": 8
-            },
-            {
-                "t": 102.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 4,
-                "left": 0,
-                "right": 6
-            },
-            {
-                "t": 102.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 3,
-                "left": 0,
-                "right": 4
-            },
-            {
-                "t": 103.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 2,
-                "left": 0,
-                "right": 3
-            },
-            {
-                "t": 103.5,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 1,
-                "left": 0,
-                "right": 2
-            },
-            {
-                "t": 104.0,
-                "topYMin": 0,
-                "topYMax": 0,
-                "btmYMin": 0,
-                "btmYMax": 0,
-                "left": 0,
-                "right": 1
-            },
-            {
-                "t": 104.5,
                 "topYMin": 0,
                 "topYMax": 0,
                 "btmYMin": 0,

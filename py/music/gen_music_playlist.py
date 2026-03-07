@@ -532,23 +532,54 @@ def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
 
 
 def _merge_bounds(a: dict, b: dict) -> dict:
-    """合并两个 bounds (取并集)"""
-    def safe_min(x, y):
-        if x == 0 and y == 0:
-            return 0
-        if x == 0:
-            return y
-        if y == 0:
-            return x
-        return min(x, y)
+    """合并两个 bounds (取并集)
+
+    对于 top/btm 区域: 如果一方的 yMax==0 表示该方无此区域, 则使用另一方的值
+    对于 left/right: 如果一方的 right==0 表示该方无内容, 则使用另一方的值
+    """
+    # top 区域
+    a_has_top = a['topYMax'] > 0
+    b_has_top = b['topYMax'] > 0
+    if a_has_top and b_has_top:
+        top_y_min = min(a['topYMin'], b['topYMin'])
+        top_y_max = max(a['topYMax'], b['topYMax'])
+    elif a_has_top:
+        top_y_min, top_y_max = a['topYMin'], a['topYMax']
+    elif b_has_top:
+        top_y_min, top_y_max = b['topYMin'], b['topYMax']
+    else:
+        top_y_min, top_y_max = 0, 0
+
+    # btm 区域
+    a_has_btm = a['btmYMax'] > 0
+    b_has_btm = b['btmYMax'] > 0
+    if a_has_btm and b_has_btm:
+        btm_y_min = min(a['btmYMin'], b['btmYMin'])
+        btm_y_max = max(a['btmYMax'], b['btmYMax'])
+    elif a_has_btm:
+        btm_y_min, btm_y_max = a['btmYMin'], a['btmYMax']
+    elif b_has_btm:
+        btm_y_min, btm_y_max = b['btmYMin'], b['btmYMax']
+    else:
+        btm_y_min, btm_y_max = 0, 0
+
+    # 左右
+    a_has_lr = a['right'] > 0
+    b_has_lr = b['right'] > 0
+    if a_has_lr and b_has_lr:
+        left = min(a['left'], b['left'])
+        right = max(a['right'], b['right'])
+    elif a_has_lr:
+        left, right = a['left'], a['right']
+    elif b_has_lr:
+        left, right = b['left'], b['right']
+    else:
+        left, right = 0, 0
 
     return {
-        'topYMin': safe_min(a['topYMin'], b['topYMin']),
-        'topYMax': max(a['topYMax'], b['topYMax']),
-        'btmYMin': safe_min(a['btmYMin'], b['btmYMin']),
-        'btmYMax': max(a['btmYMax'], b['btmYMax']),
-        'left': safe_min(a['left'], b['left']),
-        'right': max(a['right'], b['right']),
+        'topYMin': top_y_min, 'topYMax': top_y_max,
+        'btmYMin': btm_y_min, 'btmYMax': btm_y_max,
+        'left': left, 'right': right,
     }
 
 
@@ -560,13 +591,11 @@ def _smooth_bounds_timeline(
 ) -> list[dict]:
     """对逐帧 bounds 序列做 滑动窗口并集 + EMA 平滑, 生成稳定的时间轴 bounds
 
-    算法:
-    1. 滑动窗口: 对每个时间点 t, 取 [t - window_sec, t + window_sec] 范围内
-       所有帧的 bounds 并集, 提供前瞻/后瞻缓冲
-    2. EMA 平滑: 对滑动窗口结果用指数移动平均消除跳变
-       - min 类字段 (topYMin, btmYMin, left): EMA 向小值方向平滑
-       - max 类字段 (topYMax, btmYMax, right): EMA 向大值方向平滑
-    3. 迟滞策略: bounds 收缩时需要连续多帧满足才真正收缩 (通过 EMA 自然实现)
+    核心理念:
+    - 空帧 (无字幕内容) 不参与滑动窗口并集计算
+    - EMA 只在有内容的区间段内平滑, 空帧区间保持空状态
+    - 扩张 (bounds 变大) 立即响应, 收缩 (bounds 变小) 缓慢衰减
+    - 双向 EMA 消除正向滞后
 
     Args:
         frame_bounds: 每帧的 bounds dict 列表 (包含空帧)
@@ -590,6 +619,7 @@ def _smooth_bounds_timeline(
         return b['topYMax'] > 0 or b['btmYMax'] > 0 or b['right'] > 0
 
     # ---- 第 1 步: 滑动窗口并集 ----
+    # 只合并有内容的帧, 空帧不参与
     windowed = []
     for i in range(n):
         lo = max(0, i - window_frames)
@@ -605,42 +635,105 @@ def _smooth_bounds_timeline(
                 merged = _merge_bounds(merged, fb)
         windowed.append(merged if merged else dict(EMPTY))
 
-    # ---- 第 2 步: EMA 平滑 ----
+    # ---- 第 2 步: 正向 EMA 平滑 ----
+    # 关键: 分区域检查——只有 top/btm/lr 区域都存在时才做 EMA
+    # 如果某个区域当前帧不存在 (max=0), 直接用前一帧的值延续
     smoothed = [dict(windowed[0])]
     for i in range(1, n):
         prev = smoothed[-1]
         cur = windowed[i]
+        cur_has = has_content(cur)
+        prev_has = has_content(prev)
+
+        if not cur_has:
+            # 当前窗口无内容 → 直接标记为空
+            smoothed.append(dict(EMPTY))
+            continue
+
+        if not prev_has:
+            # 前一帧是空的, 当前有内容 → 不从空帧平滑, 直接用当前值
+            smoothed.append(dict(cur))
+            continue
+
+        # 两帧都有内容 → 分区域 EMA 平滑
         s = {}
-        # min 类字段: 新值更小则快速跟随, 更大则缓慢恢复
-        for f in FIELDS_MIN:
-            if cur[f] < prev[f]:
-                s[f] = cur[f]  # 扩张 (变小) → 立即响应
-            else:
-                s[f] = int(prev[f] + ema_alpha * (cur[f] - prev[f]))
-        # max 类字段: 新值更大则快速跟随, 更小则缓慢恢复
-        for f in FIELDS_MAX:
-            if cur[f] > prev[f]:
-                s[f] = cur[f]  # 扩张 (变大) → 立即响应
-            else:
-                s[f] = int(prev[f] + ema_alpha * (cur[f] - prev[f]))
+
+        # top 区域
+        cur_has_top = cur['topYMax'] > 0
+        prev_has_top = prev['topYMax'] > 0
+        if cur_has_top and prev_has_top:
+            s['topYMin'] = cur['topYMin'] if cur['topYMin'] < prev['topYMin'] else int(prev['topYMin'] + ema_alpha * (cur['topYMin'] - prev['topYMin']))
+            s['topYMax'] = cur['topYMax'] if cur['topYMax'] > prev['topYMax'] else int(prev['topYMax'] + ema_alpha * (cur['topYMax'] - prev['topYMax']))
+        elif cur_has_top:
+            s['topYMin'] = cur['topYMin']; s['topYMax'] = cur['topYMax']
+        elif prev_has_top:
+            s['topYMin'] = prev['topYMin']; s['topYMax'] = prev['topYMax']
+        else:
+            s['topYMin'] = 0; s['topYMax'] = 0
+
+        # btm 区域
+        cur_has_btm = cur['btmYMax'] > 0
+        prev_has_btm = prev['btmYMax'] > 0
+        if cur_has_btm and prev_has_btm:
+            s['btmYMin'] = cur['btmYMin'] if cur['btmYMin'] < prev['btmYMin'] else int(prev['btmYMin'] + ema_alpha * (cur['btmYMin'] - prev['btmYMin']))
+            s['btmYMax'] = cur['btmYMax'] if cur['btmYMax'] > prev['btmYMax'] else int(prev['btmYMax'] + ema_alpha * (cur['btmYMax'] - prev['btmYMax']))
+        elif cur_has_btm:
+            s['btmYMin'] = cur['btmYMin']; s['btmYMax'] = cur['btmYMax']
+        elif prev_has_btm:
+            s['btmYMin'] = prev['btmYMin']; s['btmYMax'] = prev['btmYMax']
+        else:
+            s['btmYMin'] = 0; s['btmYMax'] = 0
+
+        # 左右 (如果两帧都有内容则 right 一定 > 0)
+        s['left'] = cur['left'] if cur['left'] < prev['left'] else int(prev['left'] + ema_alpha * (cur['left'] - prev['left']))
+        s['right'] = cur['right'] if cur['right'] > prev['right'] else int(prev['right'] + ema_alpha * (cur['right'] - prev['right']))
+
         smoothed.append(s)
 
     # ---- 第 3 步: 反向 EMA 再平滑一遍 (消除正向 EMA 的滞后) ----
     for i in range(n - 2, -1, -1):
         nxt = smoothed[i + 1]
         cur = smoothed[i]
-        for f in FIELDS_MIN:
-            if nxt[f] < cur[f]:
-                cur[f] = nxt[f]  # 前瞻: 后面更小则提前缩小
+        nxt_has = has_content(nxt)
+        cur_has = has_content(cur)
+
+        if not cur_has or not nxt_has:
+            continue  # 空帧不参与反向平滑
+
+        # top 区域: 双方都有 top 时才平滑
+        if cur['topYMax'] > 0 and nxt['topYMax'] > 0:
+            if nxt['topYMin'] < cur['topYMin']:
+                cur['topYMin'] = nxt['topYMin']
             else:
-                cur[f] = int(cur[f] + ema_alpha * (nxt[f] - cur[f]))
-        for f in FIELDS_MAX:
-            if nxt[f] > cur[f]:
-                cur[f] = nxt[f]  # 前瞻: 后面更大则提前扩大
+                cur['topYMin'] = int(cur['topYMin'] + ema_alpha * (nxt['topYMin'] - cur['topYMin']))
+            if nxt['topYMax'] > cur['topYMax']:
+                cur['topYMax'] = nxt['topYMax']
             else:
-                cur[f] = int(cur[f] + ema_alpha * (nxt[f] - cur[f]))
+                cur['topYMax'] = int(cur['topYMax'] + ema_alpha * (nxt['topYMax'] - cur['topYMax']))
+
+        # btm 区域
+        if cur['btmYMax'] > 0 and nxt['btmYMax'] > 0:
+            if nxt['btmYMin'] < cur['btmYMin']:
+                cur['btmYMin'] = nxt['btmYMin']
+            else:
+                cur['btmYMin'] = int(cur['btmYMin'] + ema_alpha * (nxt['btmYMin'] - cur['btmYMin']))
+            if nxt['btmYMax'] > cur['btmYMax']:
+                cur['btmYMax'] = nxt['btmYMax']
+            else:
+                cur['btmYMax'] = int(cur['btmYMax'] + ema_alpha * (nxt['btmYMax'] - cur['btmYMax']))
+
+        # 左右
+        if nxt['left'] < cur['left']:
+            cur['left'] = nxt['left']
+        else:
+            cur['left'] = int(cur['left'] + ema_alpha * (nxt['left'] - cur['left']))
+        if nxt['right'] > cur['right']:
+            cur['right'] = nxt['right']
+        else:
+            cur['right'] = int(cur['right'] + ema_alpha * (nxt['right'] - cur['right']))
 
     # ---- 第 4 步: 构建带时间戳的输出, 并去重相邻相同项 ----
+    # 注意: 空帧的 bounds 全为 0, 前端碰到全 0 的点应跳过裁剪
     timeline = []
     prev_entry = None
     for i, s in enumerate(smoothed):
