@@ -81,23 +81,26 @@ export default function App(): React.ReactElement {
   }, [init]);
 
   // 进度条拖拽
-  // 使用 state 追踪拖拽状态，这样拖拽时 slider 不会被 currentTime 的 RAF 更新覆盖
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [seekValue, setSeekValue] = useState(0);
+  // 用 ref 追踪拖拽状态 (避免频繁 setState), 用 state 驱动显示值
+  const seekingRef = useRef(false);
+  const seekValueRef = useRef(0);
+  const [, forceUpdate] = useState(0);
 
   const handleSeekStart = useCallback(() => {
-    setIsSeeking(true);
+    seekingRef.current = true;
   }, []);
 
-  const handleSeekInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeekValue(parseFloat(e.target.value));
-    setIsSeeking(true);
+  const handleSeekInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+    seekingRef.current = true;
+    seekValueRef.current = parseFloat((e.target as HTMLInputElement).value);
+    forceUpdate((n) => n + 1); // 手动触发重渲染以更新 slider 显示
   }, []);
 
-  const handleSeekCommit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    seek(val);
-    setIsSeeking(false);
+  const handleSeekEnd = useCallback(() => {
+    if (seekingRef.current) {
+      seek(seekValueRef.current);
+      seekingRef.current = false;
+    }
   }, [seek]);
 
   // 音量
@@ -187,11 +190,12 @@ export default function App(): React.ReactElement {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={timeLabelStyle}>{formatTime(currentTime)}</span>
           <input type="range" min={0} max={duration || 0} step={0.1}
-            value={isSeeking ? seekValue : currentTime}
+            value={seekingRef.current ? seekValueRef.current : currentTime}
             onMouseDown={handleSeekStart}
             onTouchStart={handleSeekStart}
-            onInput={handleSeekInput as any}
-            onChange={handleSeekCommit}
+            onInput={handleSeekInput}
+            onMouseUp={handleSeekEnd}
+            onTouchEnd={handleSeekEnd}
             style={progressBarStyle} />
           <span style={timeLabelStyle}>{formatTime(duration)}</span>
         </div>
