@@ -552,20 +552,135 @@ def _merge_bounds(a: dict, b: dict) -> dict:
     }
 
 
-def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None:
-    """用 ffmpeg 渲染 ASS 字幕并扫描像素, 计算全局 TwoBlockBounds — 实际计算逻辑
+def _smooth_bounds_timeline(
+    frame_bounds: list[dict],
+    fps: int = PRESCAN_FPS,
+    window_sec: float = 2.0,
+    ema_alpha: float = 0.15,
+) -> list[dict]:
+    """对逐帧 bounds 序列做 滑动窗口并集 + EMA 平滑, 生成稳定的时间轴 bounds
 
-    类似 C++ 版 preprocessLyricBoundingBoxes:
+    算法:
+    1. 滑动窗口: 对每个时间点 t, 取 [t - window_sec, t + window_sec] 范围内
+       所有帧的 bounds 并集, 提供前瞻/后瞻缓冲
+    2. EMA 平滑: 对滑动窗口结果用指数移动平均消除跳变
+       - min 类字段 (topYMin, btmYMin, left): EMA 向小值方向平滑
+       - max 类字段 (topYMax, btmYMax, right): EMA 向大值方向平滑
+    3. 迟滞策略: bounds 收缩时需要连续多帧满足才真正收缩 (通过 EMA 自然实现)
+
+    Args:
+        frame_bounds: 每帧的 bounds dict 列表 (包含空帧)
+        fps: 采样帧率
+        window_sec: 滑动窗口半径 (秒)
+        ema_alpha: EMA 平滑系数, 越小越平滑
+
+    Returns:
+        平滑后的 bounds 时间序列, 每项含 't' 时间戳
+    """
+    n = len(frame_bounds)
+    if n == 0:
+        return []
+
+    window_frames = int(window_sec * fps)
+    FIELDS_MIN = ['topYMin', 'btmYMin', 'left']    # 取 min 的字段
+    FIELDS_MAX = ['topYMax', 'btmYMax', 'right']    # 取 max 的字段
+    EMPTY = {'topYMin': 0, 'topYMax': 0, 'btmYMin': 0, 'btmYMax': 0, 'left': 0, 'right': 0}
+
+    def has_content(b: dict) -> bool:
+        return b['topYMax'] > 0 or b['btmYMax'] > 0 or b['right'] > 0
+
+    # ---- 第 1 步: 滑动窗口并集 ----
+    windowed = []
+    for i in range(n):
+        lo = max(0, i - window_frames)
+        hi = min(n, i + window_frames + 1)
+        merged = None
+        for j in range(lo, hi):
+            fb = frame_bounds[j]
+            if not has_content(fb):
+                continue
+            if merged is None:
+                merged = dict(fb)
+            else:
+                merged = _merge_bounds(merged, fb)
+        windowed.append(merged if merged else dict(EMPTY))
+
+    # ---- 第 2 步: EMA 平滑 ----
+    smoothed = [dict(windowed[0])]
+    for i in range(1, n):
+        prev = smoothed[-1]
+        cur = windowed[i]
+        s = {}
+        # min 类字段: 新值更小则快速跟随, 更大则缓慢恢复
+        for f in FIELDS_MIN:
+            if cur[f] < prev[f]:
+                s[f] = cur[f]  # 扩张 (变小) → 立即响应
+            else:
+                s[f] = int(prev[f] + ema_alpha * (cur[f] - prev[f]))
+        # max 类字段: 新值更大则快速跟随, 更小则缓慢恢复
+        for f in FIELDS_MAX:
+            if cur[f] > prev[f]:
+                s[f] = cur[f]  # 扩张 (变大) → 立即响应
+            else:
+                s[f] = int(prev[f] + ema_alpha * (cur[f] - prev[f]))
+        smoothed.append(s)
+
+    # ---- 第 3 步: 反向 EMA 再平滑一遍 (消除正向 EMA 的滞后) ----
+    for i in range(n - 2, -1, -1):
+        nxt = smoothed[i + 1]
+        cur = smoothed[i]
+        for f in FIELDS_MIN:
+            if nxt[f] < cur[f]:
+                cur[f] = nxt[f]  # 前瞻: 后面更小则提前缩小
+            else:
+                cur[f] = int(cur[f] + ema_alpha * (nxt[f] - cur[f]))
+        for f in FIELDS_MAX:
+            if nxt[f] > cur[f]:
+                cur[f] = nxt[f]  # 前瞻: 后面更大则提前扩大
+            else:
+                cur[f] = int(cur[f] + ema_alpha * (nxt[f] - cur[f]))
+
+    # ---- 第 4 步: 构建带时间戳的输出, 并去重相邻相同项 ----
+    timeline = []
+    prev_entry = None
+    for i, s in enumerate(smoothed):
+        t = round(i / fps, 2)
+        entry = {
+            't': t,
+            'topYMin': s['topYMin'], 'topYMax': s['topYMax'],
+            'btmYMin': s['btmYMin'], 'btmYMax': s['btmYMax'],
+            'left': s['left'], 'right': s['right'],
+        }
+        # 相邻相同则跳过 (减少 JSON 体积), 但保留首尾
+        if prev_entry is not None and i < n - 1:
+            same = all(
+                entry[k] == prev_entry[k]
+                for k in ('topYMin', 'topYMax', 'btmYMin', 'btmYMax', 'left', 'right')
+            )
+            if same:
+                continue
+        timeline.append(entry)
+        prev_entry = entry
+
+    return timeline
+
+
+def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None:
+    """用 ffmpeg 渲染 ASS 字幕并扫描像素, 计算时间轴 bounds — 实际计算逻辑
+
+    新方案 (滑动窗口 + EMA 平滑):
     - 固定 1920x1080 画布
     - 以 2fps 采样整首歌
-    - 每帧扫描像素, 合并得到全局边界框
+    - 逐帧记录独立 bounds
+    - 滑动窗口 (±2s) 取并集 + EMA 平滑
+    - 输出时间序列 + 全局 bounds 兼容旧逻辑
 
     Args:
         ass_path: ASS 字幕文件路径
         duration_sec: 歌曲总时长 (秒)
 
     Returns:
-        TwoBlockBounds dict, 如果没有内容则返回 None
+        包含 'bounds' (全局) 和 'timeline' (时间序列) 的 dict, 无内容返回 None
     """
     if duration_sec <= 0:
         print(f"    └─ [预扫描] 时长为 0, 跳过")
@@ -603,12 +718,13 @@ def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None
         print(f"    └─ [预扫描] ffmpeg 启动失败: {e}")
         return None
 
+    # 逐帧记录 bounds (不再全局合并)
+    frame_bounds: list[dict] = []
     global_bounds = {
         'topYMin': 0, 'topYMax': 0,
         'btmYMin': 0, 'btmYMax': 0,
         'left': 0, 'right': 0,
     }
-    frame_count = 0
     has_content = False
 
     try:
@@ -616,12 +732,12 @@ def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None
             data = proc.stdout.read(frame_size)
             if len(data) < frame_size:
                 break
-            frame_count += 1
             fb = _scan_frame_rgba(data, w, h)
-            # 只有有内容才合并
+            frame_bounds.append(fb)
+            # 同时维护全局 bounds (兼容旧逻辑)
             if fb['topYMax'] > 0 or fb['btmYMax'] > 0 or fb['right'] > 0:
                 if not has_content:
-                    global_bounds = fb
+                    global_bounds = dict(fb)
                     has_content = True
                 else:
                     global_bounds = _merge_bounds(global_bounds, fb)
@@ -634,15 +750,25 @@ def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None
     if stderr_output:
         print(f"    └─ [预扫描] ffmpeg stderr: {stderr_output[:200]}")
 
+    frame_count = len(frame_bounds)
     if not has_content:
         print(f"    └─ [预扫描] {frame_count} 帧, 无字幕内容")
         return None
 
-    print(f"    └─ [预扫描] {frame_count} 帧, bounds: "
+    # 生成平滑时间轴 bounds
+    timeline = _smooth_bounds_timeline(frame_bounds, PRESCAN_FPS)
+
+    print(f"    └─ [预扫描] {frame_count} 帧, 全局 bounds: "
           f"top=[{global_bounds['topYMin']},{global_bounds['topYMax']}] "
           f"btm=[{global_bounds['btmYMin']},{global_bounds['btmYMax']}] "
           f"lr=[{global_bounds['left']},{global_bounds['right']}]")
-    return global_bounds
+    print(f"    └─ [预扫描] 时间轴: {len(timeline)} 个关键点 "
+          f"(从 {frame_count} 帧去重压缩)")
+
+    return {
+        'bounds': global_bounds,
+        'timeline': timeline,
+    }
 
 
 def prescan_ass_bounds(ass_path: Path, duration_sec: float, ass_hash: str) -> dict | None:
@@ -652,21 +778,25 @@ def prescan_ass_bounds(ass_path: Path, duration_sec: float, ass_hash: str) -> di
     """
     cache_key = str(ass_path.relative_to(STATIC_MUSIC_DIR))
     # 将时长编入哈希, 因为同一 ASS 文件配不同时长音频会影响扫描帧数
+    # 使用 v2 版缓存命名空间, 新方案的缓存格式与旧版不兼容
     combined_hash = f"{ass_hash}:{duration_sec:.2f}"
-    cached = get_cache('ass_bounds', cache_key, combined_hash)
+    cached = get_cache('ass_bounds_v2', cache_key, combined_hash)
     if cached is not None:
-        bounds = cached.get('bounds')
-        if bounds:
+        result = cached.get('result')
+        if result:
+            bounds = result.get('bounds', {})
+            timeline_len = len(result.get('timeline', []))
             print(f"    └─ [预扫描] 使用缓存: "
-                  f"top=[{bounds['topYMin']},{bounds['topYMax']}] "
-                  f"btm=[{bounds['btmYMin']},{bounds['btmYMax']}] "
-                  f"lr=[{bounds['left']},{bounds['right']}]")
+                  f"top=[{bounds.get('topYMin',0)},{bounds.get('topYMax',0)}] "
+                  f"btm=[{bounds.get('btmYMin',0)},{bounds.get('btmYMax',0)}] "
+                  f"lr=[{bounds.get('left',0)},{bounds.get('right',0)}] "
+                  f"timeline={timeline_len}点")
         else:
             print(f"    └─ [预扫描] 使用缓存: 无字幕内容")
-        return bounds
+        return result
 
     result = _prescan_ass_bounds_impl(ass_path, duration_sec)
-    set_cache('ass_bounds', cache_key, combined_hash, {'bounds': result})
+    set_cache('ass_bounds_v2', cache_key, combined_hash, {'result': result})
     return result
 
 
@@ -735,12 +865,15 @@ def scan_music_dir() -> list[dict]:
                 track["assFonts"] = ass_fonts
                 print(f"    └─ ASS 字体: {', '.join(ass_fonts)}")
 
-            # 用 ffmpeg 预扫描 ASS 字幕边界框
+            # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
             duration = meta.get("duration", 0)
             if duration > 0:
-                bounds = prescan_ass_bounds(ass_path, duration, ass_hash)
-                if bounds:
-                    track["assBounds"] = bounds
+                scan_result = prescan_ass_bounds(ass_path, duration, ass_hash)
+                if scan_result:
+                    track["assBounds"] = scan_result['bounds']
+                    if scan_result.get('timeline'):
+                        track["assBoundsTimeline"] = scan_result['timeline']
+                        print(f"    └─ 时间轴 bounds: {len(scan_result['timeline'])} 个关键点")
 
         if cover_path:
             track["coverUrl"] = path_to_url(cover_path)
