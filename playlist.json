@@ -48,5 +48,28 @@
         "fonts": [
             "/static/music/fonts/NotoSansSC-Regular.ttf"
         ]
+    },
+    {
+        "id": "2faf2323b50e",
+        "title": "羽ばたきのバースデイ (振翅的新生)",
+        "artist": "大野柚布子、遠藤ゆりか、古賀葵",
+        "audioUrl": "/static/music/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.mp3",
+        "assUrl": "/static/music/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass",
+        "assFonts": [
+            "FOT-PopJoy Std B",
+            "方正少儿_GBK"
+        ],
+        "assBounds": {
+            "topYMin": 2,
+            "topYMax": 144,
+            "btmYMin": 938,
+            "btmYMax": 1080,
+            "left": 612,
+            "right": 1312
+        },
+        "coverUrl": "/static/music/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.jpg",
+        "fonts": [
+            "/static/music/fonts/NotoSansSC-Regular.ttf"
+        ]
     }
 ]
