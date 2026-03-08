@@ -47,6 +47,7 @@ except ImportError:
 
 import struct
 import subprocess
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 项目根目录 (py/music/gen_music_playlist.py -> py/music -> py -> 项目根)
@@ -893,23 +894,49 @@ def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None
     w, h = PRESCAN_WIDTH, PRESCAN_HEIGHT
     frame_size = w * h * 4  # RGBA 每帧字节数
 
+    # 生成临时 fontconfig 配置, 将 ASS 中引用的字体映射到 CJK fallback 字体
+    # 这样 ffmpeg 的 libass 在找不到原始字体时会使用 NotoSansSC, 与前端 SubtitlesOctopus 一致
+    fonts_dir_str = str(FONTS_DIR).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    ass_fonts = _extract_ass_fonts_impl(ass_path)
+    alias_entries = '\n'.join(
+        f'  <alias><family>{fn}</family><accept><family>Noto Sans SC</family></accept></alias>'
+        for fn in ass_fonts
+    )
+    fc_config = f"""<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <dir>{fonts_dir_str}</dir>
+{alias_entries}
+</fontconfig>
+"""
+    fc_tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.conf', delete=False, encoding='utf-8')
+    fc_tmp.write(fc_config)
+    fc_tmp.close()
+    fc_tmp_path = fc_tmp.name
+
     # ffmpeg 命令: 黑底 + ASS 字幕渲染, 输出 rawvideo RGBA
     # 注意: subtitles 滤镜需要对特殊字符转义
+    # fontsdir 指向 fonts/ 目录, 配合 fontconfig 配置确保 CJK 字体 fallback
     ass_path_escaped = str(ass_path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+    fonts_dir_escaped = str(FONTS_DIR).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
     cmd = [
         'ffmpeg',
         '-f', 'lavfi',
         '-i', f'color=c=black:s={w}x{h}:d={duration_sec:.2f}:r={PRESCAN_FPS}',
-        '-vf', f"subtitles=filename='{ass_path_escaped}'",
+        '-vf', f"subtitles=filename='{ass_path_escaped}':fontsdir='{fonts_dir_escaped}'",
         '-f', 'rawvideo',
         '-pix_fmt', 'rgba',
         '-v', 'error',
         '-',
     ]
 
+    # 设置 FONTCONFIG_FILE 环境变量, 让 libass 使用我们的字体映射配置
+    env = os.environ.copy()
+    env['FONTCONFIG_FILE'] = fc_tmp_path
+
     try:
         proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
         )
     except Exception as e:
         print(f"    └─ [预扫描] ffmpeg 启动失败: {e}")
@@ -946,6 +973,12 @@ def _prescan_ass_bounds_impl(ass_path: Path, duration_sec: float) -> dict | None
     proc.stderr.close()
     if stderr_output:
         print(f"    └─ [预扫描] ffmpeg stderr: {stderr_output[:200]}")
+
+    # 清理临时 fontconfig 文件
+    try:
+        os.unlink(fc_tmp_path)
+    except OSError:
+        pass
 
     frame_count = len(frame_bounds)
     if not has_content:
