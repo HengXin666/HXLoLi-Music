@@ -76,65 +76,112 @@ jobs:
           LATEST_SHA=$(curl -s \
             -H "Authorization: token ${{ secrets.MAIN_REPO_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits/main" \
-            | jq -r '.sha')
+            "https://api.github.com/repos/HengXin666/HXLoLi-Music/git/ref/heads/main" \
+            | jq -r '.object.sha')
           echo "commit_sha=${LATEST_SHA}" >> $GITHUB_OUTPUT
           echo "🎵 HXLoLi-Music 最新 commit: ${LATEST_SHA}"
 
-      - name: Checkout HXLoLi 主仓库
-        uses: actions/checkout@v4
-        with:
-          repository: HengXin666/HXLoLi
-          token: ${{ secrets.MAIN_REPO_PAT }}
-          ref: main
-
-      - name: 检查是否需要更新
-        id: check-update
+      - name: 检查是否需要更新 & 创建 PR
+        env:
+          PAT: ${{ secrets.MAIN_REPO_PAT }}
+          NEW_SHA: ${{ steps.get-commit.outputs.commit_sha }}
+          MAIN_REPO: HengXin666/HXLoLi
+          PR_BRANCH: bot/sync-music-version
         run: |
-          CURRENT_ID=$(grep -oP "MUSIC_COMMIT_ID = '\K[^']+" data/musicVersion.ts || echo "")
-          NEW_ID="${{ steps.get-commit.outputs.commit_sha }}"
+          # 1. 读取主仓库 data/musicVersion.ts 内容
+          FILE_RESP=$(curl -s \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/contents/data/musicVersion.ts?ref=main")
+
+          FILE_SHA=$(echo "${FILE_RESP}" | jq -r '.sha')
+          CONTENT_B64=$(echo "${FILE_RESP}" | jq -r '.content')
+          CURRENT_CONTENT=$(echo "${CONTENT_B64}" | base64 -d)
+
+          # 2. 提取当前 MUSIC_COMMIT_ID
+          CURRENT_ID=$(echo "${CURRENT_CONTENT}" | grep -oP "MUSIC_COMMIT_ID = '\K[^']+")
           echo "当前 MUSIC_COMMIT_ID: ${CURRENT_ID}"
-          echo "最新 commit SHA: ${NEW_ID}"
-          if [ "${CURRENT_ID}" = "${NEW_ID}" ]; then
+          echo "最新 commit SHA:      ${NEW_SHA}"
+
+          if [ "${CURRENT_ID}" = "${NEW_SHA}" ]; then
             echo "✅ MUSIC_COMMIT_ID 已是最新, 无需更新"
-            echo "need_update=false" >> $GITHUB_OUTPUT
-          else
-            echo "🔄 需要更新 MUSIC_COMMIT_ID"
-            echo "need_update=true" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
-      - name: 更新 musicVersion.ts
-        if: steps.check-update.outputs.need_update == 'true'
-        run: |
-          NEW_ID="${{ steps.get-commit.outputs.commit_sha }}"
-          cat > data/musicVersion.ts << EOF
-          // HXLoLi-Music 仓库的最新 commit_id (每次音乐仓库更新后需同步修改)
-          export const MUSIC_COMMIT_ID = '${NEW_ID}';
-          EOF
+          echo "🔄 需要更新 MUSIC_COMMIT_ID"
+
+          # 3. 构造新文件内容
+          NEW_CONTENT="// HXLoLi-Music 仓库的最新 commit_id (每次音乐仓库更新后需同步修改)
+          export const MUSIC_COMMIT_ID = '${NEW_SHA}';"
           # 去除 heredoc 可能带来的前导空格
-          sed -i 's/^          //' data/musicVersion.ts
-          echo "📝 已更新 musicVersion.ts:"
-          cat data/musicVersion.ts
+          NEW_CONTENT=$(echo "${NEW_CONTENT}" | sed 's/^          //')
+          NEW_CONTENT_B64=$(echo "${NEW_CONTENT}" | base64 -w 0)
 
-      - name: 创建 PR 到 HXLoLi 主仓库
-        if: steps.check-update.outputs.need_update == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.MAIN_REPO_PAT }}
-          commit-message: '[LoLi-Bot]: 🎵 同步 HXLoLi-Music commit_id にゃ♪'
-          committer: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
-          author: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
-          branch: bot/sync-music-version
-          delete-branch: true
-          title: '🎵 [LoLi-Bot] 同步 HXLoLi-Music 最新版本'
-          body: |
-            ご主人さま、音楽リポジトリが更新されましたにゃ♪
+          # 4. 获取 main 分支的最新 commit SHA (用于创建新分支)
+          MAIN_SHA=$(curl -s \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/git/ref/heads/main" \
+            | jq -r '.object.sha')
 
-            **更新内容:**
-            - 同步 `MUSIC_COMMIT_ID` → `${{ steps.get-commit.outputs.commit_sha }}`
-            - 来源: [HXLoLi-Music@main](https://github.com/HengXin666/HXLoLi-Music/commit/${{ steps.get-commit.outputs.commit_sha }})
+          # 5. 创建或重置 PR 分支
+          BRANCH_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/git/ref/heads/${PR_BRANCH}")
 
-            > 🤖 此 PR 由 GitHub Actions 自动创建
-          labels: |
-            bot
-            music
+          if [ "${BRANCH_EXISTS}" = "200" ]; then
+            echo "🔁 重置已有分支 ${PR_BRANCH}"
+            curl -s -X PATCH \
+              -H "Authorization: token ${PAT}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${MAIN_REPO}/git/refs/heads/${PR_BRANCH}" \
+              -d "{\"sha\": \"${MAIN_SHA}\", \"force\": true}" > /dev/null
+          else
+            echo "🌿 创建新分支 ${PR_BRANCH}"
+            curl -s -X POST \
+              -H "Authorization: token ${PAT}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${MAIN_REPO}/git/refs" \
+              -d "{\"ref\": \"refs/heads/${PR_BRANCH}\", \"sha\": \"${MAIN_SHA}\"}" > /dev/null
+          fi
+
+          # 6. 在 PR 分支上提交更新后的文件
+          curl -s -X PUT \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/contents/data/musicVersion.ts" \
+            -d "{
+              \"message\": \"[LoLi-Bot]: 🎵 同步 HXLoLi-Music commit_id にゃ♪\",
+              \"content\": \"${NEW_CONTENT_B64}\",
+              \"sha\": \"${FILE_SHA}\",
+              \"branch\": \"${PR_BRANCH}\",
+              \"committer\": {\"name\": \"Heng_Xin[LoLi-Bot]\", \"email\": \"282000500@qq.com\"},
+              \"author\":    {\"name\": \"Heng_Xin[LoLi-Bot]\", \"email\": \"282000500@qq.com\"}
+            }" > /dev/null
+          echo "📝 已提交更新后的 musicVersion.ts"
+
+          # 7. 检查是否已有同名 PR (避免重复创建)
+          PR_EXISTS=$(curl -s \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/pulls?head=HengXin666:${PR_BRANCH}&state=open" \
+            | jq 'length')
+
+          if [ "${PR_EXISTS}" -gt "0" ]; then
+            echo "✅ PR 已存在, 已更新分支内容, 无需重新创建"
+            exit 0
+          fi
+
+          # 8. 创建 PR
+          PR_BODY="ご主人さま、音楽リポジトリが更新されましたにゃ♪\n\n**更新内容:**\n- 同步 \`MUSIC_COMMIT_ID\` → \`${NEW_SHA}\`\n- 来源: [HXLoLi-Music@main](https://github.com/HengXin666/HXLoLi-Music/commit/${NEW_SHA})\n\n> 🤖 此 PR 由 GitHub Actions 自动创建"
+          curl -s -X POST \
+            -H "Authorization: token ${PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${MAIN_REPO}/pulls" \
+            -d "{
+              \"title\": \"🎵 [LoLi-Bot] 同步 HXLoLi-Music 最新版本\",
+              \"body\": \"${PR_BODY}\",
+              \"head\": \"${PR_BRANCH}\",
+              \"base\": \"main\"
+            }" | jq -r '"🎉 PR 已创建: " + .html_url'
