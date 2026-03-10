@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASS 字幕可视化分割工具</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #a78bfa;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card {
+    background: #1a1d27;
+    border: 1px solid #2d3148;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #7c85b3;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+  }
+
+  /* 上传区 */
+  #drop-zone {
+    border: 2px dashed #3d4268;
+    border-radius: 10px;
+    padding: 36px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #6b7280;
+  }
+  #drop-zone:hover, #drop-zone.drag-over {
+    border-color: #a78bfa;
+    background: #1e1b3a;
+    color: #a78bfa;
+  }
+  #drop-zone .icon { font-size: 2.5rem; margin-bottom: 8px; }
+  #drop-zone p { font-size: 0.9rem; }
+  #file-input { display: none; }
+
+  /* 文件信息 */
+  #file-info {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #12151f;
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  #file-info .fname { color: #a78bfa; font-weight: 600; }
+  #file-info .fmeta { color: #6b7280; }
+
+  /* 时间轴 */
+  #timeline-wrap {
+    position: relative;
+    user-select: none;
+  }
+  #timeline-ruler {
+    height: 22px;
+    position: relative;
+    margin-bottom: 4px;
+    overflow: hidden;
+  }
+  #timeline-canvas {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    cursor: crosshair;
+    display: block;
+    background: #12151f;
+  }
+  #timeline-canvas.has-selection { cursor: col-resize; }
+
+  /* 选区覆盖层 */
+  #selection-overlay {
+    position: absolute;
+    top: 26px;
+    height: 80px;
+    background: rgba(167, 139, 250, 0.18);
+    border: 1px solid rgba(167, 139, 250, 0.6);
+    border-radius: 4px;
+    pointer-events: none;
+    display: none;
+  }
+  #sel-handle-l, #sel-handle-r {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 8px;
+    background: #a78bfa;
+    border-radius: 3px;
+    cursor: ew-resize;
+    pointer-events: all;
+    opacity: 0.9;
+  }
+  #sel-handle-l { left: -4px; }
+  #sel-handle-r { right: -4px; }
+
+  /* 时间标签 */
+  .time-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #4b5563;
+    margin-top: 6px;
+  }
+  #sel-time-display {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #a78bfa;
+    margin-top: 6px;
+    min-height: 1.2em;
+  }
+
+  /* 控制区 */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .input-group label {
+    font-size: 0.78rem;
+    color: #7c85b3;
+  }
+  .input-group input {
+    background: #12151f;
+    border: 1px solid #2d3148;
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: #e2e8f0;
+    font-size: 0.88rem;
+    font-family: 'Consolas', monospace;
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus {
+    outline: none;
+    border-color: #a78bfa;
+  }
+  .input-group input.error { border-color: #f87171; }
+
+  /* 按钮 */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  button {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: #7c3aed;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-primary:disabled { background: #3d3d5c; color: #6b7280; cursor: not-allowed; }
+  .btn-secondary {
+    background: #1e2235;
+    color: #a78bfa;
+    border: 1px solid #3d4268;
+  }
+  .btn-secondary:hover { background: #252840; }
+  .btn-danger {
+    background: #1e2235;
+    color: #f87171;
+    border: 1px solid #4b2020;
+  }
+  .btn-danger:hover { background: #2a1a1a; }
+
+  /* 片段列表 */
+  #segments-list { display: flex; flex-direction: column; gap: 8px; }
+  .segment-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #12151f;
+    border-radius: 8px;
+    border: 1px solid #2d3148;
+    font-size: 0.85rem;
+  }
+  .segment-item .seg-name {
+    flex: 1;
+    font-weight: 600;
+    color: #c4b5fd;
+  }
+  .segment-item .seg-range {
+    font-family: 'Consolas', monospace;
+    color: #6b7280;
+    font-size: 0.8rem;
+  }
+  .segment-item .seg-count {
+    color: #4ade80;
+    font-size: 0.78rem;
+    background: #0d2a1a;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .seg-name-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #3d4268;
+    color: #c4b5fd;
+    font-size: 0.85rem;
+    font-weight: 600;
+    width: 80px;
+    padding: 1px 2px;
+  }
+  .seg-name-input:focus { outline: none; border-bottom-color: #a78bfa; }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: #4b5563;
+    font-size: 0.85rem;
+  }
+
+  /* 状态提示 */
+  #status-bar {
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    display: none;
+  }
+  #status-bar.info { background: #1a2a3a; color: #60a5fa; border: 1px solid #1e3a5f; }
+  #status-bar.success { background: #0d2a1a; color: #4ade80; border: 1px solid #14532d; }
+  #status-bar.error { background: #2a1010; color: #f87171; border: 1px solid #7f1d1d; }
+
+  /* 智能分割 */
+  .smart-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .smart-row label { font-size: 0.82rem; color: #7c85b3; }
+  .smart-row input[type=number] {
+    width: 70px;
+    background: #12151f;
+    border: 1px solid #2d3148;
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+  }
+  .smart-row input[type=number]:focus { outline: none; border-color: #a78bfa; }
+
+  /* 导出区 */
+  #export-section { display: none; }
+  .export-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #12151f;
+    border-radius: 8px;
+    border: 1px solid #2d3148;
+    margin-bottom: 8px;
+  }
+  .export-item .ei-name { font-weight: 600; color: #c4b5fd; font-size: 0.88rem; }
+  .export-item .ei-meta { font-size: 0.78rem; color: #6b7280; margin-top: 2px; }
+
+  /* 响应式 */
+  @media (max-width: 600px) {
+    .controls-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>✂️ ASS 字幕可视化分割工具</h1>
+
+<!-- 上传 -->
+<div class="card">
+  <div class="card-title">① 导入文件</div>
+  <div id="drop-zone">
+    <div class="icon">📂</div>
+    <p>点击选择 或 拖拽 .ass 文件到此处</p>
+  </div>
+  <input type="file" id="file-input" accept=".ass">
+  <div id="file-info">
+    <span>📄</span>
+    <span class="fname" id="fi-name"></span>
+    <span class="fmeta" id="fi-meta"></span>
+    <button class="btn-danger" onclick="resetFile()" style="margin-left:auto;padding:4px 10px;font-size:0.78rem">重置</button>
+  </div>
+</div>
+
+<!-- 时间轴 -->
+<div class="card" id="timeline-card" style="display:none">
+  <div class="card-title">② 时间轴 — 拖拽选取区间</div>
+  <div id="timeline-wrap">
+    <div id="timeline-ruler"></div>
+    <canvas id="timeline-canvas"></canvas>
+    <div id="selection-overlay">
+      <div id="sel-handle-l"></div>
+      <div id="sel-handle-r"></div>
+    </div>
+  </div>
+  <div class="time-labels">
+    <span id="tl-start">0:00:00.00</span>
+    <span id="tl-end">—</span>
+  </div>
+  <div id="sel-time-display">在时间轴上拖拽以选取区间</div>
+</div>
+
+<!-- 手动输入 + 操作 -->
+<div class="card" id="controls-card" style="display:none">
+  <div class="card-title">③ 区间设置 & 添加片段</div>
+  <div class="controls-grid" style="margin-bottom:14px">
+    <div class="input-group">
+      <label>开始时间 L（H:MM:SS.cc）</label>
+      <input type="text" id="inp-L" placeholder="0:00:00.00">
+    </div>
+    <div class="input-group">
+      <label>结束时间 R（H:MM:SS.cc 或 all）</label>
+      <input type="text" id="inp-R" placeholder="0:01:30.00">
+    </div>
+    <div class="input-group">
+      <label>输出起始时间 L'（偏移到）</label>
+      <input type="text" id="inp-Lp" placeholder="0:00:00.00" value="0:00:00.00">
+    </div>
+    <div class="input-group">
+      <label>片段名称</label>
+      <input type="text" id="inp-name" placeholder="clip_1">
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="addSegment()">＋ 添加片段</button>
+    <button class="btn-secondary" onclick="clearSelection()">清除选区</button>
+  </div>
+
+  <hr style="border-color:#2d3148;margin:16px 0">
+
+  <div class="card-title" style="margin-bottom:10px">智能分割（自动检测 OP/ED）</div>
+  <div class="smart-row">
+    <label>静默间隔阈值（秒）</label>
+    <input type="number" id="inp-gap" value="5" min="0.5" step="0.5">
+    <button class="btn-secondary" onclick="smartSplit()">⚡ 自动检测并添加</button>
+  </div>
+</div>
+
+<!-- 片段列表 -->
+<div class="card" id="segments-card" style="display:none">
+  <div class="card-title">④ 片段列表</div>
+  <div id="segments-list">
+    <div class="empty-state">还没有添加任何片段</div>
+  </div>
+</div>
+
+<!-- 导出 -->
+<div class="card" id="export-section">
+  <div class="card-title">⑤ 导出</div>
+  <div id="export-list"></div>
+  <div class="btn-row" style="margin-top:8px">
+    <button class="btn-primary" onclick="exportAll()">⬇ 全部下载</button>
+    <button class="btn-secondary" onclick="clearSegments()">🗑 清空片段</button>
+  </div>
+</div>
+
+<div id="status-bar"></div>
+
+<script>
+// ─── 状态 ───
+let assLines = [];
+let assHeader = [], assStyles = [], assEvents = [];
+let totalDuration = 0;
+let dialogues = []; // [{start, end, text}]
+let segments = []; // [{name, L, R, Lp}]
+let clipCount = 1;
+
+// 选区状态
+let selL = null, selR = null;
+let isDragging = false, dragMode = null; // 'new'|'left'|'right'
+let dragStartX = 0;
+
+// ─── 时间工具 ───
+function parseTime(s) {
+  if (!s) return null;
+  s = s.trim();
+  const m = s.match(/^(\d+):(\d{2}):(\d{2})\.(\d{2})$/);
+  if (!m) return null;
+  return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/100;
+}
+function formatTime(t) {
+  if (t < 0) t = 0;
+  const cs = Math.round(t * 100);
+  const h = Math.floor(cs / 360000);
+  const rem1 = cs % 360000;
+  const mi = Math.floor(rem1 / 6000);
+  const rem2 = rem1 % 6000;
+  const sec = Math.floor(rem2 / 100);
+  const c = rem2 % 100;
+  return `${h}:${String(mi).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(c).padStart(2,'0')}`;
+}
+
+// ─── ASS 解析 ───
+const EVENT_RE = /^(Dialogue|Comment):\s*(\d+),(\d+:\d{2}:\d{2}\.\d{2}),(\d+:\d{2}:\d{2}\.\d{2}),(.*)/s;
+
+function parseAss(text) {
+  assLines = text.split(/\r?\n/).map(l => l.endsWith('\n') ? l : l + '\n');
+  // 修正：保留原始行
+  assLines = text.split(/\r?\n/);
+
+  assHeader = []; assStyles = []; assEvents = [];
+  let section = 'header';
+  for (const line of assLines) {
+    const low = line.trim().toLowerCase();
+    if (low === '[v4+ styles]') section = 'styles';
+    else if (low === '[events]') section = 'events';
+    if (section === 'header') assHeader.push(line);
+    else if (section === 'styles') assStyles.push(line);
+    else assEvents.push(line);
+  }
+
+  // 提取 Dialogue 行
+  dialogues = [];
+  for (const line of assEvents) {
+    const m = EVENT_RE.exec(line);
+    if (m && m[1] === 'Dialogue') {
+      const start = parseTime(m[3]);
+      const end = parseTime(m[4]);
+      if (start !== null && end !== null) {
+        dialogues.push({ start, end, text: m[5] });
+      }
+    }
+  }
+  dialogues.sort((a, b) => a.start - b.start);
+  totalDuration = dialogues.length ? dialogues[dialogues.length - 1].end : 0;
+}
+
+function cleanProjectGarbage(headerLines) {
+  const result = [];
+  let inGarbage = false;
+  for (const line of headerLines) {
+    const low = line.trim().toLowerCase();
+    if (low === '[aegisub project garbage]') { inGarbage = true; continue; }
+    if (inGarbage && low.startsWith('[')) inGarbage = false;
+    if (!inGarbage) result.push(line);
+  }
+  return result;
+}
+
+function extractRange(eventLines, L, R, Lp) {
+  const offset = Lp - L;
+  const result = [];
+  for (const line of eventLines) {
+    const m = EVENT_RE.exec(line);
+    if (!m) { result.push(line); continue; }
+    const etype = m[1], layer = m[2];
+    const start = parseTime(m[3]), end = parseTime(m[4]), rest = m[5];
+    if (end <= L || start >= R) continue;
+    const ns = Math.max(start, L) + offset;
+    const ne = Math.min(end, R) + offset;
+    result.push(`${etype}: ${layer},${formatTime(ns)},${formatTime(ne)},${rest}`);
+  }
+  return result;
+}
+
+function buildAssText(header, styles, events) {
+  const cleanHeader = cleanProjectGarbage(header);
+  return [...cleanHeader, ...styles, ...events].join('\r\n');
+}
+
+// ─── 文件上传 ───
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      parseAss(e.target.result);
+      document.getElementById('fi-name').textContent = file.name;
+      document.getElementById('fi-meta').textContent =
+        `${dialogues.length} 条对话 · 总时长 ${formatTime(totalDuration)}`;
+      document.getElementById('file-info').style.display = 'flex';
+      dropZone.style.display = 'none';
+      document.getElementById('timeline-card').style.display = 'block';
+      document.getElementById('controls-card').style.display = 'block';
+      document.getElementById('segments-card').style.display = 'block';
+      document.getElementById('inp-name').value = 'clip_' + clipCount;
+      initTimeline();
+      showStatus('文件加载成功，共 ' + dialogues.length + ' 条对话，时长 ' + formatTime(totalDuration), 'success');
+    } catch(err) {
+      showStatus('解析失败：' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function resetFile() {
+  assLines = []; assHeader = []; assStyles = []; assEvents = [];
+  dialogues = []; segments = []; totalDuration = 0; clipCount = 1;
+  selL = null; selR = null;
+  document.getElementById('file-info').style.display = 'none';
+  dropZone.style.display = 'block';
+  document.getElementById('timeline-card').style.display = 'none';
+  document.getElementById('controls-card').style.display = 'none';
+  document.getElementById('segments-card').style.display = 'none';
+  document.getElementById('export-section').style.display = 'none';
+  renderSegments();
+  fileInput.value = '';
+}
+
+// ─── 时间轴 ───
+const canvas = document.getElementById('timeline-canvas');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('selection-overlay');
+const wrap = document.getElementById('timeline-wrap');
+
+function initTimeline() {
+  resizeCanvas();
+  drawTimeline();
+  updateSelectionOverlay();
+}
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = 80;
+}
+
+function timeToX(t) {
+  return (t / totalDuration) * canvas.width;
+}
+function xToTime(x) {
+  return Math.max(0, Math.min(totalDuration, (x / canvas.width) * totalDuration));
+}
+
+function drawTimeline() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  ctx.fillStyle = '#12151f';
+  ctx.fillRect(0, 0, W, H);
+
+  // 密度热图：按时间分桶
+  const buckets = 200;
+  const counts = new Array(buckets).fill(0);
+  for (const d of dialogues) {
+    const b1 = Math.floor((d.start / totalDuration) * buckets);
+    const b2 = Math.ceil((d.end / totalDuration) * buckets);
+    for (let b = b1; b < b2 && b < buckets; b++) counts[b]++;
+  }
+  const maxCount = Math.max(...counts, 1);
+
+  for (let b = 0; b < buckets; b++) {
+    const x = (b / buckets) * W;
+    const bw = W / buckets + 1;
+    const ratio = counts[b] / maxCount;
+    if (ratio === 0) continue;
+    const alpha = 0.2 + ratio * 0.75;
+    ctx.fillStyle = `rgba(124, 58, 237, ${alpha})`;
+    const barH = 10 + ratio * (H - 20);
+    ctx.fillRect(x, H - barH, bw, barH);
+  }
+
+  // 刻度线
+  const tickInterval = chooseTick(totalDuration);
+  ctx.strokeStyle = '#2d3148';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#4b5563';
+  ctx.font = '10px Consolas, monospace';
+  ctx.textAlign = 'center';
+  for (let t = 0; t <= totalDuration; t += tickInterval) {
+    const x = timeToX(t);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+    if (t > 0 && t < totalDuration - tickInterval * 0.3) {
+      ctx.fillText(formatTime(t), x, 12);
+    }
+  }
+
+  // 已有片段高亮
+  for (const seg of segments) {
+    const x1 = timeToX(seg.L);
+    const x2 = timeToX(seg.R === Infinity ? totalDuration : seg.R);
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.12)';
+    ctx.fillRect(x1, 0, x2 - x1, H);
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x1, 0, x2 - x1, H);
+  }
+}
+
+function chooseTick(dur) {
+  const targets = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600];
+  for (const t of targets) {
+    if (dur / t <= 20) return t;
+  }
+  return 600;
+}
+
+function updateSelectionOverlay() {
+  if (selL === null || selR === null) {
+    overlay.style.display = 'none';
+    document.getElementById('sel-time-display').textContent = '在时间轴上拖拽以选取区间';
+    return;
+  }
+  const canvasRect = canvas.getBoundingClientRect();
+  const wrapRect = wrap.getBoundingClientRect();
+  const offsetLeft = canvasRect.left - wrapRect.left;
+
+  const x1 = timeToX(selL) + offsetLeft;
+  const x2 = timeToX(selR) + offsetLeft;
+  overlay.style.display = 'block';
+  overlay.style.left = x1 + 'px';
+  overlay.style.width = (x2 - x1) + 'px';
+
+  document.getElementById('sel-time-display').textContent =
+    `选区：${formatTime(selL)}  →  ${formatTime(selR)}  （时长 ${formatTime(selR - selL)}）`;
+  document.getElementById('inp-L').value = formatTime(selL);
+  document.getElementById('inp-R').value = formatTime(selR);
+}
+
+// 鼠标事件
+canvas.addEventListener('mousedown', onMouseDown);
+document.addEventListener('mousemove', onMouseMove);
+document.addEventListener('mouseup', onMouseUp);
+
+// 触摸支持
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onMouseDown(e.touches[0]); }, {passive:false});
+document.addEventListener('touchmove', e => { if(isDragging) { e.preventDefault(); onMouseMove(e.touches[0]); } }, {passive:false});
+document.addEventListener('touchend', e => { onMouseUp(e.changedTouches[0]); });
+
+function getCanvasX(e) {
+  const rect = canvas.getBoundingClientRect();
+  return e.clientX - rect.left;
+}
+
+function onMouseDown(e) {
+  const x = getCanvasX(e);
+  if (x < 0 || x > canvas.width) return;
+
+  // 检查是否点击了手柄
+  if (selL !== null && selR !== null) {
+    const x1 = timeToX(selL), x2 = timeToX(selR);
+    if (Math.abs(x - x1) < 10) { isDragging = true; dragMode = 'left'; return; }
+    if (Math.abs(x - x2) < 10) { isDragging = true; dragMode = 'right'; return; }
+  }
+  isDragging = true;
+  dragMode = 'new';
+  dragStartX = x;
+  selL = xToTime(x);
+  selR = selL;
+  updateSelectionOverlay();
+}
+
+function onMouseMove(e) {
+  if (!isDragging) return;
+  const x = getCanvasX(e);
+  const t = xToTime(Math.max(0, Math.min(canvas.width, x)));
+  if (dragMode === 'new') {
+    const anchor = xToTime(dragStartX);
+    selL = Math.min(anchor, t);
+    selR = Math.max(anchor, t);
+  } else if (dragMode === 'left') {
+    selL = Math.min(t, selR - 0.01);
+  } else if (dragMode === 'right') {
+    selR = Math.max(t, selL + 0.01);
+  }
+  updateSelectionOverlay();
+}
+
+function onMouseUp(e) {
+  if (!isDragging) return;
+  isDragging = false;
+  if (dragMode === 'new' && selL !== null && selR !== null && Math.abs(selR - selL) < 0.05) {
+    selL = null; selR = null;
+    updateSelectionOverlay();
+  }
+  dragMode = null;
+}
+
+// 手柄拖拽
+document.getElementById('sel-handle-l').addEventListener('mousedown', e => {
+  e.stopPropagation(); isDragging = true; dragMode = 'left';
+});
+document.getElementById('sel-handle-r').addEventListener('mousedown', e => {
+  e.stopPropagation(); isDragging = true; dragMode = 'right';
+});
+
+function clearSelection() {
+  selL = null; selR = null;
+  document.getElementById('inp-L').value = '';
+  document.getElementById('inp-R').value = '';
+  updateSelectionOverlay();
+}
+
+// ─── 片段管理 ───
+function addSegment() {
+  const Lstr = document.getElementById('inp-L').value.trim();
+  const Rstr = document.getElementById('inp-R').value.trim();
+  const Lpstr = document.getElementById('inp-Lp').value.trim();
+  const name = document.getElementById('inp-name').value.trim() || ('clip_' + clipCount);
+
+  const L = parseTime(Lstr);
+  const R = Rstr.toLowerCase() === 'all' ? Infinity : parseTime(Rstr);
+  const Lp = parseTime(Lpstr);
+
+  let ok = true;
+  if (L === null) { document.getElementById('inp-L').classList.add('error'); ok = false; }
+  else document.getElementById('inp-L').classList.remove('error');
+  if (R === null) { document.getElementById('inp-R').classList.add('error'); ok = false; }
+  else document.getElementById('inp-R').classList.remove('error');
+  if (Lp === null) { document.getElementById('inp-Lp').classList.add('error'); ok = false; }
+  else document.getElementById('inp-Lp').classList.remove('error');
+  if (!ok) { showStatus('请检查时间格式（H:MM:SS.cc）', 'error'); return; }
+  if (L >= R) { showStatus('开始时间必须小于结束时间', 'error'); return; }
+
+  segments.push({ name, L, R, Lp });
+  clipCount++;
+  document.getElementById('inp-name').value = 'clip_' + clipCount;
+  renderSegments();
+  drawTimeline();
+  showStatus(`已添加片段 "${name}"`, 'success');
+}
+
+function removeSegment(i) {
+  segments.splice(i, 1);
+  renderSegments();
+  drawTimeline();
+}
+
+function renderSegments() {
+  const list = document.getElementById('segments-list');
+  if (segments.length === 0) {
+    list.innerHTML = '<div class="empty-state">还没有添加任何片段</div>';
+    document.getElementById('export-section').style.display = 'none';
+    return;
+  }
+  list.innerHTML = segments.map((seg, i) => {
+    const Rstr = seg.R === Infinity ? 'all' : formatTime(seg.R);
+    const count = dialogues.filter(d => d.end > seg.L && d.start < (seg.R === Infinity ? totalDuration : seg.R)).length;
+    return `<div class="segment-item">
+      <input class="seg-name-input" value="${seg.name}" onchange="segments[${i}].name=this.value;renderExport()">
+      <span class="seg-range">${formatTime(seg.L)} → ${Rstr}  ⟶  ${formatTime(seg.Lp)}</span>
+      <span class="seg-count">${count} 条</span>
+      <button class="btn-secondary" style="padding:4px 10px;font-size:0.78rem" onclick="loadSegToInputs(${i})">编辑</button>
+      <button class="btn-danger" style="padding:4px 10px;font-size:0.78rem" onclick="removeSegment(${i})">删除</button>
+    </div>`;
+  }).join('');
+  document.getElementById('export-section').style.display = 'block';
+  renderExport();
+}
+
+function loadSegToInputs(i) {
+  const seg = segments[i];
+  document.getElementById('inp-L').value = formatTime(seg.L);
+  document.getElementById('inp-R').value = seg.R === Infinity ? 'all' : formatTime(seg.R);
+  document.getElementById('inp-Lp').value = formatTime(seg.Lp);
+  document.getElementById('inp-name').value = seg.name;
+  selL = seg.L; selR = seg.R === Infinity ? totalDuration : seg.R;
+  updateSelectionOverlay();
+}
+
+function clearSegments() {
+  if (!confirm('确定清空所有片段？')) return;
+  segments = [];
+  renderSegments();
+  drawTimeline();
+}
+
+// ─── 智能分割 ───
+function smartSplit() {
+  if (!dialogues.length) { showStatus('请先加载文件', 'error'); return; }
+  const gap = parseFloat(document.getElementById('inp-gap').value) || 5;
+
+  // 找最大静默间隔
+  let bestGap = -1, opEnd = 0, edStart = 0;
+  for (let i = 0; i < dialogues.length - 1; i++) {
+    const g = dialogues[i+1].start - dialogues[i].end;
+    if (g > bestGap) { bestGap = g; opEnd = dialogues[i].end; edStart = dialogues[i+1].start; }
+  }
+
+  if (bestGap < gap) {
+    showStatus(`最大静默间隔仅 ${bestGap.toFixed(2)}s（阈值 ${gap}s），结果可能不准确`, 'info');
+  }
+
+  // 添加 OP 和 ED
+  segments.push({ name: 'OP', L: 0, R: opEnd, Lp: 0 });
+  segments.push({ name: 'ED', L: edStart, R: Infinity, Lp: 0 });
+  clipCount += 2;
+  renderSegments();
+  drawTimeline();
+  showStatus(`智能分割完成：OP [0 → ${formatTime(opEnd)}]，ED [${formatTime(edStart)} → end]，间隔 ${bestGap.toFixed(2)}s`, 'success');
+}
+
+// ─── 导出 ───
+function renderExport() {
+  const list = document.getElementById('export-list');
+  list.innerHTML = segments.map((seg, i) => {
+    const Rstr = seg.R === Infinity ? 'all' : formatTime(seg.R);
+    const count = dialogues.filter(d => d.end > seg.L && d.start < (seg.R === Infinity ? totalDuration : seg.R)).length;
+    return `<div class="export-item">
+      <div>
+        <div class="ei-name">${seg.name}.ass</div>
+        <div class="ei-meta">${formatTime(seg.L)} → ${Rstr}  ·  ${count} 条对话</div>
+      </div>
+      <button class="btn-primary" style="padding:6px 14px;font-size:0.82rem" onclick="exportOne(${i})">⬇ 下载</button>
+    </div>`;
+  }).join('');
+}
+
+function buildOutput(seg) {
+  const R = seg.R === Infinity ? totalDuration + 1 : seg.R;
+  const outEvents = extractRange(assEvents, seg.L, R, seg.Lp);
+  return buildAssText(assHeader, assStyles, outEvents);
+}
+
+function exportOne(i) {
+  const seg = segments[i];
+  const text = buildOutput(seg);
+  download(seg.name + '.ass', text);
+}
+
+function exportAll() {
+  for (let i = 0; i < segments.length; i++) exportOne(i);
+}
+
+function download(filename, text) {
+  // UTF-8 with BOM
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── 状态提示 ───
+function showStatus(msg, type = 'info') {
+  const bar = document.getElementById('status-bar');
+  bar.textContent = msg;
+  bar.className = type;
+  bar.style.display = 'block';
+  clearTimeout(bar._timer);
+  bar._timer = setTimeout(() => { bar.style.display = 'none'; }, 4000);
+}
+
+// ─── 响应式 resize ───
+window.addEventListener('resize', () => {
+  if (totalDuration > 0) { resizeCanvas(); drawTimeline(); updateSelectionOverlay(); }
+});
+</script>
+</body>
+</html>

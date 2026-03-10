@@ -1,6 +1,12 @@
 # Python 虚拟环境
 .venv/
 
+# py
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # uv 锁文件 (可选择是否提交)
 # uv.lock
 

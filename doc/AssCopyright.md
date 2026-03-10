@@ -13,4 +13,4 @@
 
 - [来自深渊 Made In Abyss]() -> [Seekladoom](https://assrt.net/xml/sub/609/609368.xml)
 
-- [Lia - Bravely You](../static/music/Lia%20-%20Bravely%20You.ass) -> [DHR×星冈 DHR×星冈](https://www.bilibili.com/video/BV1Js411v7nC) (原出处未知)
+- [Lia - Bravely You](../static/music/Lia%20-%20Bravely%20You.ass) -> [DHR×星冈](https://www.bilibili.com/video/BV1Js411v7nC) (原出处未知) (个人进行了微调: 把复述部分注明修改为歌词(如: `聴こえない`))
