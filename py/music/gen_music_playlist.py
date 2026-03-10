@@ -45,6 +45,12 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
+try:
+    import py7zr
+    HAS_PY7ZR = True
+except ImportError:
+    HAS_PY7ZR = False
+
 import struct
 import subprocess
 import tempfile
@@ -74,6 +80,21 @@ CJK_FONT_NAME = "NotoSansSC-Regular.ttf"
 CJK_FONT_URL = (
     "https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
 )
+
+# ASS 字体自动下载配置表
+# key: ASS Style 行中的字体名 (精确匹配)
+# value: dict
+#   - file: 下载后保存的文件名
+#   - url:  下载 URL
+#   - note: 说明 (可选)
+FONT_DOWNLOAD_MAP: dict[str, dict] = {
+    "Rounded-L Mgen+ 1c bold": {
+        "file": "rounded-mgenplus-1c-bold.ttf",
+        "url": "https://github.com/itouhiro/mixfont-mplus-ipa/releases/download/v2013.0501/mgenplus-20130501.7z",
+        # 压缩包内的文件路径 (相对于压缩包根目录)
+        "archive_path": "rounded-mgenplus-1c-bold.ttf",
+    },
+}
 
 # 封面图片的 MIME -> 扩展名映射
 MIME_TO_EXT = {
@@ -327,6 +348,20 @@ def extract_cover_from_audio(audio_path: Path, audio_hash: str) -> Path | None:
     return None
 
 
+# 匹配 ASS \1img(path) 标签中的图片路径
+_RE_ASS_IMG = re.compile(r'\\1img\(([^)]+)\)')
+
+
+def _read_ass_text(ass_path: Path) -> str | None:
+    """尝试多种编码读取 ASS 文件文本, 失败返回 None"""
+    for encoding in ('utf-8-sig', 'utf-8', 'gbk', 'shift_jis', 'latin-1'):
+        try:
+            return ass_path.read_text(encoding=encoding)
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    return None
+
+
 def _extract_ass_fonts_impl(ass_path: Path) -> list[str]:
     """从 ASS 文件中解析 Style 行使用的字体名列表 — 实际计算逻辑
 
@@ -334,14 +369,8 @@ def _extract_ass_fonts_impl(ass_path: Path) -> list[str]:
     """
     fonts = set()
     try:
-        # ASS 文件可能用不同编码
-        for encoding in ('utf-8-sig', 'utf-8', 'gbk', 'shift_jis', 'latin-1'):
-            try:
-                text = ass_path.read_text(encoding=encoding)
-                break
-            except (UnicodeDecodeError, UnicodeError):
-                continue
-        else:
+        text = _read_ass_text(ass_path)
+        if text is None:
             return []
 
         # 匹配 Style 行，提取 Fontname 字段 (Style 格式的第 2 个字段)
@@ -360,6 +389,143 @@ def _extract_ass_fonts_impl(ass_path: Path) -> list[str]:
         print(f"  [警告] 解析 ASS 字体失败 {ass_path.name}: {e}")
 
     return sorted(fonts)
+
+
+def _extract_ass_images_impl(ass_path: Path) -> list[str]:
+    """从 ASS 文件中解析 \\1img(...) 引用的图片路径列表 — 实际计算逻辑
+
+    \\1img 是 Aegisub 扩展标签, 用于在字幕中嵌入外部图片。
+    返回去重后的相对路径列表 (相对于 ASS 文件所在目录)。
+    注意: 路径中可能含有 Lua 表达式 (如 !math.fmod(...)!), 这类动态路径会被过滤掉。
+    """
+    images = set()
+    try:
+        text = _read_ass_text(ass_path)
+        if text is None:
+            return []
+
+        for match in _RE_ASS_IMG.finditer(text):
+            path = match.group(1).strip()
+            # 过滤含 Lua 表达式的动态路径 (含 ! 或 $ 的)
+            if '!' in path or '$' in path:
+                continue
+            images.add(path)
+
+    except Exception as e:
+        print(f"  [警告] 解析 ASS 图片失败 {ass_path.name}: {e}")
+
+    return sorted(images)
+
+
+def extract_ass_images(ass_path: Path, ass_hash: str) -> list[str]:
+    """提取 ASS 图片路径列表, 优先使用缓存"""
+    cache_key = str(ass_path.relative_to(STATIC_MUSIC_DIR))
+    cached = get_cache('ass_images', cache_key, ass_hash)
+    if cached is not None:
+        return cached.get('images', [])
+
+    images = _extract_ass_images_impl(ass_path)
+    set_cache('ass_images', cache_key, ass_hash, {'images': images})
+    return images
+
+
+def embed_ass_images(ass_path: Path) -> bool:
+    """将 ASS 文件中 \\1img 引用的外部图片以 UUEncoding 内嵌到 [Graphics] 节。
+
+    libass 支持通过 [Graphics] 节内嵌图片，格式与 [Fonts] 节相同：
+        [Graphics]
+        Picture/tipi.png: M...（uuencoded 数据行）
+        Picture/tipi.png: M...
+        ...
+
+    图片文件需位于 ASS 文件所在目录下（相对路径）。
+    如果 ASS 文件已包含 [Graphics] 节则跳过（视为已内嵌）。
+    返回是否成功内嵌了至少一张图片。
+    """
+    text = _read_ass_text(ass_path)
+    if text is None:
+        print(f"  [警告] 无法读取 ASS 文件: {ass_path.name}")
+        return False
+
+    # 已有 [Graphics] 节则跳过
+    if '[Graphics]' in text:
+        print(f"    └─ ASS 图片: 已内嵌，跳过")
+        return False
+
+    # 收集所有静态图片路径（去重，保持顺序）
+    seen: set[str] = set()
+    img_paths: list[str] = []
+    for match in _RE_ASS_IMG.finditer(text):
+        rel = match.group(1).strip()
+        if '!' in rel or '$' in rel:
+            continue
+        if rel not in seen:
+            seen.add(rel)
+            img_paths.append(rel)
+
+    if not img_paths:
+        return False
+
+    # 构建 [Graphics] 节内容
+    graphics_lines: list[str] = ['[Graphics]']
+    embedded_count = 0
+    missing: list[str] = []
+
+    def _uuencode_data(data: bytes) -> list[str]:
+        """将二进制数据 UUEncode 为数据行列表（不含 begin/end）"""
+        lines = []
+        for i in range(0, len(data), 45):
+            chunk = data[i:i + 45]
+            # 每行：长度字符 + 编码数据
+            encoded = bytearray()
+            encoded.append((len(chunk) & 0x3F) + 32)
+            for j in range(0, len(chunk), 3):
+                triple = chunk[j:j + 3]
+                # 补齐到 3 字节
+                while len(triple) < 3:
+                    triple = triple + b'\x00'
+                b0, b1, b2 = triple
+                encoded.append(((b0 >> 2) & 0x3F) + 32)
+                encoded.append((((b0 << 4) | (b1 >> 4)) & 0x3F) + 32)
+                encoded.append((((b1 << 2) | (b2 >> 6)) & 0x3F) + 32)
+                encoded.append((b2 & 0x3F) + 32)
+            # 将空格(32)替换为反引号(96)，符合标准 UUEncoding
+            line = encoded.decode('ascii').replace(' ', '`')
+            lines.append(line)
+        return lines
+
+    for rel in img_paths:
+        img_file = ass_path.parent / rel
+        if not img_file.exists():
+            missing.append(rel)
+            continue
+
+        img_data = img_file.read_bytes()
+        data_lines = _uuencode_data(img_data)
+        for line in data_lines:
+            graphics_lines.append(f'{rel}: {line}')
+        embedded_count += 1
+
+    if missing:
+        print(f"  [警告] 以下图片文件不存在，无法内嵌: {', '.join(missing)}")
+
+    if embedded_count == 0:
+        return False
+
+    # 将 [Graphics] 节追加到文件末尾
+    graphics_section = '\n'.join(graphics_lines) + '\n'
+    # 保持原始编码（优先 utf-8-sig）
+    for encoding in ('utf-8-sig', 'utf-8', 'gbk', 'shift_jis', 'latin-1'):
+        try:
+            ass_path.read_text(encoding=encoding)
+            new_text = text.rstrip('\n') + '\n\n' + graphics_section
+            ass_path.write_text(new_text, encoding=encoding)
+            break
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+
+    print(f"    └─ ASS 图片内嵌: {embedded_count} 张图片写入 [Graphics] 节")
+    return True
 
 
 def extract_ass_fonts(ass_path: Path, ass_hash: str) -> list[str]:
@@ -416,6 +582,103 @@ def ensure_cjk_fallback_font() -> bool:
         if font_path.exists():
             font_path.unlink()
         return False
+
+
+def _download_file(url: str, dest: Path, label: str = "") -> bool:
+    """下载文件到 dest, 显示进度。返回是否成功。"""
+    if not HAS_REQUESTS:
+        print(f"    └─ [{label}] 无法自动下载 (缺少 requests 库)")
+        return False
+    try:
+        resp = requests.get(url, stream=True, timeout=120)
+        resp.raise_for_status()
+        total = int(resp.headers.get('content-length', 0))
+        downloaded = 0
+        with open(dest, 'wb') as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total > 0:
+                    pct = downloaded * 100 // total
+                    print(f"\r         进度: {pct}% ({downloaded}/{total})", end='', flush=True)
+        print()
+        return True
+    except Exception as e:
+        print(f"\n         [错误] 下载失败: {e}")
+        if dest.exists():
+            dest.unlink()
+        return False
+
+
+def ensure_ass_fonts(ass_fonts: list[str], target_dir: Path) -> None:
+    """检查 ASS 字体列表, 对配置表中有下载源的字体自动下载到 target_dir/fonts/
+
+    支持直接下载 .ttf/.otf, 以及从 .7z 压缩包中提取指定文件。
+
+    Args:
+        ass_fonts: ASS 文件中引用的字体名列表
+        target_dir: 歌曲所在目录 (字体将下载到 target_dir/fonts/)
+    """
+    if not ass_fonts:
+        return
+
+    fonts_dir = target_dir / "fonts"
+
+    for font_name in ass_fonts:
+        if font_name not in FONT_DOWNLOAD_MAP:
+            continue
+
+        info = FONT_DOWNLOAD_MAP[font_name]
+        font_file = fonts_dir / info["file"]
+
+        if font_file.exists():
+            print(f"    └─ 字体已存在: {font_file.relative_to(STATIC_MUSIC_DIR)}")
+            continue
+
+        fonts_dir.mkdir(parents=True, exist_ok=True)
+        url = info["url"]
+        archive_path = info.get("archive_path")  # 压缩包内的目标文件路径
+
+        if archive_path:
+            # 需要从压缩包中提取
+            if not HAS_PY7ZR and url.endswith('.7z'):
+                print(f"    └─ [字体] '{font_name}' 需要 py7zr 解压, 请安装: uv add py7zr")
+                print(f"         目标路径: {font_file}")
+                continue
+
+            print(f"    └─ [字体] 下载并解压 '{font_name}' ...")
+            archive_file = fonts_dir / Path(url).name
+            ok = _download_file(url, archive_file, label="字体")
+            if not ok:
+                print(f"         请手动下载到: {font_file}")
+                continue
+
+            # 解压目标文件
+            try:
+                if url.endswith('.7z'):
+                    with py7zr.SevenZipFile(archive_file, mode='r') as z:
+                        # 只提取指定文件
+                        z.extract(targets=[archive_path], path=fonts_dir)
+                    # 提取后文件可能在子目录，移动到 fonts_dir 根
+                    extracted = fonts_dir / archive_path
+                    if extracted != font_file and extracted.exists():
+                        extracted.rename(font_file)
+                print(f"         [完成] {font_file.name} ({font_file.stat().st_size} bytes)")
+            except Exception as e:
+                print(f"         [错误] 解压失败: {e}")
+                print(f"         请手动解压 {archive_file.name} 中的 {archive_path} 到 {font_file}")
+            finally:
+                # 删除压缩包
+                if archive_file.exists():
+                    archive_file.unlink()
+        else:
+            # 直接下载字体文件
+            print(f"    └─ [字体] 下载 '{font_name}' -> {info['file']} ...")
+            ok = _download_file(url, font_file, label="字体")
+            if ok:
+                print(f"         [完成] {font_file.name} ({font_file.stat().st_size} bytes)")
+            else:
+                print(f"         请手动下载到: {font_file}")
 
 
 def find_matching_ass(audio_path: Path) -> Path | None:
@@ -1094,6 +1357,19 @@ def scan_music_dir() -> list[dict]:
             if ass_fonts:
                 track["assFonts"] = ass_fonts
                 print(f"    └─ ASS 字体: {', '.join(ass_fonts)}")
+                # 自动下载配置表中有下载源的字体
+                ensure_ass_fonts(ass_fonts, audio_path.parent)
+
+            # 将 \1img 引用的外部图片内嵌到 [Graphics] 节（libass 支持）
+            embed_ass_images(ass_path)
+
+            # 解析 ASS 中 \1img 引用的外部图片（重新计算哈希，因为文件可能已修改）
+            ass_hash = file_md5(ass_path)
+            ass_images = extract_ass_images(ass_path, ass_hash)
+            if ass_images:
+                track["assImages"] = ass_images
+                print(f"    └─ ASS 图片: {len(ass_images)} 个 ({', '.join(ass_images[:3])}{'...' if len(ass_images) > 3 else ''})")
+
 
             # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
             duration = meta.get("duration", 0)
