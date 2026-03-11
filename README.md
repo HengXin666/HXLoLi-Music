@@ -13,11 +13,21 @@ HXLoLi-Music/
 │   ├── *.mp3              # 音频文件
 │   ├── *.ass              # ASS 歌词文件
 │   └── *.jpg              # 封面图片
+├── static/info/           # 歌曲详细配置 (按需加载, 自动生成)
+│   └── {id}.json          # 单首歌曲的字体/图片/边界框等重数据
 ├── py/                    # Python 工具
 │   └── music/             # 播放列表生成脚本
 ├── playlist.json          # 自动生成的播放列表 (勿手动编辑)
 └── .gitignore
 ```
+
+## 按需加载架构
+
+`playlist.json` 仅存放歌曲列表的元信息 (id、标题、艺术家、音频/歌词/封面路径等), 体积很小, 页面加载时一次性获取。
+
+每首歌曲的重数据 (字体映射 `assFontMap`、图片 base64 `assImageData`、图片事件 `assImageEvents`、边界框时间轴 `assBoundsTimeline` 等) 被拆分到 `static/info/{id}.json` 中, 仅在用户点击播放该歌曲时才按需加载。
+
+这样可以避免首屏加载数百 KB 的 JSON, 显著提升列表加载速度。
 
 ## 使用方法
 

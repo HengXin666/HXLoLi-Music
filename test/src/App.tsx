@@ -256,19 +256,6 @@ export default function App(): React.ReactElement {
           )}
         </div>
 
-        {/* assBounds 信息 */}
-        {currentTrack?.assBounds && (
-          <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: 6, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>
-            <div style={{ marginBottom: 4, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>📐 assBounds (预计算)</div>
-            <div>top: [{currentTrack.assBounds.topYMin}, {currentTrack.assBounds.topYMax}] • btm: [{currentTrack.assBounds.btmYMin}, {currentTrack.assBounds.btmYMax}]</div>
-            <div>left: {currentTrack.assBounds.left} • right: {currentTrack.assBounds.right}</div>
-            {currentTrack.assBoundsTimeline && (
-              <div style={{ marginTop: 4, color: 'rgba(136,255,136,0.6)' }}>
-                🕐 时间轴 bounds: {currentTrack.assBoundsTimeline.length} 个关键点 (滑动窗口+EMA)
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* 播放列表 */}

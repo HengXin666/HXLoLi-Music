@@ -3525,7 +3525,7 @@
     }
   },
   "ass_fonts:点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass": {
-    "hash": "dabd2ddb9276516f7748d9a8bfdddcd9",
+    "hash": "151915b8d462f0c6c69547736504e5d1",
     "data": {
       "fonts": [
         "FOT-Seurat ProN DB",
@@ -3535,7 +3535,7 @@
     }
   },
   "ass_bounds_v2:点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass": {
-    "hash": "dabd2ddb9276516f7748d9a8bfdddcd9:257.49",
+    "hash": "151915b8d462f0c6c69547736504e5d1:257.49",
     "data": {
       "result": {
         "bounds": {
@@ -4269,18 +4269,955 @@
     }
   },
   "ass_images:点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass": {
-    "hash": "dabd2ddb9276516f7748d9a8bfdddcd9",
+    "hash": "151915b8d462f0c6c69547736504e5d1",
     "data": {
       "images": [
-        "Picture/end/1.png",
-        "Picture/end/2.png",
-        "Picture/end/3.png",
         "Picture/tipi.png",
         "Picture/tipi/1.png",
         "Picture/tipi/2.png",
         "Picture/tipi/3.png",
         "Picture/tipi/4.png",
-        "Picture/tipi/5.png"
+        "Picture/tipi/5.png",
+        "Picture/end/1.png",
+        "Picture/end/2.png",
+        "Picture/end/3.png"
+      ]
+    }
+  },
+  "ass_image_events:点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass": {
+    "hash": "151915b8d462f0c6c69547736504e5d1",
+    "data": {
+      "events": [
+        {
+          "start": 28.11,
+          "end": 33.83,
+          "img": "Picture/tipi.png",
+          "move": [
+            1403.0,
+            1025.0,
+            517.0,
+            1025.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 100.0,
+          "drawH": 80.0
+        },
+        {
+          "start": 33.77,
+          "end": 37.48,
+          "img": "Picture/tipi.png",
+          "move": [
+            1201.0,
+            1025.0,
+            719.0,
+            1025.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 100.0,
+          "drawH": 80.0
+        },
+        {
+          "start": 37.46,
+          "end": 41.63,
+          "img": "Picture/tipi.png",
+          "move": [
+            1541.0,
+            1025.0,
+            379.0,
+            1025.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 100.0,
+          "drawH": 80.0
+        },
+        {
+          "start": 42.16,
+          "end": 48.24,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            629.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.16,
+          "end": 48.24,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            684.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.39,
+          "end": 48.24,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            739.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.39,
+          "end": 48.24,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            795.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.49,
+          "end": 48.24,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            850.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.49,
+          "end": 48.24,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            905.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.75,
+          "end": 48.24,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            960.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.75,
+          "end": 48.24,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1015.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 42.89,
+          "end": 48.24,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            1070.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 43.59,
+          "end": 48.24,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            1125.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 44.3,
+          "end": 48.24,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1181.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 44.91,
+          "end": 48.24,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1236.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 45.71,
+          "end": 48.24,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1291.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 47.8,
+          "end": 53.89,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            767.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 48.17,
+          "end": 53.89,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            822.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 48.36,
+          "end": 53.89,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            877.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 48.54,
+          "end": 53.89,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            932.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 49.24,
+          "end": 53.89,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            988.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 49.92,
+          "end": 53.89,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1043.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 50.59,
+          "end": 53.89,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1098.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 51.36,
+          "end": 53.89,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1153.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 53.47,
+          "end": 60.14,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            482.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 53.65,
+          "end": 60.14,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            537.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 53.82,
+          "end": 60.14,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            592.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 54.03,
+          "end": 60.14,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            647.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 54.18,
+          "end": 60.14,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            702.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 54.51,
+          "end": 60.14,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            757.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 54.84,
+          "end": 60.14,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            813.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 55.12,
+          "end": 60.14,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            868.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 55.28,
+          "end": 60.14,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            923.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 55.45,
+          "end": 60.14,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            978.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 56.29,
+          "end": 60.14,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1052.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 56.55,
+          "end": 60.14,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1107.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 56.78,
+          "end": 60.14,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1163.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 56.93,
+          "end": 60.14,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            1218.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 57.25,
+          "end": 60.14,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            1273.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 57.86,
+          "end": 60.14,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1328.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 58.12,
+          "end": 60.14,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1383.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 58.91,
+          "end": 60.14,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1438.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 59.82,
+          "end": 65.05,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            399.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 60.0,
+          "end": 65.05,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            454.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 60.17,
+          "end": 65.05,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            509.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 60.35,
+          "end": 65.05,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            564.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 60.53,
+          "end": 65.05,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            619.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 60.87,
+          "end": 65.05,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            675.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.08,
+          "end": 65.05,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            730.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.24,
+          "end": 65.05,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            785.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.46,
+          "end": 65.05,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            859.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.56,
+          "end": 65.05,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            914.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.68,
+          "end": 65.05,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            970.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.81,
+          "end": 65.05,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1025.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 61.91,
+          "end": 65.05,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1080.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 62.11,
+          "end": 65.05,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            1135.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 62.25,
+          "end": 65.05,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            1190.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 62.48,
+          "end": 65.05,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1245.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 62.61,
+          "end": 65.05,
+          "img": "Picture/tipi/2.png",
+          "pos": [
+            1301.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 62.95,
+          "end": 65.05,
+          "img": "Picture/tipi/3.png",
+          "pos": [
+            1356.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 63.32,
+          "end": 65.05,
+          "img": "Picture/tipi/4.png",
+          "pos": [
+            1411.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 63.57,
+          "end": 65.05,
+          "img": "Picture/tipi/5.png",
+          "pos": [
+            1466.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 63.9,
+          "end": 65.05,
+          "img": "Picture/tipi/1.png",
+          "pos": [
+            1521.0,
+            955.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 55.0,
+          "drawH": 44.0
+        },
+        {
+          "start": 82.44,
+          "end": 83.14,
+          "img": "Picture/end/1.png",
+          "pos": [
+            1380.0,
+            932.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 375.0,
+          "drawH": 296.0
+        },
+        {
+          "start": 83.14,
+          "end": 83.84,
+          "img": "Picture/end/2.png",
+          "pos": [
+            1380.0,
+            932.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 375.0,
+          "drawH": 296.0
+        },
+        {
+          "start": 83.84,
+          "end": 86.85,
+          "img": "Picture/end/3.png",
+          "pos": [
+            1380.0,
+            932.0
+          ],
+          "fadIn": 150,
+          "fadOut": 300,
+          "an": 5,
+          "drawW": 375.0,
+          "drawH": 296.0
+        }
       ]
     }
   }
