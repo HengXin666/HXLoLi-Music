@@ -47,7 +47,7 @@ jobs:
       - name: 生成 playlist.json
         run: |
           source $HOME/.cargo/env
-          uv run python music/gen_music_playlist.py
+          uv run python -m music.gen_music_playlist
         working-directory: ./py
         env:
           PYTHONUNBUFFERED: "1"
@@ -60,7 +60,7 @@ jobs:
           commit_user_name: 'Heng_Xin[LoLi-Bot]'
           commit_user_email: '282000500@qq.com'
           commit_author: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
-          file_pattern: 'playlist.json .playlist_cache.json static/music/**'
+          file_pattern: 'playlist.json .playlist_cache.json static/music/** static/info/**'
 
   # --- Job 2: 向 HXLoLi 主仓库发 PR 同步 MUSIC_COMMIT_ID ---
   sync-to-main-repo:
