@@ -69,7 +69,7 @@ jobs:
     if: always() && needs.generate-playlist.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: 获取当前仓库最新 commit hash
+      - name: 获取当前仓库最新 commit hash 和 message
         id: get-commit
         run: |
           # 获取 HXLoLi-Music 仓库 main 分支的最新 commit SHA
@@ -81,10 +81,20 @@ jobs:
           echo "commit_sha=${LATEST_SHA}" >> $GITHUB_OUTPUT
           echo "🎵 HXLoLi-Music 最新 commit: ${LATEST_SHA}"
 
+          # 获取该 commit 的 message (取第一行)
+          COMMIT_MSG=$(curl -s \
+            -H "Authorization: token ${{ secrets.MAIN_REPO_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits/${LATEST_SHA}" \
+            | jq -r '.commit.message' | head -n 1)
+          echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
+          echo "📝 commit message: ${COMMIT_MSG}"
+
       - name: 检查是否需要更新 & 创建 PR
         env:
           PAT: ${{ secrets.MAIN_REPO_PAT }}
           NEW_SHA: ${{ steps.get-commit.outputs.commit_sha }}
+          COMMIT_MSG: ${{ steps.get-commit.outputs.commit_msg }}
           MAIN_REPO: HengXin666/HXLoLi
           PR_BRANCH: bot/sync-music-version
         run: |
@@ -174,13 +184,16 @@ jobs:
           fi
 
           # 8. 创建 PR
-          PR_BODY="ご主人さま、音楽リポジトリが更新されましたにゃ♪\n\n**更新内容:**\n- 同步 \`MUSIC_COMMIT_ID\` → \`${NEW_SHA}\`\n- 来源: [HXLoLi-Music@main](https://github.com/HengXin666/HXLoLi-Music/commit/${NEW_SHA})\n\n> 🤖 此 PR 由 GitHub Actions 自动创建"
+          PR_TITLE="🎵 [LoLi-Bot] 同步 HXLoLi-Music: 「${COMMIT_MSG}」"
+          PR_BODY="ご主人さま、音楽リポジトリが更新されましたにゃ♪\n\n**更新内容:**\n- 同步 \`MUSIC_COMMIT_ID\` → \`${NEW_SHA}\`\n- 来源: [HXLoLi-Music@main](https://github.com/HengXin666/HXLoLi-Music/commit/${NEW_SHA})\n- commit message: \`${COMMIT_MSG}\`\n\n> 🤖 此 PR 由 GitHub Actions 自动创建"
+          # 转义 title 中的双引号, 防止 JSON 解析错误
+          PR_TITLE_ESCAPED=$(echo "${PR_TITLE}" | sed 's/"/\\"/g')
           curl -s -X POST \
             -H "Authorization: token ${PAT}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${MAIN_REPO}/pulls" \
             -d "{
-              \"title\": \"🎵 [LoLi-Bot] 同步 HXLoLi-Music 最新版本\",
+              \"title\": \"${PR_TITLE_ESCAPED}\",
               \"body\": \"${PR_BODY}\",
               \"head\": \"${PR_BRANCH}\",
               \"base\": \"main\"
