@@ -27,7 +27,7 @@ from .scanner import scan_music_dir
 # 需要从 playlist.json 拆分到 info/{id}.json 的重字段
 # 这些字段体积大 (如 assBoundsTimeline、assImageData)，按需加载以减小 playlist.json 体积
 DETAIL_FIELDS = [
-    'assFontMap', 'assImages', 'assImageData', 'assImageEvents',
+    'assFontMap', 'assImages', 'assImageData',
     'assBounds', 'assBoundsTimeline', 'fonts',
 ]
 

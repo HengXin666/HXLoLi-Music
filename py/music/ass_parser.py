@@ -1,10 +1,8 @@
-"""
-ASS 字幕文件解析模块
+"""ASS 字幕文件解析模块
 
 解析 ASS/SSA 字幕文件中的字体引用、\\1img 图片引用,
-并将外部图片以 base64 方式记录供前端加载
+并将外部图片以 base64 方式记录供渲染引擎虚拟文件系统加载
 """
-
 import re
 import base64
 from pathlib import Path
@@ -117,8 +115,7 @@ def extract_ass_images(ass_path: Path, ass_hash: str) -> list[str]:
 def build_ass_image_data(ass_path: Path, image_paths: list[str]) -> dict[str, str]:
     """将 ASS \\1img 引用的外部图片编码为 base64 数据
 
-    SubtitlesOctopus (libass-wasm) 不支持 VSFilter 的 [Graphics] UUEncode 内嵌,
-    而是通过 Emscripten 虚拟文件系统加载图片。
+    渲染引擎通过 Emscripten 虚拟文件系统加载图片, 原生支持 \\1img 纹理渲染。
     此函数将图片编码为 base64, 由前端写入 worker 的虚拟 FS。
 
     Args:
@@ -223,8 +220,10 @@ def _parse_drawing_size(drawing: str) -> tuple[float, float] | None:
 def extract_ass_image_events(ass_path: Path, ass_hash: str) -> list[dict] | None:
     """解析 ASS 中所有包含 \\1img 的 Dialogue 行, 提取图片事件信息
 
-    由于 libass (SubtitlesOctopus 底层) 不支持 \\1img 标签,
-    需要在前端自行叠加渲染这些图片。此函数提取每个事件的:
+    注意: 渲染引擎已原生支持 \\1img 纹理渲染, 此函数仅作为备用方案保留。
+    当渲染引擎已能正确处理 \\1img 时, 前端无需使用此数据进行叠加渲染。
+
+    提取每个事件的:
     - 时间范围 (start, end)
     - 图片路径 (img)
     - 位置 (pos 或 move)

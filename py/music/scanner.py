@@ -14,7 +14,7 @@ from .cache import file_md5, get_file_id, path_to_url
 from .metadata import extract_metadata, extract_cover_from_audio, find_matching_cover
 from .ass_parser import (
     find_matching_ass, extract_ass_fonts, extract_ass_images,
-    build_ass_image_data, extract_ass_image_events,
+    build_ass_image_data,
 )
 from .ass_prescan import prescan_ass_bounds
 from .fonts import ensure_ass_fonts, find_fonts_in_dir
@@ -103,20 +103,16 @@ def scan_music_dir() -> list[dict]:
                     print(f"    └─ 字体映射: {len(font_map)} 个 ({map_desc})")
 
             # 解析 ASS 中 \\1img 引用的外部图片
+            # 渲染引擎已原生支持 \1img 纹理渲染, 只需将图片写入 Worker 虚拟 FS
             ass_images = extract_ass_images(ass_path, ass_hash)
             if ass_images:
                 track["assImages"] = ass_images
                 print(f"    └─ ASS 图片: {len(ass_images)} 个 ({', '.join(ass_images[:3])}{'...' if len(ass_images) > 3 else ''})")
 
-                # 将图片编码为 base64, 供前端叠加渲染
+                # 将图片编码为 base64, 供前端写入 Worker 虚拟文件系统
                 image_data = build_ass_image_data(ass_path, ass_images)
                 if image_data:
                     track["assImageData"] = image_data
-
-                # 解析 \1img Dialogue 事件 (libass 不支持 \1img, 需要前端自行渲染)
-                image_events = extract_ass_image_events(ass_path, ass_hash)
-                if image_events:
-                    track["assImageEvents"] = image_events
 
             # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
             duration = meta.get("duration", 0)
