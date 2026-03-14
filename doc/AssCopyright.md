@@ -9,7 +9,7 @@
 
 - [いとうかなこ - ファティマ .ass](../static/music/命运石之门/いとうかなこ%20-%20ファティマ%20.ass) -> [Seekladoom](https://github.com/Seekladoom/Seekladoom-ASS-Effect/blob/master/%E5%91%BD%E8%BF%90%E7%9F%B3%E4%B9%8B%E9%97%A8%200%20OP1.ass)
 
-- [羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass](../static/music/天使の3P/羽ばたきのバースデイ%20(振翅的新生)%20-%20大野柚布子、遠藤ゆりか、古賀葵.ass) -> [Seekladoom](https://assrt.net/xml/sub/608/608983.xml)
+- [羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass](../static/music/天使の3P/羽ばたきのバースデイ%20(振翅的新生)%20-%20大野柚布子、遠藤ゆりか、古賀葵.ass) -> [Seekladoom](https://assrt.net/xml/sub/608/608983.xml) **(仅参考)**, `个人`已经补充为 **全歌曲歌词** 并且附带 **日语注音**
 
 - [来自深渊 Made In Abyss]() -> [Seekladoom](https://assrt.net/xml/sub/609/609368.xml)
 

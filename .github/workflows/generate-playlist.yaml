@@ -81,12 +81,22 @@ jobs:
           echo "commit_sha=${LATEST_SHA}" >> $GITHUB_OUTPUT
           echo "🎵 HXLoLi-Music 最新 commit: ${LATEST_SHA}"
 
-          # 获取该 commit 的 message (取第一行)
+          # 获取最近的 commits 列表, 找到第一条非 Bot 的 commit message
+          # (最新 commit 可能是 Bot 自动提交的 playlist 更新, 需要跳过)
           COMMIT_MSG=$(curl -s \
             -H "Authorization: token ${{ secrets.MAIN_REPO_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits/${LATEST_SHA}" \
-            | jq -r '.commit.message' | head -n 1)
+            "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits?sha=main&per_page=5" \
+            | jq -r '[.[] | select(.commit.message | test("\\[LoLi-Bot\\]") | not)][0].commit.message' \
+            | head -n 1)
+          # 如果找不到非 Bot 的 commit, 回退到最新 commit 的 message
+          if [ -z "${COMMIT_MSG}" ] || [ "${COMMIT_MSG}" = "null" ]; then
+            COMMIT_MSG=$(curl -s \
+              -H "Authorization: token ${{ secrets.MAIN_REPO_PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/HengXin666/HXLoLi-Music/commits/${LATEST_SHA}" \
+              | jq -r '.commit.message' | head -n 1)
+          fi
           echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
           echo "📝 commit message: ${COMMIT_MSG}"
 

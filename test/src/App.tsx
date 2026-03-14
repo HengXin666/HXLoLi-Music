@@ -13,8 +13,22 @@ import {
     FaStepBackward, FaStepForward, FaVolumeDown, FaVolumeMute, FaVolumeUp
 } from 'react-icons/fa';
 import AssLyrics from './AssLyrics';
+import AssLyricsLibass from './AssLyricsLibass';
 import { useMusicStore, type PlayMode } from './musicStore';
 import type { MusicTrack } from './types';
+
+/** 渲染引擎类型 */
+type RendererEngine = 'octopus' | 'libass-wasm';
+
+const RENDERER_KEY = 'hxloli-lyrics-renderer';
+
+function loadRenderer(): RendererEngine {
+  try { const raw = localStorage.getItem(RENDERER_KEY); if (raw === 'libass-wasm') return 'libass-wasm'; } catch {}
+  return 'octopus';
+}
+function saveRenderer(engine: RendererEngine) {
+  try { localStorage.setItem(RENDERER_KEY, engine); } catch {}
+}
 
 /** 格式化时间 mm:ss */
 function formatTime(seconds: number): string {
@@ -41,6 +55,15 @@ const PLAY_MODE_INFO: Record<PlayMode, { icon: React.ReactNode; title: string }>
 export default function App(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rendererEngine, setRendererEngine] = useState<RendererEngine>(loadRenderer);
+
+  const toggleRenderer = useCallback(() => {
+    setRendererEngine((prev) => {
+      const next: RendererEngine = prev === 'octopus' ? 'libass-wasm' : 'octopus';
+      saveRenderer(next);
+      return next;
+    });
+  }, []);
 
   const pl = useMusicStore((s) => s.playlist);
   const trackIndex = useMusicStore((s) => s.trackIndex);
@@ -180,6 +203,21 @@ export default function App(): React.ReactElement {
         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 4 }}>
           测试 ASS 歌词渲染效果 • 预处理裁剪 • 悬浮窗
         </p>
+        {/* 渲染引擎切换 */}
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>渲染引擎:</span>
+          <button onClick={toggleRenderer}
+            style={{
+              fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 12,
+              border: '1px solid', cursor: 'pointer', transition: 'all 0.15s',
+              ...(rendererEngine === 'libass-wasm'
+                ? { background: 'rgba(0, 255, 136, 0.15)', borderColor: '#00ff88', color: '#00ff88' }
+                : { background: 'rgba(136, 136, 255, 0.15)', borderColor: '#8888ff', color: '#8888ff' }),
+            }}
+            title={`当前: ${rendererEngine}\n点击切换渲染引擎`}>
+            {rendererEngine === 'libass-wasm' ? '🚀 libass-wasm (原生图片)' : '🐙 SubtitlesOctopus'}
+          </button>
+        </div>
       </header>
 
       {/* 主播放器 */}
@@ -283,7 +321,7 @@ export default function App(): React.ReactElement {
       </div>
 
       {/* ASS 歌词悬浮窗 */}
-      <AssLyrics />
+      {rendererEngine === 'libass-wasm' ? <AssLyricsLibass /> : <AssLyrics />}
     </div>
   );
 }

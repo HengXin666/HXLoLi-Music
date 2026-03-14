@@ -20,7 +20,7 @@ function serveParentStatic(): Plugin {
 
         const decodedUrl = decodeURIComponent(req.url.split('?')[0]);
 
-        // 代理 /static/music/* 到父目录
+        // 代理 /static/music/* 到父目录 (支持 Range 请求, 以便音频可拖动)
         if (decodedUrl.startsWith('/static/music/')) {
           const filePath = path.join(parentRoot, decodedUrl);
           if (fs.existsSync(filePath)) {
@@ -48,8 +48,52 @@ function serveParentStatic(): Plugin {
               '.wasm': 'application/wasm',
             };
             const mime = mimeMap[ext] || 'application/octet-stream';
-            res.setHeader('Content-Type', mime);
-            res.setHeader('Content-Length', stat.size);
+            const totalSize = stat.size;
+            const rangeHeader = req.headers.range;
+
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Accept-Ranges', 'bytes');
+
+            if (rangeHeader) {
+              // 解析 Range 头, 例如 "bytes=0-1023"
+              const match = rangeHeader.match(/bytes=(\d*)-(\d*)/);
+              if (match) {
+                const start = match[1] ? parseInt(match[1], 10) : 0;
+                const end = match[2] ? parseInt(match[2], 10) : totalSize - 1;
+                const chunkSize = end - start + 1;
+
+                if (start >= totalSize || end >= totalSize || start > end) {
+                  res.writeHead(416, { 'Content-Range': `bytes */${totalSize}` });
+                  res.end();
+                  return;
+                }
+
+                res.writeHead(206, {
+                  'Content-Type': mime,
+                  'Content-Range': `bytes ${start}-${end}/${totalSize}`,
+                  'Content-Length': chunkSize,
+                });
+                fs.createReadStream(filePath, { start, end }).pipe(res);
+              } else {
+                // Range 格式无法解析, 返回完整文件
+                res.setHeader('Content-Type', mime);
+                res.setHeader('Content-Length', totalSize);
+                fs.createReadStream(filePath).pipe(res);
+              }
+            } else {
+              res.setHeader('Content-Type', mime);
+              res.setHeader('Content-Length', totalSize);
+              fs.createReadStream(filePath).pipe(res);
+            }
+            return;
+          }
+        }
+
+        // 代理 /static/info/* 到父目录 (歌曲详细配置, 按需加载)
+        if (decodedUrl.startsWith('/static/info/')) {
+          const filePath = path.join(parentRoot, decodedUrl);
+          if (fs.existsSync(filePath)) {
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
             res.setHeader('Access-Control-Allow-Origin', '*');
             fs.createReadStream(filePath).pipe(res);
             return;
