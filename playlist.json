@@ -58,6 +58,18 @@
         ]
     },
     {
+        "id": "843f7977fe25",
+        "title": "INNOCENT BLUE",
+        "artist": "古賀葵、大野柚布子、遠藤ゆりか",
+        "audioUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.mp3",
+        "assUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.ass",
+        "assFonts": [
+            "FOT-PopJoy Std B",
+            "方正少儿_GBK"
+        ],
+        "coverUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.jpg"
+    },
+    {
         "id": "d65124ad8c89",
         "title": "羽ばたきのバースデイ (振翅的新生)",
         "artist": "大野柚布子、遠藤ゆりか、古賀葵",
