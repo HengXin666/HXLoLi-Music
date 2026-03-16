@@ -13,6 +13,6 @@
 
 - [来自深渊 Made In Abyss]() -> [Seekladoom](https://assrt.net/xml/sub/609/609368.xml)
 
-- [Lia - Bravely You](../static/music/Charlotte/Lia%20-%20Bravely%20You.ass) -> [DHR×星冈](https://www.bilibili.com/video/BV1Js411v7nC) (原出处未知) (个人进行了微调: 把复述部分注明修改为歌词(如: `聴こえない`))
+- [Lia - Bravely You](../static/music/Charlotte/Lia%20-%20Bravely%20You.ass) -> [DHR×星冈](https://www.bilibili.com/video/BV1Js411v7nC) (原出处未知) (个人进行了微调: 把复述部分注明修改为歌词(如: `聴こえない`)) (个人模仿其特效拓展到全曲, 并且附带 **日语注音**)
 
 - [ときめきポポロン♪ (心动泡芙♪) - チマメ隊](../static/music/点兔/ときめきポポロン♪%20(心动泡芙♪)%20-%20チマメ隊.ass) -> [藤原七宝](https://github.com/Kinoshita-Shippo/Aegisub_Practice) (修改了部分特效(如 `\fsvp` 转换为 `\fax`), VSFilter → libass 兼容)

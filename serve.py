@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """
-HXLoLi-Music 本地文件服务器
+HXLoLi-Music 本地文件服务器 (FastAPI 异步版)
 
 在本地开发 HXLoLi 时, 启动此服务器可以让前端直接读取本地仓库的音乐资源,
 无需等待远程 CDN 更新.
 
 使用方法:
     cd /path/to/HXLoLi-Music
-    python3 serve.py          # 默认端口 9527
-    python3 serve.py 8080     # 自定义端口
+    uv run serve.py          # 默认端口 9527
+    uv run serve.py 8080     # 自定义端口
 
 前端 (HXLoLi) 在本地开发模式 (localhost) 下会自动检测此服务器,
 如果可用则从本地加载, 否则自动 fallback 到 jsDelivr CDN.
 """
 
-import os
 import sys
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+import logging
 from pathlib import Path
-from functools import partial
 from urllib.parse import unquote
+
+import uvicorn
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 # 默认端口 (前端 musicDataLoader.ts 中的 LOCAL_MUSIC_SERVER 端口一致)
 DEFAULT_PORT = 9527
@@ -28,129 +31,168 @@ DEFAULT_PORT = 9527
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 
-class CORSHandler(SimpleHTTPRequestHandler):
-    """带 CORS 和 Range 请求支持的静态文件服务器
+# ---------------------------------------------------------------------------
+# 自定义日志: 用 emoji 区分不同类型的请求
+# ---------------------------------------------------------------------------
+class EmojiAccessFilter(logging.Filter):
+    """
+    过滤 uvicorn.access 日志, 只保留特定类型的请求.
 
-    - 允许跨域请求 (前端 localhost:3000 访问 localhost:9527)
-    - 支持 Range 请求 (音频拖动进度条 / 断点续传)
-    - 支持 HEAD 请求 (用于可用性检测)
-    - 路由: / 映射到项目根目录 (playlist.json 在此)
-    - 路由: /static/music/ 映射到 static/music/ 目录
+    uvicorn 传入的 record.args 为:
+        (client_addr, method, full_path, http_version, status_code)
     """
 
-    # 使用 HTTP/1.1 以支持 Range 请求和持久连接
-    protocol_version = "HTTP/1.1"
+    # 需要记录的文件扩展名 -> emoji 映射
+    _EXT_EMOJI: dict[str, str] = {
+        '.json': '📋',
+        '.mp3': '🎵', '.flac': '🎵', '.ogg': '🎵',
+        '.m4a': '🎵', '.wav': '🎵', '.opus': '🎵',
+        '.ass': '📝', '.ssa': '📝',
+        '.ttf': '🔤', '.otf': '🔤', '.woff': '🔤', '.woff2': '🔤',
+    }
 
-    def _add_cors_headers(self):
-        """添加 CORS 和缓存控制头"""
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', '*')
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        # HTTP/1.1 默认 keep-alive, 但 SimpleHTTPRequestHandler 不支持, 必须显式关闭
-        self.send_header('Connection', 'close')
-
-    def end_headers(self):
-        self._add_cors_headers()
-        super().end_headers()
-
-    def do_OPTIONS(self):
-        """处理 CORS 预检请求"""
-        self.send_response(200)
-        self.end_headers()
-
-    def do_GET(self):
-        """处理 GET 请求, 支持 Range 头 (音频 seek 必需)"""
-        range_header = self.headers.get('Range')
-        if not range_header:
-            # 无 Range 头, 走默认逻辑
-            super().do_GET()
-            return
-
-        # 解析文件路径
-        path = self.translate_path(self.path)
-        if os.path.isdir(path):
-            super().do_GET()
-            return
-
+    def filter(self, record: logging.LogRecord) -> bool:
         try:
-            file_size = os.path.getsize(path)
-        except OSError:
-            self.send_error(404, "File not found")
-            return
+            (_client_addr, _method, full_path, _http_version, status_code) = record.args  # type: ignore[misc]
+            path = unquote(full_path)
+            status = str(status_code)
+        except (ValueError, TypeError):
+            return True
 
-        # 解析 Range: bytes=start-end
+        # 非 200/206 的请求始终打印 (错误)
+        if status not in ('200', '206'):
+            record.msg = f"  ⚠️  {status} {path}"
+            record.args = None
+            return True
+
+        # 匹配扩展名
+        for ext, emoji in self._EXT_EMOJI.items():
+            if path.endswith(ext):
+                record.msg = f"  {emoji} {path}"
+                record.args = None
+                return True
+
+        # 其他请求静默
+        return False
+
+
+# ---------------------------------------------------------------------------
+# 创建 FastAPI 应用
+# ---------------------------------------------------------------------------
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+# CORS: 允许所有来源
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "HEAD", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+
+# ---------------------------------------------------------------------------
+# 缓存控制中间件
+# ---------------------------------------------------------------------------
+@app.middleware("http")
+async def add_cache_control(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
+
+
+# ---------------------------------------------------------------------------
+# 路由: 捕获所有路径, 作为静态文件服务
+# ---------------------------------------------------------------------------
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
+async def serve_file(request: Request, full_path: str):
+    """提供静态文件服务, 支持 Range 请求 (音频 seek 必需)"""
+
+    # 将 URL 路径映射到文件系统
+    if not full_path or full_path == "/":
+        full_path = "index.html"
+
+    file_path = PROJECT_ROOT / full_path
+
+    # 安全检查: 防止路径穿越
+    try:
+        file_path = file_path.resolve()
+        if not str(file_path).startswith(str(PROJECT_ROOT)):
+            return Response(status_code=403)
+    except (OSError, ValueError):
+        return Response(status_code=400)
+
+    # 目录 -> 尝试 index.html
+    if file_path.is_dir():
+        file_path = file_path / "index.html"
+
+    if not file_path.is_file():
+        return Response(status_code=404)
+
+    file_size = file_path.stat().st_size
+
+    # HEAD 请求
+    if request.method == "HEAD":
+        from mimetypes import guess_type
+        content_type = guess_type(str(file_path))[0] or "application/octet-stream"
+        return Response(
+            status_code=200,
+            headers={
+                "Content-Type": content_type,
+                "Content-Length": str(file_size),
+                "Accept-Ranges": "bytes",
+            },
+        )
+
+    # Range 请求
+    range_header = request.headers.get("range")
+    if range_header:
         try:
-            range_spec = range_header.replace('bytes=', '').strip()
-            parts = range_spec.split('-')
+            range_spec = range_header.replace("bytes=", "").strip()
+            parts = range_spec.split("-")
             start = int(parts[0]) if parts[0] else 0
             end = int(parts[1]) if parts[1] else file_size - 1
         except (ValueError, IndexError):
-            self.send_error(416, "Invalid Range")
-            return
+            return Response(status_code=416, headers={
+                "Content-Range": f"bytes */{file_size}",
+            })
 
         # 范围校验
         if start >= file_size or end >= file_size or start > end:
-            self.send_response(416)
-            self.send_header('Content-Range', f'bytes */{file_size}')
-            self.end_headers()
-            return
+            return Response(status_code=416, headers={
+                "Content-Range": f"bytes */{file_size}",
+            })
 
         content_length = end - start + 1
-        content_type = self.guess_type(path)
+        from mimetypes import guess_type
+        content_type = guess_type(str(file_path))[0] or "application/octet-stream"
 
-        try:
-            f = open(path, 'rb')
+        # 异步读取文件片段
+        data = b""
+        with open(file_path, "rb") as f:
             f.seek(start)
             data = f.read(content_length)
-            f.close()
-        except OSError:
-            self.send_error(500, "Internal Server Error")
-            return
 
-        self.send_response(206)
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', str(content_length))
-        self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
-        self.send_header('Accept-Ranges', 'bytes')
-        self.end_headers()
-        self.wfile.write(data)
+        return Response(
+            content=data,
+            status_code=206,
+            headers={
+                "Content-Type": content_type,
+                "Content-Length": str(content_length),
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Accept-Ranges": "bytes",
+            },
+        )
 
-    def do_HEAD(self):
-        """处理 HEAD 请求, 添加 Accept-Ranges 头告知客户端支持 Range"""
-        path = self.translate_path(self.path)
-        if not os.path.isdir(path):
-            try:
-                file_size = os.path.getsize(path)
-                content_type = self.guess_type(path)
-                self.send_response(200)
-                self.send_header('Content-Type', content_type)
-                self.send_header('Content-Length', str(file_size))
-                self.send_header('Accept-Ranges', 'bytes')
-                self.end_headers()
-                return
-            except OSError:
-                pass
-        super().do_HEAD()
-
-    def log_message(self, format, *args):
-        """自定义日志格式"""
-        path = unquote(args[0].split(' ')[1]) if args else ''
-        status = args[1] if len(args) > 1 else ''
-        # 只打印非 200/206 或者非静态资源的请求
-        if str(status) not in ('200', '206'):
-            print(f"  ⚠️  {status} {path}")
-        elif path.endswith('.json'):
-            print(f"  📋 {path}")
-        elif any(path.endswith(ext) for ext in ('.mp3', '.flac', '.ogg', '.m4a', '.wav', '.opus')):
-            print(f"  🎵 {path}")
-        elif any(path.endswith(ext) for ext in ('.ass', '.ssa')):
-            print(f"  📝 {path}")
-        elif any(path.endswith(ext) for ext in ('.ttf', '.otf', '.woff', '.woff2')):
-            print(f"  🔤 {path}")
-        # 其他请求静默
+    # 普通 GET 请求: 使用 FileResponse (支持异步文件发送)
+    return FileResponse(
+        path=file_path,
+        headers={"Accept-Ranges": "bytes"},
+    )
 
 
+# ---------------------------------------------------------------------------
+# 入口
+# ---------------------------------------------------------------------------
 def main():
     port = DEFAULT_PORT
     if len(sys.argv) > 1:
@@ -159,17 +201,6 @@ def main():
         except ValueError:
             print(f"[错误] 无效的端口号: {sys.argv[1]}")
             sys.exit(1)
-
-    os.chdir(PROJECT_ROOT)
-
-    handler = partial(CORSHandler, directory=str(PROJECT_ROOT))
-
-    # 允许端口重用, 避免服务器重启时 "Address already in use" 错误
-    class ReusableHTTPServer(HTTPServer):
-        allow_reuse_address = True
-        allow_reuse_port = True
-
-    server = ReusableHTTPServer(('0.0.0.0', port), handler)
 
     print("=" * 50)
     print("🎵 HXLoLi-Music 本地文件服务器")
@@ -185,12 +216,26 @@ def main():
     print("=" * 50)
     print()
 
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\n\n[信息] 服务器已停止")
-        server.server_close()
+    # 配置 uvicorn access 日志使用 emoji 过滤器 + 简洁格式化器
+    log_config = uvicorn.config.LOGGING_CONFIG
+    # 用简单的 formatter 替换 uvicorn 的 AccessFormatter (后者会解包 args)
+    log_config["formatters"]["access"] = {
+        "format": "%(message)s",
+    }
+    log_config["filters"] = {
+        "emoji_access": {"()": __name__ + ".EmojiAccessFilter"},
+    }
+    log_config["handlers"]["access"]["filters"] = ["emoji_access"]
+    # 关闭 uvicorn 默认的启动信息, 我们已经打印了自己的
+    log_config["loggers"]["uvicorn"]["level"] = "WARNING"
+
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_config=log_config,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
