@@ -100,9 +100,8 @@
         "audioUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.mp3",
         "assUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass",
         "assFonts": [
-            "FOT-Seurat ProN DB",
-            "Rounded-L Mgen+ 1c bold",
-            "黑体"
+            "FOT-ニューロダン Pro M",
+            "Meiryo"
         ],
         "coverUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.jpg"
     }
