@@ -2,9 +2,9 @@
 
 HXLoLi 音乐资源仓库, 存放音频、歌词、封面、字体等音乐相关资源。
 
-通过 jsDelivr CDN 为 [HXLoLi](https://github.com/HXLoLi/HXLoLi) 主站提供音乐数据。
+通过 jsDelivr CDN 为 [HXLoLi](https://github.com/HengXin666/HXLoLi) 主站提供音乐数据。
 
-ASS 歌词由 [SubtitlesOctopus (HXLoLi 定制版)](https://github.com/HXLoLi/JavascriptSubtitlesOctopus) 渲染引擎驱动，
+ASS 歌词由 [SubtitlesOctopus (HXLoLi 定制版)](https://github.com/HengXin666/JavascriptSubtitlesOctopus) 渲染引擎驱动，
 原生支持 VSFilterMod 扩展标签（`\1img` 图片纹理、`\fsvp` 垂直偏移、`\moves3`/`\moves4` 贝塞尔曲线移动等）。
 
 ## 目录结构
