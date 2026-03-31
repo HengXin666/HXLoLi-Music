@@ -1,0 +1,135 @@
+name: 🏷️ CDN Tag & 同步主仓库
+
+on:
+  # 由 generate-playlist 工作流完成后触发 (playlist bot commit 之后)
+  workflow_run:
+    workflows: ["[LoLi-Music]: 自动生成播放列表"]
+    types: [completed]
+    branches: [main]
+  # 非音乐路径的 push 直接触发 (如修改 README、scripts 等)
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'static/music/**'
+      - 'py/music/**'
+  # 手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag-and-pr:
+    name: 打 CDN Tag & 发 PR 到 HXLoLi
+    # workflow_run 时只在成功后执行; push/dispatch 时总是执行
+    if: |
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # 确保拿到最新的 main (包含 bot commit)
+          fetch-depth: 0
+
+      # ── 1. 生成 HX-{随机6位}-{时间戳} 格式的 tag ──
+      - name: 🏷️ 创建 CDN Tag
+        id: tag
+        run: |
+          RANDOM_STR=$(head -c 100 /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          NEW_TAG="HX-${RANDOM_STR}-${TIMESTAMP}"
+
+          git tag "${NEW_TAG}"
+          git push origin "${NEW_TAG}"
+
+          echo "tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+          echo "✅ CDN tag: ${NEW_TAG}"
+
+      # ── 2. 清理旧 tag (只保留最新 2 个) ──
+      - name: 🗑️ 清理旧 Tag
+        run: |
+          BOT_TAGS=$(git tag -l 'HX-*' --sort=-creatordate)
+          TAG_COUNT=$(echo "${BOT_TAGS}" | grep -c '^HX-' || true)
+
+          if [ "${TAG_COUNT}" -gt 2 ]; then
+            echo "${BOT_TAGS}" | tail -n +3 | while IFS= read -r tag; do
+              [ -n "${tag}" ] && git push origin --delete "${tag}" 2>/dev/null || true
+              [ -n "${tag}" ] && git tag -d "${tag}" 2>/dev/null || true
+            done
+          fi
+
+      # ── 3. 切片超大文件 (>19MB, jsDelivr 限制 20MB) ──
+      - name: ✂️ 大文件切片
+        run: |
+          if [ -f scripts/cdn-split.sh ]; then
+            # 安装 hx-cdn-forge CLI
+            npm install -g hx-cdn-forge 2>/dev/null || npx hx-cdn-split --help > /dev/null 2>&1 || true
+            bash scripts/cdn-split.sh
+            # 如果切片产生了新文件, 提交并更新 tag
+            if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+              git add -A
+              git config user.name "Heng_Xin[LoLi-Bot]"
+              git config user.email "282000500@qq.com"
+              git commit -m "[LoLi-Bot]: 自动切片大文件"
+              git push
+
+              # 移动 tag 到最新 commit
+              git tag -f "${{ steps.tag.outputs.tag }}"
+              git push origin -f "${{ steps.tag.outputs.tag }}"
+              echo "🔄 Tag 已更新到包含切片的 commit"
+            fi
+          fi
+
+      # ── 4. 向主仓库 HXLoLi 发 PR 更新 musicCdnVersion.ts ──
+      - name: 🔄 向 HXLoLi 发 PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.HXLOLI_PR_TOKEN }}
+          script: |
+            const owner = 'HengXin666';
+            const repo = 'HXLoLi';
+            const newTag = '${{ steps.tag.outputs.tag }}';
+            const branchName = `auto/music-cdn-${newTag}`;
+
+            const { data: ref } = await github.rest.git.getRef({
+              owner, repo, ref: 'heads/main'
+            });
+
+            await github.rest.git.createRef({
+              owner, repo,
+              ref: `refs/heads/${branchName}`,
+              sha: ref.object.sha
+            });
+
+            const { data: file } = await github.rest.repos.getContent({
+              owner, repo,
+              path: 'data/musicCdnVersion.ts',
+              ref: 'main'
+            });
+
+            const content = Buffer.from(file.content, 'base64').toString('utf-8');
+            const updatedContent = content.replace(
+              /export const MUSIC_CDN_TAG = '.*?';/,
+              `export const MUSIC_CDN_TAG = '${newTag}';`
+            );
+
+            await github.rest.repos.createOrUpdateFileContents({
+              owner, repo,
+              path: 'data/musicCdnVersion.ts',
+              message: `[LoLi-Bot]: update MUSIC_CDN_TAG to ${newTag}`,
+              content: Buffer.from(updatedContent).toString('base64'),
+              sha: file.sha,
+              branch: branchName
+            });
+
+            await github.rest.pulls.create({
+              owner, repo,
+              title: `🎵 Music: CDN 版本更新 → ${newTag}`,
+              body: `## 🎵 HXLoLi-Music 数据同步\n\n更新 \`MUSIC_CDN_TAG\` → \`${newTag}\`\n\n---\n*由 HXLoLi-Music CI 自动生成*`,
+              head: branchName,
+              base: 'main'
+            });
+
+            console.log(`✅ PR created: ${branchName} → main`);
