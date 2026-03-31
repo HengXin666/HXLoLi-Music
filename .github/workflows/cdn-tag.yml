@@ -85,12 +85,14 @@ jobs:
       # ── 4. 向主仓库 HXLoLi 发 PR 更新 musicCdnVersion.ts ──
       - name: 🔄 向 HXLoLi 发 PR
         uses: actions/github-script@v7
+        env:
+          NEW_TAG: ${{ steps.tag.outputs.tag }}
         with:
           github-token: ${{ secrets.HXLOLI_PR_TOKEN }}
           script: |
             const owner = 'HengXin666';
             const repo = 'HXLoLi';
-            const newTag = '${{ steps.tag.outputs.tag }}';
+            const newTag = process.env.NEW_TAG;
             const branchName = `auto/music-cdn-${newTag}`;
 
             const { data: ref } = await github.rest.git.getRef({

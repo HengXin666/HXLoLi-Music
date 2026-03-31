@@ -14,7 +14,7 @@
 set -e
 
 THRESHOLD=$((19 * 1024 * 1024))  # 19MB
-SPLIT_DIR="cdn-split"
+SPLIT_DIR="static/cdn"
 STATIC_DIR="static"
 
 echo "=== HXLoLi-Music CDN 大文件切片 ==="
@@ -39,5 +39,5 @@ done
 echo "✅ 切片完成!"
 echo ""
 echo "前端配置:"
-echo "  splitStoragePath: '$SPLIT_DIR'"
+echo "  splitStoragePath: 'static/cdn'"
 echo "  mappingPrefix: '$STATIC_DIR'"
