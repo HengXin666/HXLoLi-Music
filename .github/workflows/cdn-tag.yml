@@ -99,7 +99,7 @@ jobs:
           NEW_TAG: ${{ steps.tag.outputs.tag }}
           COMMIT_MSG: ${{ steps.info.outputs.msg }}
         with:
-          github-token: ${{ secrets.HXLOLI_PR_TOKEN }}
+          github-token: ${{ secrets.MAIN_REPO_PAT }}
           script: |
             const owner = 'HengXin666';
             const repo = 'HXLoLi';
