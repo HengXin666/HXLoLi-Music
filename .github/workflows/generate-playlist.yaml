@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   # --- Job 1: 生成并提交 playlist.json ---
@@ -61,4 +62,18 @@ jobs:
           commit_user_email: '282000500@qq.com'
           commit_author: 'Heng_Xin[LoLi-Bot] <282000500@qq.com>'
           file_pattern: 'playlist.json .playlist_cache.json static/music/** static/info/**'
+
+      # Bot commit 完成后, 触发 cdn-tag 打 tag (确保 tag 包含最新数据)
+      - name: 🏷️ 触发 CDN Tag
+        if: steps.auto-commit.outputs.changes_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'cdn-tag.yml',
+              ref: 'main',
+            });
+            console.log('✅ 已触发 cdn-tag.yml');
 

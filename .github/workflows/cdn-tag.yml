@@ -1,45 +1,69 @@
 name: 🏷️ CDN Tag & 同步主仓库
 
 on:
-  # 由 generate-playlist 工作流完成后触发 (playlist bot commit 之后)
-  workflow_run:
-    workflows: ["[LoLi-Music]: 自动生成播放列表"]
-    types: [completed]
-    branches: [main]
-  # 非音乐路径的 push 直接触发 (如修改 README、scripts 等)
+  # 由 generate-playlist 工作流在 bot commit 之后主动触发
+  workflow_dispatch:
+  # 非音乐路径的 push 直接触发
   push:
     branches: [main]
     paths-ignore:
       - 'static/music/**'
       - 'py/music/**'
-  # 手动触发
-  workflow_dispatch:
+      - 'py/**'
+      - 'playlist.json'
+      - '.playlist_cache.json'
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   create-tag-and-pr:
     name: 打 CDN Tag & 发 PR 到 HXLoLi
-    # workflow_run 时只在成功后执行; push/dispatch 时总是执行
+    # 跳过 Bot 自己的 commit (避免循环)
     if: |
-      github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'success'
+      github.event_name == 'workflow_dispatch' ||
+      !contains(github.event.head_commit.message, '[LoLi-Bot]')
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main  # 确保拿到最新的 main (包含 bot commit)
+          ref: main
           fetch-depth: 0
 
-      # ── 1. 生成 HX-{随机6位}-{时间戳} 格式的 tag ──
+      # ── 1. 切片超大文件 (>19MB) ──
+      - name: ✂️ 大文件切片
+        id: split
+        run: |
+          SPLIT_CHANGED=false
+          if [ -f scripts/cdn-split.sh ]; then
+            npm install -g hx-cdn-forge 2>/dev/null || true
+            bash scripts/cdn-split.sh
+
+            if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard static/cdn/)" ]; then
+              SPLIT_CHANGED=true
+            fi
+          fi
+          echo "changed=${SPLIT_CHANGED}" >> "$GITHUB_OUTPUT"
+
+      # ── 2. 切片有变化 → 提交并继续 ──
+      - name: 📦 提交切片
+        if: steps.split.outputs.changed == 'true'
+        run: |
+          git add static/cdn/
+          git config user.name "Heng_Xin[LoLi-Bot]"
+          git config user.email "282000500@qq.com"
+          git commit -m "[LoLi-Bot]: 自动切片大文件到 static/cdn"
+          git push
+
+      # ── 3. 生成 tag ──
       - name: 🏷️ 创建 CDN Tag
         id: tag
         run: |
-          RANDOM_STR=$(head -c 100 /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          NEW_TAG="HX-${RANDOM_STR}-${TIMESTAMP}"
+          RANDOM_STR=$(head -c 100 /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
+          NEW_TAG="HX-${TIMESTAMP}-${RANDOM_STR}"
 
           git tag "${NEW_TAG}"
           git push origin "${NEW_TAG}"
@@ -47,7 +71,7 @@ jobs:
           echo "tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
           echo "✅ CDN tag: ${NEW_TAG}"
 
-      # ── 2. 清理旧 tag (只保留最新 2 个) ──
+      # ── 4. 清理旧 tag ──
       - name: 🗑️ 清理旧 Tag
         run: |
           BOT_TAGS=$(git tag -l 'HX-*' --sort=-creatordate)
@@ -60,40 +84,29 @@ jobs:
             done
           fi
 
-      # ── 3. 切片超大文件 (>19MB, jsDelivr 限制 20MB) ──
-      - name: ✂️ 大文件切片
+      # ── 5. 获取 commit 信息 ──
+      - name: 📝 获取 commit 信息
+        id: info
         run: |
-          if [ -f scripts/cdn-split.sh ]; then
-            # 安装 hx-cdn-forge CLI
-            npm install -g hx-cdn-forge 2>/dev/null || npx hx-cdn-split --help > /dev/null 2>&1 || true
-            bash scripts/cdn-split.sh
-            # 如果切片产生了新文件, 提交并更新 tag
-            if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-              git add -A
-              git config user.name "Heng_Xin[LoLi-Bot]"
-              git config user.email "282000500@qq.com"
-              git commit -m "[LoLi-Bot]: 自动切片大文件"
-              git push
+          COMMIT_MSG=$(git log --format='%s' --no-merges -20 | grep -v '\[LoLi-Bot\]' | head -n 1)
+          [ -z "${COMMIT_MSG}" ] && COMMIT_MSG="CDN 版本更新"
+          echo "msg=${COMMIT_MSG}" >> "$GITHUB_OUTPUT"
 
-              # 移动 tag 到最新 commit
-              git tag -f "${{ steps.tag.outputs.tag }}"
-              git push origin -f "${{ steps.tag.outputs.tag }}"
-              echo "🔄 Tag 已更新到包含切片的 commit"
-            fi
-          fi
-
-      # ── 4. 向主仓库 HXLoLi 发 PR 更新 musicCdnVersion.ts ──
+      # ── 6. 向主仓库发 PR ──
       - name: 🔄 向 HXLoLi 发 PR
         uses: actions/github-script@v7
         env:
           NEW_TAG: ${{ steps.tag.outputs.tag }}
+          COMMIT_MSG: ${{ steps.info.outputs.msg }}
         with:
           github-token: ${{ secrets.HXLOLI_PR_TOKEN }}
           script: |
             const owner = 'HengXin666';
             const repo = 'HXLoLi';
             const newTag = process.env.NEW_TAG;
+            const commitMsg = process.env.COMMIT_MSG;
             const branchName = `auto/music-cdn-${newTag}`;
+            const prTitle = `[LoLi-Bot] 同步 Music: 「${commitMsg}」`;
 
             const { data: ref } = await github.rest.git.getRef({
               owner, repo, ref: 'heads/main'
@@ -128,10 +141,10 @@ jobs:
 
             await github.rest.pulls.create({
               owner, repo,
-              title: `🎵 Music: CDN 版本更新 → ${newTag}`,
-              body: `## 🎵 HXLoLi-Music 数据同步\n\n更新 \`MUSIC_CDN_TAG\` → \`${newTag}\`\n\n---\n*由 HXLoLi-Music CI 自动生成*`,
+              title: prTitle,
+              body: `## 🎵 HXLoLi-Music 数据同步\n\n更新 \`MUSIC_CDN_TAG\` → \`${newTag}\`\n\n来源: \`${commitMsg}\`\n\n---\n*由 HXLoLi-Music CI 自动生成*`,
               head: branchName,
               base: 'main'
             });
 
-            console.log(`✅ PR created: ${branchName} → main`);
+            console.log(`✅ PR created: ${prTitle}`);
