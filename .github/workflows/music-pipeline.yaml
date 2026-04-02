@@ -1,29 +1,31 @@
-name: 🏷️ CDN Tag & 同步主仓库
+name: "[LoLi-Music]: 自动生成播放列表 & CDN Tag"
+
+# ─────────────────────────────────────────────────────
+# 唯一的自动触发路径:
+#   push 到 main 且 static/music/** 或 py/music/** 有变更
+#
+# 流水线:
+#   py 预处理 (ASS 解析等) → 生成 playlist.json
+#   → CDN 大文件切片 → 一次性提交所有变更
+#   → 打 tag → 清理旧 tag → 向 HXLoLi 主仓库发 PR
+# ─────────────────────────────────────────────────────
 
 on:
-  # 由 generate-playlist 工作流在 bot commit 之后主动触发
-  workflow_dispatch:
-  # 非音乐路径的 push 直接触发
   push:
     branches: [main]
-    paths-ignore:
+    paths:
       - 'static/music/**'
       - 'py/music/**'
-      - 'py/**'
-      - 'playlist.json'
-      - '.playlist_cache.json'
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  create-tag-and-pr:
-    name: 打 CDN Tag & 发 PR 到 HXLoLi
-    # 跳过 Bot 自己的 commit (避免循环)
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      !contains(github.event.head_commit.message, '[LoLi-Bot]')
+  pipeline:
+    name: 预处理 → 切片 → Tag → PR
+    # 跳过 Bot 自己的提交, 避免无限循环
+    if: "!contains(github.event.head_commit.message, '[LoLi-Bot]')"
     runs-on: ubuntu-latest
 
     steps:
@@ -32,33 +34,68 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      # ── 1. 切片超大文件 (>19MB) ──
-      - name: ✂️ 大文件切片
-        id: split
+      # ══════════════════════════════════════
+      # 阶段 1: Python 预处理 (ASS 解析 + 生成播放列表)
+      # ══════════════════════════════════════
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🎬 安装 ffmpeg
         run: |
-          SPLIT_CHANGED=false
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: 📦 安装 uv & Python 依赖
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+          uv sync
+        working-directory: ./py
+
+      - name: 🎵 生成 playlist.json
+        run: |
+          source $HOME/.cargo/env
+          uv run python -m music.gen_music_playlist
+        working-directory: ./py
+        env:
+          PYTHONUNBUFFERED: "1"
+
+      # ══════════════════════════════════════
+      # 阶段 2: CDN 大文件切片
+      # ══════════════════════════════════════
+
+      - name: ✂️ 大文件切片
+        run: |
           if [ -f scripts/cdn-split.sh ]; then
             npm install -g hx-cdn-forge
             bash scripts/cdn-split.sh
-
-            if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard static/cdn/)" ]; then
-              SPLIT_CHANGED=true
-            fi
           fi
-          echo "changed=${SPLIT_CHANGED}" >> "$GITHUB_OUTPUT"
 
-      # ── 2. 切片有变化 → 提交并继续 ──
-      - name: 📦 提交切片
-        if: steps.split.outputs.changed == 'true'
+      # ══════════════════════════════════════
+      # 阶段 3: 一次性提交所有变更 → 打 Tag → 发 PR
+      # ══════════════════════════════════════
+
+      - name: 📦 提交所有变更 (预处理 + 切片)
+        id: commit-all
         run: |
-          git add static/cdn/
+          git add playlist.json .playlist_cache.json static/music/ static/info/ static/cdn/ || true
           git config user.name "Heng_Xin[LoLi-Bot]"
           git config user.email "282000500@qq.com"
-          git commit -m "[LoLi-Bot]: 自动切片大文件到 static/cdn"
-          git push
 
-      # ── 3. 生成 tag ──
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ 没有变更, 跳过提交"
+          else
+            git commit -m "[LoLi-Bot]: ご主人さま、プレイリストを更新しましたにゃ♪"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: 🏷️ 创建 CDN Tag
+        if: steps.commit-all.outputs.changed == 'true'
         id: tag
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -71,8 +108,8 @@ jobs:
           echo "tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
           echo "✅ CDN tag: ${NEW_TAG}"
 
-      # ── 4. 清理旧 tag ──
       - name: 🗑️ 清理旧 Tag
+        if: steps.commit-all.outputs.changed == 'true'
         run: |
           BOT_TAGS=$(git tag -l 'HX-*' --sort=-creatordate)
           TAG_COUNT=$(echo "${BOT_TAGS}" | grep -c '^HX-' || true)
@@ -84,16 +121,16 @@ jobs:
             done
           fi
 
-      # ── 5. 获取 commit 信息 ──
       - name: 📝 获取 commit 信息
+        if: steps.commit-all.outputs.changed == 'true'
         id: info
         run: |
           COMMIT_MSG=$(git log --format='%s' --no-merges -20 | grep -v '\[LoLi-Bot\]' | head -n 1)
           [ -z "${COMMIT_MSG}" ] && COMMIT_MSG="CDN 版本更新"
           echo "msg=${COMMIT_MSG}" >> "$GITHUB_OUTPUT"
 
-      # ── 6. 向主仓库发 PR ──
       - name: 🔄 向 HXLoLi 发 PR
+        if: steps.commit-all.outputs.changed == 'true'
         uses: actions/github-script@v7
         env:
           NEW_TAG: ${{ steps.tag.outputs.tag }}

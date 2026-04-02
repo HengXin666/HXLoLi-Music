@@ -1,0 +1,201 @@
+name: "🔄 [手动] 清除缓存 & 重新生成"
+
+# ─────────────────────────────────────────────────────
+# 唯一的手动触发路径:
+#   用户在 GitHub Actions 页面点 "Run workflow"
+#
+# 流水线与自动触发完全一致:
+#   可选清缓存 → py 预处理 → 生成 playlist.json
+#   → CDN 大文件切片 → 一次性提交所有变更
+#   → 打 tag → 清理旧 tag → 向 HXLoLi 主仓库发 PR
+# ─────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      clear_cache:
+        description: '清除 .playlist_cache.json 缓存'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pipeline:
+    name: 清缓存 → 预处理 → 切片 → Tag → PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # ══════════════════════════════════════
+      # 阶段 0: 清除缓存 (可选)
+      # ══════════════════════════════════════
+
+      - name: 🗑️ 清除播放列表缓存
+        if: inputs.clear_cache
+        run: |
+          if [ -f .playlist_cache.json ]; then
+            rm -f .playlist_cache.json
+            echo "✅ 已删除 .playlist_cache.json"
+          else
+            echo "ℹ️ .playlist_cache.json 不存在, 跳过"
+          fi
+
+      # ══════════════════════════════════════
+      # 阶段 1: Python 预处理 (ASS 解析 + 生成播放列表)
+      # ══════════════════════════════════════
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🎬 安装 ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: 📦 安装 uv & Python 依赖
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+          uv sync
+        working-directory: ./py
+
+      - name: 🎵 生成 playlist.json
+        run: |
+          source $HOME/.cargo/env
+          uv run python -m music.gen_music_playlist
+        working-directory: ./py
+        env:
+          PYTHONUNBUFFERED: "1"
+
+      # ══════════════════════════════════════
+      # 阶段 2: CDN 大文件切片
+      # ══════════════════════════════════════
+
+      - name: ✂️ 大文件切片
+        run: |
+          if [ -f scripts/cdn-split.sh ]; then
+            npm install -g hx-cdn-forge
+            bash scripts/cdn-split.sh
+          fi
+
+      # ══════════════════════════════════════
+      # 阶段 3: 一次性提交所有变更 → 打 Tag → 发 PR
+      # ══════════════════════════════════════
+
+      - name: 📦 提交所有变更 (预处理 + 切片)
+        id: commit-all
+        run: |
+          git add playlist.json .playlist_cache.json static/music/ static/info/ static/cdn/ || true
+          git config user.name "Heng_Xin[LoLi-Bot]"
+          git config user.email "282000500@qq.com"
+
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ 没有变更, 跳过提交"
+          else
+            git commit -m "[LoLi-Bot]: ご主人さま、プレイリストを手動で再生成しましたにゃ♪"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🏷️ 创建 CDN Tag
+        if: steps.commit-all.outputs.changed == 'true'
+        id: tag
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          RANDOM_STR=$(head -c 100 /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 6)
+          NEW_TAG="HX-${TIMESTAMP}-${RANDOM_STR}"
+
+          git tag "${NEW_TAG}"
+          git push origin "${NEW_TAG}"
+
+          echo "tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+          echo "✅ CDN tag: ${NEW_TAG}"
+
+      - name: 🗑️ 清理旧 Tag
+        if: steps.commit-all.outputs.changed == 'true'
+        run: |
+          BOT_TAGS=$(git tag -l 'HX-*' --sort=-creatordate)
+          TAG_COUNT=$(echo "${BOT_TAGS}" | grep -c '^HX-' || true)
+
+          if [ "${TAG_COUNT}" -gt 2 ]; then
+            echo "${BOT_TAGS}" | tail -n +3 | while IFS= read -r tag; do
+              [ -n "${tag}" ] && git push origin --delete "${tag}" 2>/dev/null || true
+              [ -n "${tag}" ] && git tag -d "${tag}" 2>/dev/null || true
+            done
+          fi
+
+      - name: 📝 获取 commit 信息
+        if: steps.commit-all.outputs.changed == 'true'
+        id: info
+        run: |
+          COMMIT_MSG=$(git log --format='%s' --no-merges -20 | grep -v '\[LoLi-Bot\]' | head -n 1)
+          [ -z "${COMMIT_MSG}" ] && COMMIT_MSG="CDN 版本更新"
+          echo "msg=${COMMIT_MSG}" >> "$GITHUB_OUTPUT"
+
+      - name: 🔄 向 HXLoLi 发 PR
+        if: steps.commit-all.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        env:
+          NEW_TAG: ${{ steps.tag.outputs.tag }}
+          COMMIT_MSG: ${{ steps.info.outputs.msg }}
+        with:
+          github-token: ${{ secrets.MAIN_REPO_PAT }}
+          script: |
+            const owner = 'HengXin666';
+            const repo = 'HXLoLi';
+            const newTag = process.env.NEW_TAG;
+            const commitMsg = process.env.COMMIT_MSG;
+            const branchName = `auto/music-cdn-${newTag}`;
+            const prTitle = `[LoLi-Bot] 同步 Music: 「${commitMsg}」`;
+
+            const { data: ref } = await github.rest.git.getRef({
+              owner, repo, ref: 'heads/main'
+            });
+
+            await github.rest.git.createRef({
+              owner, repo,
+              ref: `refs/heads/${branchName}`,
+              sha: ref.object.sha
+            });
+
+            const { data: file } = await github.rest.repos.getContent({
+              owner, repo,
+              path: 'data/musicCdnVersion.ts',
+              ref: 'main'
+            });
+
+            const content = Buffer.from(file.content, 'base64').toString('utf-8');
+            const updatedContent = content.replace(
+              /export const MUSIC_CDN_TAG = '.*?';/,
+              `export const MUSIC_CDN_TAG = '${newTag}';`
+            );
+
+            await github.rest.repos.createOrUpdateFileContents({
+              owner, repo,
+              path: 'data/musicCdnVersion.ts',
+              message: `[LoLi-Bot]: update MUSIC_CDN_TAG to ${newTag}`,
+              content: Buffer.from(updatedContent).toString('base64'),
+              sha: file.sha,
+              branch: branchName
+            });
+
+            await github.rest.pulls.create({
+              owner, repo,
+              title: prTitle,
+              body: `## 🎵 HXLoLi-Music 数据同步\n\n更新 \`MUSIC_CDN_TAG\` → \`${newTag}\`\n\n来源: \`${commitMsg}\`\n\n---\n*由 HXLoLi-Music CI 自动生成*`,
+              head: branchName,
+              base: 'main'
+            });
+
+            console.log(`✅ PR created: ${prTitle}`);

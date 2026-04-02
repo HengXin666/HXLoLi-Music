@@ -27,7 +27,7 @@ find "$STATIC_DIR" -type f -size +${THRESHOLD}c | while read -r file; do
     echo "📦 发现大文件: $file (${SIZE_MB}MB)"
     echo "   正在切片到 $SPLIT_DIR/ ..."
     
-    npx hx-cdn-split \
+    hx-cdn-split \
         --source "$file" \
         --output "$SPLIT_DIR" \
         --prefix "$STATIC_DIR" \
