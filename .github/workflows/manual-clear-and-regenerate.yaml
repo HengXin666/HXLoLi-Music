@@ -6,7 +6,8 @@ name: "🔄 [手动] 清除缓存 & 重新生成"
 #
 # 流水线与自动触发完全一致:
 #   可选清缓存 → py 预处理 → 生成 playlist.json
-#   → CDN 大文件切片 → 一次性提交所有变更
+#   → CDN 大文件切片 → 文本文件预压缩 (.ass → .gz)
+#   → 一次性提交所有变更
 #   → 打 tag → 清理旧 tag → 向 HXLoLi 主仓库发 PR
 # ─────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ permissions:
 
 jobs:
   pipeline:
-    name: 清缓存 → 预处理 → 切片 → Tag → PR
+    name: 清缓存 → 预处理 → 切片 → 预压缩 → Tag → PR
     runs-on: ubuntu-latest
 
     steps:
@@ -78,7 +79,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
 
       # ══════════════════════════════════════
-      # 阶段 2: CDN 大文件切片
+      # 阶段 2: CDN 大文件切片 + 文本文件预压缩
       # ══════════════════════════════════════
 
       - name: ✂️ 大文件切片
@@ -86,6 +87,14 @@ jobs:
           if [ -f scripts/cdn-split.sh ]; then
             npm install -g hx-cdn-forge
             bash scripts/cdn-split.sh
+          fi
+
+      - name: 🗜️ 文本文件预压缩
+        run: |
+          if [ -f scripts/cdn-compress.sh ]; then
+            # hx-cdn-forge 已在上一步全局安装 (含 hx-cdn-compress CLI)
+            command -v hx-cdn-compress >/dev/null 2>&1 || npm install -g hx-cdn-forge
+            bash scripts/cdn-compress.sh
           fi
 
       # ══════════════════════════════════════
