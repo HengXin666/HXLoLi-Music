@@ -14,7 +14,7 @@
 set -e
 
 THRESHOLD=$((19 * 1024 * 1024))  # 19MB
-SPLIT_DIR="static/cdn"
+SPLIT_DIR="static/cdn/all"
 STATIC_DIR="static"
 
 echo "=== HXLoLi-Music CDN 大文件切片 ==="
