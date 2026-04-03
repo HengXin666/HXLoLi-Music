@@ -6,7 +6,8 @@ name: "[LoLi-Music]: 自动生成播放列表 & CDN Tag"
 #
 # 流水线:
 #   py 预处理 (ASS 解析等) → 生成 playlist.json
-#   → CDN 大文件切片 → 一次性提交所有变更
+#   → CDN 大文件切片 → 文本文件预压缩 (.ass → .gz)
+#   → 一次性提交所有变更
 #   → 打 tag → 清理旧 tag → 向 HXLoLi 主仓库发 PR
 # ─────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ permissions:
 
 jobs:
   pipeline:
-    name: 预处理 → 切片 → Tag → PR
+    name: 预处理 → 切片 → 预压缩 → Tag → PR
     # 跳过 Bot 自己的提交, 避免无限循环
     if: "!contains(github.event.head_commit.message, '[LoLi-Bot]')"
     runs-on: ubuntu-latest
@@ -64,7 +65,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
 
       # ══════════════════════════════════════
-      # 阶段 2: CDN 大文件切片
+      # 阶段 2: CDN 大文件切片 + 文本文件预压缩
       # ══════════════════════════════════════
 
       - name: ✂️ 大文件切片
@@ -72,6 +73,14 @@ jobs:
           if [ -f scripts/cdn-split.sh ]; then
             npm install -g hx-cdn-forge
             bash scripts/cdn-split.sh
+          fi
+
+      - name: 🗜️ 文本文件预压缩
+        run: |
+          if [ -f scripts/cdn-compress.sh ]; then
+            # hx-cdn-forge 已在上一步全局安装 (含 hx-cdn-compress CLI)
+            command -v hx-cdn-compress >/dev/null 2>&1 || npm install -g hx-cdn-forge
+            bash scripts/cdn-compress.sh
           fi
 
       # ══════════════════════════════════════
