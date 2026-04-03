@@ -50,8 +50,8 @@ for ext in $TEXT_EXTENSIONS; do
     FIND_ARGS="$FIND_ARGS -name *.${ext}"
 done
 
-# 查找符合条件的文本文件
-eval "find \"$STATIC_DIR\" -type f \\( $FIND_ARGS \\)" | while read -r file; do
+# 查找符合条件的文本文件 (排除 cdn 产物目录, 避免对切片分片做二次压缩)
+eval "find \"$STATIC_DIR\" -path \"$STATIC_DIR/cdn\" -prune -o -type f \\( $FIND_ARGS \\) -print" | while read -r file; do
     SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
 
     # 跳过太小的文件
