@@ -94,6 +94,18 @@
         "coverUrl": "/static/music/天使の3P/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.jpg"
     },
     {
+        "id": "e24572433e4c",
+        "title": "オンリー",
+        "artist": "大原ゆい子",
+        "audioUrl": "/static/music/无职转生/大原ゆい子 - オンリー.mp3",
+        "assUrl": "/static/music/无职转生/大原ゆい子 - オンリー.ass",
+        "assFonts": [
+            "Sarasa Gothic J Semibold",
+            "更纱黑体 SC Semibold"
+        ],
+        "coverUrl": "/static/music/无职转生/大原ゆい子 - オンリー.jpg"
+    },
+    {
         "id": "cb0528c0674f",
         "title": "ときめきポポロン♪ (心动泡芙♪)",
         "artist": "チマメ隊",
