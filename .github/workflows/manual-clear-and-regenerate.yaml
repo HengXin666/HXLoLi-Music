@@ -39,14 +39,39 @@ jobs:
       # 阶段 0: 清除缓存 (可选)
       # ══════════════════════════════════════
 
-      - name: 🗑️ 清除播放列表缓存
+      - name: 🗑️ 清除缓存与生成产物
         if: inputs.clear_cache
         run: |
+          # 清除播放列表缓存
           if [ -f .playlist_cache.json ]; then
             rm -f .playlist_cache.json
             echo "✅ 已删除 .playlist_cache.json"
           else
             echo "ℹ️ .playlist_cache.json 不存在, 跳过"
+          fi
+
+          # 清除 playlist.json
+          if [ -f playlist.json ]; then
+            rm -f playlist.json
+            echo "✅ 已删除 playlist.json"
+          else
+            echo "ℹ️ playlist.json 不存在, 跳过"
+          fi
+
+          # 清除 CDN 切片产物
+          if [ -d static/cdn ]; then
+            rm -rf static/cdn/*
+            echo "✅ 已清除 static/cdn/**"
+          else
+            echo "ℹ️ static/cdn/ 不存在, 跳过"
+          fi
+
+          # 清除 info 产物
+          if [ -d static/info ]; then
+            rm -rf static/info/*
+            echo "✅ 已清除 static/info/**"
+          else
+            echo "ℹ️ static/info/ 不存在, 跳过"
           fi
 
       # ══════════════════════════════════════
