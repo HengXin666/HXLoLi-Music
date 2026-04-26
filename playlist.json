@@ -34,6 +34,18 @@
         "coverUrl": "/static/music/ヨスガノソラ/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg"
     },
     {
+        "id": "ed5861594af4",
+        "title": "果てなき風の軌跡さえ_双版混合",
+        "artist": "Unknown",
+        "audioUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.mp3",
+        "assUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.ass",
+        "assFonts": [
+            "Sarasa Gothic J Semibold",
+            "更纱黑体 SC Semibold"
+        ],
+        "coverUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.jpg"
+    },
+    {
         "id": "82230e451624",
         "title": "朝焼けのスターマイン (朝霞星火)",
         "artist": "今井麻美",
