@@ -82,6 +82,18 @@
         "coverUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.jpg"
     },
     {
+        "id": "dc10d02b9479",
+        "title": "モノクローム果樹園 (黑白果树园)",
+        "artist": "大野柚布子、遠藤ゆりか",
+        "audioUrl": "/static/music/天使の3P/モノクローム果樹園 (黑白果树园) - 大野柚布子、遠藤ゆりか.mp3",
+        "assUrl": "/static/music/天使の3P/モノクローム果樹園 (黑白果树园) - 大野柚布子、遠藤ゆりか.ass",
+        "assFonts": [
+            "Sarasa Gothic J Semibold",
+            "更纱黑体 SC Semibold"
+        ],
+        "coverUrl": "/static/music/天使の3P/モノクローム果樹園 (黑白果树园) - 大野柚布子、遠藤ゆりか.jpg"
+    },
+    {
         "id": "0e6bb9830342",
         "title": "大切がきこえる (重要的倾听)",
         "artist": "古賀葵、大野柚布子、遠藤ゆりか",
