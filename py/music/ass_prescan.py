@@ -18,71 +18,105 @@ from .cache import get_cache, set_cache
 from .ass_parser import _extract_ass_fonts_impl
 
 
+MIN_GAP_FOR_SPLIT = 100  # 上下两组内容之间的最小空隙 (像素), 小于此值不分区
+
 def _scan_frame_rgba(data: bytes, width: int, height: int) -> dict:
     """扫描单帧 RGBA 原始数据, 返回该帧的 TwoBlockBounds.
 
-    上下分区: y < midLine 归上区块, y >= midLine 归下区块.
-    像素 RGB 非黑 视为有内容 (ffmpeg 渲染在黑底上, alpha 恒为 255).
+    动态分区: 先扫描所有像素行, 找到上下两组内容之间的最大垂直空隙,
+    以空隙中点作为 midLine. 如果没有足够大的空隙 (< MIN_GAP_FOR_SPLIT),
+    则不分区, 所有内容归入距离画布中心更近的一侧.
 
+    像素 RGB 非黑 视为有内容 (ffmpeg 渲染在黑底上, alpha 恒为 255).
     每个区块有独立的 left/right, 避免不同位置的内容互相干扰裁剪窗口.
     同时保留全局 left/right 用于兼容.
     """
-    mid_line = height >> 1
-    step = 2  # 隔行扫描加速
+    step = 2
+    row_bytes = width * 4
+
+    # 第 1 遍: 收集每行是否有像素, 以及全局 left/right
+    row_has_pixel = [False] * height
+    left = float('inf')
+    right = 0
+    for y in range(0, height, step):
+        row_start = y * row_bytes
+        for x in range(0, width, step):
+            px = row_start + x * 4
+            if data[px] > 0 or data[px + 1] > 0 or data[px + 2] > 0:
+                row_has_pixel[y] = True
+                if x < left:
+                    left = x
+                if x + step > right:
+                    right = x + step
+
+    # 找到有内容的行范围
+    content_rows = [y for y in range(0, height, step) if row_has_pixel[y]]
+    if not content_rows:
+        return {
+            'topYMin': 0, 'topYMax': 0, 'btmYMin': 0, 'btmYMax': 0,
+            'left': 0, 'right': 0, 'leftT': 0, 'rightT': 0, 'leftB': 0, 'rightB': 0,
+        }
+
+    # 找最大空隙: 在有内容的行之间找最大间距
+    mid_line = -1  # -1 表示不分区
+    if len(content_rows) >= 2:
+        best_gap = 0
+        best_gap_start = 0
+        best_gap_end = 0
+        for i in range(1, len(content_rows)):
+            gap = content_rows[i] - content_rows[i - 1]
+            if gap > best_gap:
+                best_gap = gap
+                best_gap_start = content_rows[i - 1]
+                best_gap_end = content_rows[i]
+        if best_gap >= MIN_GAP_FOR_SPLIT:
+            mid_line = (best_gap_start + best_gap_end) // 2
+
+    # 第 2 遍: 按 mid_line 分区, 收集各区域的 bounds
     top_y_min = float('inf')
     top_y_max = 0
     btm_y_min = float('inf')
     btm_y_max = 0
-    # 全局 left/right (兼容)
-    left = float('inf')
-    right = 0
-    # top/btm 独立 left/right
     left_t = float('inf')
     right_t = 0
     left_b = float('inf')
     right_b = 0
 
-    row_bytes = width * 4  # RGBA, 每像素4字节
     for y in range(0, height, step):
+        if not row_has_pixel[y]:
+            continue
         row_start = y * row_bytes
         for x in range(0, width, step):
             px = row_start + x * 4
-            # 检查 RGB 任一通道非零 (ffmpeg 黑底上的字幕)
             if data[px] > 0 or data[px + 1] > 0 or data[px + 2] > 0:
-                if x < left:
-                    left = x
-                if x + step > right:
-                    right = x + step
-                if y < mid_line:
-                    if y < top_y_min:
-                        top_y_min = y
-                    if y + step > top_y_max:
-                        top_y_max = y + step
-                    if x < left_t:
-                        left_t = x
-                    if x + step > right_t:
-                        right_t = x + step
+                if mid_line < 0:
+                    # 不分区: 内容完全在上半部分时归 top, 否则归 btm
+                    if content_rows[-1] < height // 2:
+                        if y < top_y_min: top_y_min = y
+                        if y + step > top_y_max: top_y_max = y + step
+                        if x < left_t: left_t = x
+                        if x + step > right_t: right_t = x + step
+                    else:
+                        if y < btm_y_min: btm_y_min = y
+                        if y + step > btm_y_max: btm_y_max = y + step
+                        if x < left_b: left_b = x
+                        if x + step > right_b: right_b = x + step
+                elif y < mid_line:
+                    if y < top_y_min: top_y_min = y
+                    if y + step > top_y_max: top_y_max = y + step
+                    if x < left_t: left_t = x
+                    if x + step > right_t: right_t = x + step
                 else:
-                    if y < btm_y_min:
-                        btm_y_min = y
-                    if y + step > btm_y_max:
-                        btm_y_max = y + step
-                    if x < left_b:
-                        left_b = x
-                    if x + step > right_b:
-                        right_b = x + step
+                    if y < btm_y_min: btm_y_min = y
+                    if y + step > btm_y_max: btm_y_max = y + step
+                    if x < left_b: left_b = x
+                    if x + step > right_b: right_b = x + step
 
-    # 裁剪到画布范围
-    if right > width:
-        right = width
-    if right_t > width:
-        right_t = width
-    if right_b > width:
-        right_b = width
-    if top_y_max > height:
-        top_y_max = height
-    if btm_y_max > height:
-        btm_y_max = height
+    if right > width: right = width
+    if right_t > width: right_t = width
+    if right_b > width: right_b = width
+    if top_y_max > height: top_y_max = height
+    if btm_y_max > height: btm_y_max = height
 
     return {
         'topYMin': top_y_min if top_y_min != float('inf') else 0,
@@ -247,12 +281,22 @@ def _smooth_bounds_timeline(
         # 两帧都有内容 → 分区域 EMA 平滑
         s = {}
 
+        # 自适应 alpha: 收缩量大时使用更大的 alpha 加速响应
+        def adaptive_ema(prev_val, cur_val, expand):
+            """expand=True 表示扩张方向 (立即响应), False 表示收缩方向 (平滑衰减)"""
+            if expand:
+                return cur_val
+            diff = abs(cur_val - prev_val)
+            # 大幅收缩 (>200px) 时使用更大的 alpha 加速
+            a = min(0.6, ema_alpha + (diff / 500.0) * 0.5) if diff > 200 else ema_alpha
+            return int(prev_val + a * (cur_val - prev_val))
+
         # top 区域
         cur_has_top = cur['topYMax'] > 0
         prev_has_top = prev['topYMax'] > 0
         if cur_has_top and prev_has_top:
-            s['topYMin'] = cur['topYMin'] if cur['topYMin'] < prev['topYMin'] else int(prev['topYMin'] + ema_alpha * (cur['topYMin'] - prev['topYMin']))
-            s['topYMax'] = cur['topYMax'] if cur['topYMax'] > prev['topYMax'] else int(prev['topYMax'] + ema_alpha * (cur['topYMax'] - prev['topYMax']))
+            s['topYMin'] = adaptive_ema(prev['topYMin'], cur['topYMin'], cur['topYMin'] < prev['topYMin'])
+            s['topYMax'] = adaptive_ema(prev['topYMax'], cur['topYMax'], cur['topYMax'] > prev['topYMax'])
         elif cur_has_top:
             s['topYMin'] = cur['topYMin']; s['topYMax'] = cur['topYMax']
         elif prev_has_top:
@@ -264,8 +308,8 @@ def _smooth_bounds_timeline(
         cur_has_btm = cur['btmYMax'] > 0
         prev_has_btm = prev['btmYMax'] > 0
         if cur_has_btm and prev_has_btm:
-            s['btmYMin'] = cur['btmYMin'] if cur['btmYMin'] < prev['btmYMin'] else int(prev['btmYMin'] + ema_alpha * (cur['btmYMin'] - prev['btmYMin']))
-            s['btmYMax'] = cur['btmYMax'] if cur['btmYMax'] > prev['btmYMax'] else int(prev['btmYMax'] + ema_alpha * (cur['btmYMax'] - prev['btmYMax']))
+            s['btmYMin'] = adaptive_ema(prev['btmYMin'], cur['btmYMin'], cur['btmYMin'] < prev['btmYMin'])
+            s['btmYMax'] = adaptive_ema(prev['btmYMax'], cur['btmYMax'], cur['btmYMax'] > prev['btmYMax'])
         elif cur_has_btm:
             s['btmYMin'] = cur['btmYMin']; s['btmYMax'] = cur['btmYMax']
         elif prev_has_btm:
@@ -306,6 +350,12 @@ def _smooth_bounds_timeline(
         smoothed.append(s)
 
     # ---- 第 3 步: 反向 EMA 再平滑一遍 (消除正向 EMA 的滞后) ----
+    def adaptive_ema_rev(cur_val, nxt_val, is_expand):
+        """反向 EMA 的自适应平滑, 大幅变化时也做衰减而非立即响应"""
+        diff = abs(nxt_val - cur_val)
+        a = min(0.6, ema_alpha + (diff / 500.0) * 0.5) if diff > 200 else ema_alpha
+        return int(cur_val + a * (nxt_val - cur_val))
+
     for i in range(n - 2, -1, -1):
         nxt = smoothed[i + 1]
         cur = smoothed[i]
@@ -317,25 +367,13 @@ def _smooth_bounds_timeline(
 
         # top 区域
         if cur['topYMax'] > 0 and nxt['topYMax'] > 0:
-            if nxt['topYMin'] < cur['topYMin']:
-                cur['topYMin'] = nxt['topYMin']
-            else:
-                cur['topYMin'] = int(cur['topYMin'] + ema_alpha * (nxt['topYMin'] - cur['topYMin']))
-            if nxt['topYMax'] > cur['topYMax']:
-                cur['topYMax'] = nxt['topYMax']
-            else:
-                cur['topYMax'] = int(cur['topYMax'] + ema_alpha * (nxt['topYMax'] - cur['topYMax']))
+            cur['topYMin'] = adaptive_ema_rev(cur['topYMin'], nxt['topYMin'], nxt['topYMin'] < cur['topYMin'])
+            cur['topYMax'] = adaptive_ema_rev(cur['topYMax'], nxt['topYMax'], nxt['topYMax'] > cur['topYMax'])
 
         # btm 区域
         if cur['btmYMax'] > 0 and nxt['btmYMax'] > 0:
-            if nxt['btmYMin'] < cur['btmYMin']:
-                cur['btmYMin'] = nxt['btmYMin']
-            else:
-                cur['btmYMin'] = int(cur['btmYMin'] + ema_alpha * (nxt['btmYMin'] - cur['btmYMin']))
-            if nxt['btmYMax'] > cur['btmYMax']:
-                cur['btmYMax'] = nxt['btmYMax']
-            else:
-                cur['btmYMax'] = int(cur['btmYMax'] + ema_alpha * (nxt['btmYMax'] - cur['btmYMax']))
+            cur['btmYMin'] = adaptive_ema_rev(cur['btmYMin'], nxt['btmYMin'], nxt['btmYMin'] < cur['btmYMin'])
+            cur['btmYMax'] = adaptive_ema_rev(cur['btmYMax'], nxt['btmYMax'], nxt['btmYMax'] > cur['btmYMax'])
 
         # 全局左右
         if nxt['left'] < cur['left']:
@@ -368,6 +406,16 @@ def _smooth_bounds_timeline(
                 cur['rightB'] = nxt['rightB']
             else:
                 cur['rightB'] = int(cur['rightB'] + ema_alpha * (nxt['rightB'] - cur['rightB']))
+
+    # ---- 第 3.5 步: 修复 top/btm 重叠 ----
+    # 动态 midLine 可能导致不同帧的分区不一致, 滑动窗口合并后 top/btm 可能重叠
+    # 修复策略: 将 topYMax 限制为不超过 btmYMin, 保留分区裁剪效果
+    for s in smoothed:
+        if s['topYMax'] > 0 and s['btmYMax'] > 0 and s['topYMax'] > s['btmYMin']:
+            s['topYMax'] = s['btmYMin']
+            if s['topYMax'] <= s['topYMin']:
+                s['topYMin'] = 0; s['topYMax'] = 0
+                s['leftT'] = 0; s['rightT'] = 0
 
     # ---- 第 4 步: 构建带时间戳的输出, 并去重相邻相同项 ----
     timeline = []
@@ -538,7 +586,7 @@ def prescan_ass_bounds(ass_path: Path, duration_sec: float, ass_hash: str) -> di
     """
     cache_key = str(ass_path.relative_to(STATIC_MUSIC_DIR))
     combined_hash = f"{ass_hash}:{duration_sec:.2f}"
-    cached = get_cache('ass_bounds_v2', cache_key, combined_hash)
+    cached = get_cache('ass_bounds_v3', cache_key, combined_hash)
     if cached is not None:
         result = cached.get('result')
         if result:
@@ -554,5 +602,5 @@ def prescan_ass_bounds(ass_path: Path, duration_sec: float, ass_hash: str) -> di
         return result
 
     result = _prescan_ass_bounds_impl(ass_path, duration_sec)
-    set_cache('ass_bounds_v2', cache_key, combined_hash, {'result': result})
+    set_cache('ass_bounds_v3', cache_key, combined_hash, {'result': result})
     return result
