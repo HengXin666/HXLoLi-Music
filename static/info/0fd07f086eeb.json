@@ -1640,7 +1640,7 @@
         {
             "t": 102.5,
             "topYMin": 11,
-            "topYMax": 82,
+            "topYMax": 81,
             "btmYMin": 894,
             "btmYMax": 1079,
             "left": 288,
@@ -1653,7 +1653,7 @@
         {
             "t": 103.0,
             "topYMin": 11,
-            "topYMax": 82,
+            "topYMax": 81,
             "btmYMin": 896,
             "btmYMax": 1079,
             "left": 288,
@@ -1666,7 +1666,7 @@
         {
             "t": 103.5,
             "topYMin": 10,
-            "topYMax": 85,
+            "topYMax": 84,
             "btmYMin": 896,
             "btmYMax": 1079,
             "left": 288,
@@ -1730,7 +1730,7 @@
         },
         {
             "t": 109.5,
-            "topYMin": 5,
+            "topYMin": 6,
             "topYMax": 98,
             "btmYMin": 896,
             "btmYMax": 1079,
@@ -1743,7 +1743,7 @@
         },
         {
             "t": 110.0,
-            "topYMin": 6,
+            "topYMin": 7,
             "topYMax": 94,
             "btmYMin": 897,
             "btmYMax": 1079,
@@ -1756,7 +1756,7 @@
         },
         {
             "t": 110.5,
-            "topYMin": 7,
+            "topYMin": 8,
             "topYMax": 91,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1769,7 +1769,7 @@
         },
         {
             "t": 111.0,
-            "topYMin": 8,
+            "topYMin": 9,
             "topYMax": 88,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1782,7 +1782,7 @@
         },
         {
             "t": 111.5,
-            "topYMin": 9,
+            "topYMin": 10,
             "topYMax": 86,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1795,7 +1795,7 @@
         },
         {
             "t": 112.0,
-            "topYMin": 10,
+            "topYMin": 11,
             "topYMax": 84,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1808,7 +1808,7 @@
         },
         {
             "t": 112.5,
-            "topYMin": 10,
+            "topYMin": 11,
             "topYMax": 82,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1821,7 +1821,7 @@
         },
         {
             "t": 113.0,
-            "topYMin": 10,
+            "topYMin": 11,
             "topYMax": 81,
             "btmYMin": 898,
             "btmYMax": 1079,
@@ -1834,7 +1834,7 @@
         },
         {
             "t": 113.5,
-            "topYMin": 10,
+            "topYMin": 11,
             "topYMax": 80,
             "btmYMin": 899,
             "btmYMax": 1079,
@@ -1847,7 +1847,7 @@
         },
         {
             "t": 114.0,
-            "topYMin": 10,
+            "topYMin": 11,
             "topYMax": 79,
             "btmYMin": 899,
             "btmYMax": 1079,
@@ -1860,19 +1860,6 @@
         },
         {
             "t": 114.5,
-            "topYMin": 10,
-            "topYMax": 78,
-            "btmYMin": 895,
-            "btmYMax": 1079,
-            "left": 288,
-            "right": 1635,
-            "leftT": 288,
-            "rightT": 1635,
-            "leftB": 420,
-            "rightB": 1515
-        },
-        {
-            "t": 118.0,
             "topYMin": 11,
             "topYMax": 78,
             "btmYMin": 895,
