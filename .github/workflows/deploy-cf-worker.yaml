@@ -51,6 +51,7 @@ jobs:
 
           [assets]
           directory = "./cf-assets"
+          run_worker_first = true
           EOF
 
           cat > worker.js << 'WORKEREOF'
@@ -67,11 +68,14 @@ jobs:
                   },
                 });
               }
-              const resp = await env.ASSETS.fetch(request);
-              const h = new Headers(resp.headers);
-              h.set("Access-Control-Allow-Origin", "*");
-              h.set("X-Debug-Worker", "executed");
-              return new Response(resp.body, { status: resp.status, headers: h });
+              try {
+                const resp = await env.ASSETS.fetch(request);
+                const h = new Headers(resp.headers);
+                h.set("Access-Control-Allow-Origin", "*");
+                return new Response(resp.body, { status: resp.status, headers: h });
+              } catch (e) {
+                return new Response("Not Found", { status: 404 });
+              }
             },
           };
           WORKEREOF
@@ -84,3 +88,4 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+          wranglerVersion: '4.x'
