@@ -42,53 +42,25 @@ jobs:
             # 不直接删除, 由 hx-cdn-forge 的切片机制处理
           fi
 
-      - name: ✍️ 生成 wrangler.toml 和 worker.js
+      - name: ✍️ 生成 wrangler.toml 和 _headers
         run: |
           cat > wrangler.toml << 'EOF'
           name = "hxloli-music"
-          main = "./worker.js"
           compatibility_date = "2024-09-23"
 
           [assets]
           directory = "./cf-assets"
           EOF
 
-          cat > worker.js << 'WORKEREOF'
-          export default {
-            async fetch(request, env) {
-              const url = new URL(request.url);
+          # Cloudflare Workers Static Assets 原生支持 _headers 文件
+          cat > cf-assets/_headers << 'HEADERSEOF'
+          /*
+            Access-Control-Allow-Origin: *
+            Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+            Access-Control-Allow-Headers: *
+          HEADERSEOF
 
-              // CORS 预检请求
-              if (request.method === 'OPTIONS') {
-                return new Response(null, {
-                  status: 204,
-                  headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Max-Age': '86400',
-                  },
-                });
-              }
-
-              const resp = await env.ASSETS.fetch(request);
-              const newHeaders = new Headers(resp.headers);
-              newHeaders.set('Access-Control-Allow-Origin', '*');
-
-              // 支持 Range 请求 (音频 seek 必需)
-              if (resp.ok && !newHeaders.has('Accept-Ranges')) {
-                newHeaders.set('Accept-Ranges', 'bytes');
-              }
-
-              return new Response(resp.body, {
-                status: resp.status,
-                headers: newHeaders,
-              });
-            },
-          };
-          WORKEREOF
-
-          echo "✅ wrangler.toml 和 worker.js 已生成"
+          echo "✅ wrangler.toml 和 _headers 已生成"
 
       - name: 🚀 部署到 Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
