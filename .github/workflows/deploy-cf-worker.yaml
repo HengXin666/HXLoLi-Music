@@ -75,7 +75,7 @@ jobs:
                 h.set("Access-Control-Allow-Origin", "*");
                 return new Response(resp.body, { status: resp.status, headers: h });
               } catch (e) {
-                return new Response("Asset not found: " + url.pathname, {
+                return new Response("Error: " + (e?.message || e), {
                   status: 404,
                   headers: { "Access-Control-Allow-Origin": "*" },
                 });
