@@ -84,5 +84,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-          preCommands: |
-            echo "y" | npx wrangler delete 2>/dev/null || echo "(cleanup skipped)"
