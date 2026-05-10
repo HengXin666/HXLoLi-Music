@@ -1,0 +1,86 @@
+name: "[LoLi-Music]: 部署到 Cloudflare Workers"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'static/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 📦 准备 Worker 部署目录
+        run: |
+          rm -rf ./cf-assets
+          mkdir -p ./cf-assets
+          cp -r static ./cf-assets/
+          echo "✅ 部署目录已准备:"
+          find ./cf-assets -type f | head -20
+          echo "   总文件数: $(find ./cf-assets -type f | wc -l)"
+
+      - name: 🔍 扫描超过 25MB 的文件 (Cloudflare Workers 单文件限制)
+        run: |
+          OVERSIZED=$(find ./cf-assets -type f -size +25M)
+          if [ -z "$OVERSIZED" ]; then
+            echo "✅ 没有超过 25MB 的文件"
+          else
+            echo "⚠️ 以下文件超过 25MB, 需要切片处理:"
+            echo "$OVERSIZED" | while read -r file; do
+              echo "   ⚠️ $file ($(du -h "$file" | cut -f1))"
+            done
+            # 不直接删除, 由 hx-cdn-forge 的切片机制处理
+          fi
+
+      - name: ✍️ 生成 wrangler.toml 和 worker.js
+        run: |
+          cat > wrangler.toml << 'EOF'
+          name = "hxloli-music"
+          main = "./worker.js"
+          compatibility_date = "2024-09-23"
+
+          [assets]
+          directory = "./cf-assets"
+          EOF
+
+          cat > worker.js << 'WORKEREOF'
+          export default {
+            async fetch(request, env) {
+              const url = new URL(request.url);
+
+              // 支持 Range 请求 (音频 seek 必需)
+              const rangeHeader = request.headers.get('Range');
+              if (rangeHeader) {
+                const resp = await env.ASSETS.fetch(request);
+                if (resp.ok && resp.headers.get('Accept-Ranges') !== 'bytes') {
+                  const newHeaders = new Headers(resp.headers);
+                  newHeaders.set('Accept-Ranges', 'bytes');
+                  return new Response(resp.body, {
+                    status: resp.status,
+                    headers: newHeaders,
+                  });
+                }
+                return resp;
+              }
+
+              return env.ASSETS.fetch(request);
+            },
+          };
+          WORKEREOF
+
+          echo "✅ wrangler.toml 和 worker.js 已生成"
+
+      - name: 🚀 部署到 Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
