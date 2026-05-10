@@ -86,6 +86,13 @@ jobs:
 
           echo "✅ wrangler.toml 和 worker.js 已生成"
 
+      - name: 🗑️ 删除旧 Worker (强制 v4 重建 asset 清单)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "y" | npx wrangler@4 delete 2>/dev/null || echo "(已清理或不存在)"
+
       - name: 🚀 部署到 Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
