@@ -52,6 +52,7 @@ jobs:
           [assets]
           directory = "./cf-assets"
           run_worker_first = true
+          binding = "ASSETS"
           EOF
 
           cat > worker.js << 'WORKEREOF'
@@ -69,6 +70,11 @@ jobs:
                 });
               }
               const url = new URL(request.url);
+              if (url.pathname === "/__env") {
+                return new Response(JSON.stringify(Object.keys(env).map(k => ({ k, t: typeof env[k] }))), {
+                  headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+                });
+              }
               try {
                 const resp = await env.ASSETS.fetch(url.pathname + url.search);
                 const h = new Headers(resp.headers);
