@@ -23,6 +23,8 @@ jobs:
           rm -rf ./cf-assets
           mkdir -p ./cf-assets
           cp -r static ./cf-assets/
+          # playlist.json 在仓库根目录, CF Worker 也需要提供 (音乐播放器入口)
+          cp playlist.json ./cf-assets/ 2>/dev/null || true
           echo "✅ 部署目录已准备:"
           find ./cf-assets -type f | head -20
           echo "   总文件数: $(find ./cf-assets -type f | wc -l)"
