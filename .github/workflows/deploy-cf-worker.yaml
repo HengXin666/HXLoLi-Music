@@ -68,13 +68,17 @@ jobs:
                   },
                 });
               }
+              const url = new URL(request.url);
               try {
-                const resp = await env.ASSETS.fetch(request);
+                const resp = await env.ASSETS.fetch(url.pathname + url.search);
                 const h = new Headers(resp.headers);
                 h.set("Access-Control-Allow-Origin", "*");
                 return new Response(resp.body, { status: resp.status, headers: h });
               } catch (e) {
-                return new Response("Not Found", { status: 404 });
+                return new Response("Asset not found: " + url.pathname, {
+                  status: 404,
+                  headers: { "Access-Control-Allow-Origin": "*" },
+                });
               }
             },
           };
