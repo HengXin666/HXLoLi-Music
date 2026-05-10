@@ -42,25 +42,22 @@ jobs:
             # 不直接删除, 由 hx-cdn-forge 的切片机制处理
           fi
 
-      - name: ✍️ 生成 wrangler.toml 和 _headers
+      - name: ✍️ 生成 wrangler.toml 和 worker.js
         run: |
           cat > wrangler.toml << 'EOF'
           name = "hxloli-music"
+          main = "./worker.js"
           compatibility_date = "2024-09-23"
 
           [assets]
           directory = "./cf-assets"
           EOF
 
-          # Cloudflare Workers Static Assets 原生支持 _headers 文件
-          cat > cf-assets/_headers << 'HEADERSEOF'
-          /*
-            Access-Control-Allow-Origin: *
-            Access-Control-Allow-Methods: GET, HEAD, OPTIONS
-            Access-Control-Allow-Headers: *
-          HEADERSEOF
+          # ES module worker: CORS 预检 + 静态资源响应注入 CORS 头
+          # 使用 printf 确保输出无多余缩进
+          printf 'export default {\n  async fetch(request, env) {\n    if (request.method === "OPTIONS") {\n      return new Response(null, {\n        status: 204,\n        headers: {\n          "Access-Control-Allow-Origin": "*",\n          "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",\n          "Access-Control-Allow-Headers": "*",\n          "Access-Control-Max-Age": "86400",\n        },\n      });\n    }\n    const resp = await env.ASSETS.fetch(request);\n    const h = new Headers(resp.headers);\n    h.set("Access-Control-Allow-Origin", "*");\n    return new Response(resp.body, { status: resp.status, headers: h });\n  }\n};\n' > worker.js
 
-          echo "✅ wrangler.toml 和 _headers 已生成"
+          echo "✅ wrangler.toml 和 worker.js 已生成"
 
       - name: 🚀 部署到 Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
