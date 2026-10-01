@@ -36,9 +36,14 @@ Status: implemented
   `steps/11-design/impl/density.md`（密度）、`steps/13-validate/impl/overlap.md`（卡片重叠）、
   `steps/02-lyrics/impl/reading-basis.md`（读音基准）、`steps/03-offset/impl/verdict.md`（离散度判定）。
 - **每个 impl 文件都归属唯一一步**，加一种做法 = 加一个文件，契约不用改。
-- `SKILL.md` 只留**步骤表**（编号 / 步骤 / 关心什么 / 契约在哪 / 产物）与脚本索引；
-  每条路径后面跟一句"什么时候读"，不写 `[a](a)` 形式的链接。
-- 跨步骤的铁律（band、素材、来源定级……）抽到 `shared/hard-rules.md`，SKILL.md 只点它一次。
+- `SKILL.md` **只留步骤表**（编号 / 步骤 / 关心什么 / 契约在哪），46 行。
+  **它不再列脚本、模板与示例**——这三类都下移到"用到它们的那一步"：
+  每步的契约里有一节"这一步要用的脚本"（路径 + 一句话作用），
+  模板与参考工程写在 `steps/12-generate`（生成器那一步），
+  跨步骤的铁律（band、素材、来源定级……）抽到 `shared/hard-rules.md`，SKILL.md 只点它一次。
+- **一条判据只存一处**。同一件事在 `index.md` 与 `impl/` 里各留一份就是新版的重复源，
+  所以：`steps/13-validate/impl/checklist.md` 的门禁表只留摘要 + 指针（判据表在 `index.md`），
+  `steps/06-kf-timing/index.md` 的三条纪律只留一行指针（实测数字与理由在 `impl/collapse.md`）。
 
 编号从 **00** 开始，两位十六进制对齐（`steps/00-setup` … `steps/15-render`），
 这样按字典序排就是流程顺序，且以后在中间插一步不用全体改名。
@@ -63,24 +68,41 @@ Status: implemented
   否决：见 [karaoke-layout-consolidation](./2026-10-02-karaoke-layout-consolidation.md) ——
   其中 `blackbullet_ed` 一个工程占 726MB（含 169MB 的 `base.mp4`、96MB 的 stems、356MB 成片），
   且它是**一次具体制作的产物**，不是 skill 的一部分。
+- **把脚本/模板/示例的中心化索引留在 SKILL.md**（第一版的写法：26 行脚本清单 + 示例与模板节）：
+  最强理由是「模型一眼就能看到全部工具，不用翻 16 个文件」。否决（用户指正）：
+  它违反**渐进式披露**——那份清单是**每次触发出场**的 L2 成本，而它的内容只有在走到对应步骤时才有用。
+  实测代价：SKILL.md 105 行里 48 行是这个索引（约 46%），而 0 次触发需要它；
+  下移之后 SKILL.md 46 行，每步的 35~76 行只在真正走到那步时读。
+  **"函数索引"和"调用它的地方"应该是同一个位置**，否则读者要在两处同步。
+- **把示例/模板继续留在 SKILL.md 的「示例与模板」节**：同上，且它比脚本清单更容易误导 ——
+  示例的一句话描述（"30 句逐句设计 + 71 处 fixes"）在读 `make_ass.py` 之前没有意义，
+  读了之后又不再需要。现在它写在 `steps/12-generate/index.md`，紧挨着"复制模板 → 改 → 跑"的命令。
 
 ## Consequences
 
-- 文档从 12 份平铺长文（1774 行）变成 16 个契约 + 16 份 `impl`（约 1750 行），
-  **总量没变，但每份都可独立定位**：`SKILL.md` 105 行（原 206 行），正文预算降到 L2 之内。
-- 新增文件不产生新的心智负担：`steps/NN-xxx/index.md` 的第三节固定是"产物与过关条件"，
-  找"这一步怎么算过"永远在同一个位置。
+- 文档从 12 份平铺长文（1774 行）变成 16 个契约 + 19 份 `impl`（共 2347 行），
+  **总量略增，但每份都可独立定位**：`SKILL.md` **46 行**（第一版 105 行，旧版 206 行）。
+- **上下文占用按"走到哪读到哪"计**：触发时只付 46 行（SKILL.md）+ 十条铁律；
+  走到某一步再付那一步的 35~76 行（实测每步契约 1.3KB~4.7KB），
+  只有需要时才读该步的 `impl/`。第一版的 105 行里 48 行是每次都要读、却只有走到特定步骤才有用的索引。
+- 新增文件不产生新的心智负担：`steps/NN-xxx/index.md` 的小标题顺序固定
+  （只做这一件事 / 命令 / 这一步要用的脚本 / 产物与过关条件 / 具体做法），
+  找"这一步怎么算过"或"这一步要用什么"永远在同一个位置。
 - 脚本内部指向文档的引用一并改到 `steps/`（`check_gates.py` / `fetch_anime_bg.py` /
   `find_lyrics.py` / `calibrate_offset.py` / `check_lag.py` / `assfx/props.py` / `assfx/motifs.py`），
   否则报错信息会指着已经不存在的 `references/*.md`。
-- `hx-make-skill` 的校验器现在全绿（0 error / 0 warning）：
-  它在 `--strict` 下要求"索引写裸路径 + 每个路径一句描述 + 每个 L3 文件都被 SKILL.md 引用"，
-  这三条正好是旧版 `references/` 结构做不到的。
+- **30 条 WARN 是已知且刻意接受的**：`hx-make-skill` 的校验器有一条软约定
+  "`references/` 与 `scripts/` 下每个文件都要在 SKILL.md 里被引用"。把脚本索引下移之后，
+  30 个脚本不再出现在 SKILL.md，于是它逐条报 WARN。
+  **这不是可达性问题**：逐个验证过，30 个脚本全部能从某一步的契约走到（`0 unreachable`）。
+  校验器自己的注释也说明这条是软约定（`_soft()`，默认降到 WARN）；
+  代价换成的是上面那条上下文收益。
 - 已知边界：步骤目录仍是**软约定**，DSH 的 loader 只强制 `SKILL.md` 存在且 frontmatter 可解析；
   步骤结构的收益来自"读的时候知道该读哪一份"，不是来自任何机器强制。
 
 ## Verification
 
-- `uv run <hx-make-skill>/scripts/validate_skill.py .agents/skills/hx-anime-karaoke-ass` → `PASS (0 errors, 0 warnings)`。
+- `uv run <hx-make-skill>/scripts/validate_skill.py .agents/skills/hx-anime-karaoke-ass` → `PASS (0 errors, 30 warnings)`；
+  30 条全部是上面那条软约定，脚本可达性单独验证为 `0 unreachable`。
 - 保留示例实跑：`uv run examples/mushoku_ed1/make_ass.py /tmp/mushoku_out.ass` → `events: 9155`。
 - `python3 -W error::SyntaxWarning -m compileall scripts/` → 无警告（顺手修掉了三处 `\p1` 非法转义 docstring）。
