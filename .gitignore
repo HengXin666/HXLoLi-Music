@@ -23,3 +23,24 @@ Thumbs.db
 # 本地测试
 test/node_modules/
 test/dist/
+
+# MV 素材: 只作本地逐帧测量用 (位置/亮度分布), 不进仓库
+# 来源与用途见 HXLoLi/.agents/skills/hx-kfx/SKILL.md 的「第 0 步」
+*.mp4
+*.mkv
+*.webm
+
+# ASS 特效字幕 skill 的字体: 52MB, 全是 OFL 可再分发但没必要进 git。
+# 换机器用 .agents/skills/hx-anime-karaoke-ass/scripts/fetch_fonts.py 重建。
+.agents/skills/hx-anime-karaoke-ass/fonts/
+
+# skill 目录里不许出现任何一次制作的产物 —— 工程产物属于工程目录
+# (static/music/<番名>/ 下), 见该 skill 的 shared/hard-rules.md 第 10 条。
+# 这几条是兜底: 脚本侧已经把 SVG 缓存移出 skill、bake_shapes 也会拒绝写到 skill 内,
+# 但缓存目录/临时产物仍可能被手改或旧版本写回来, 所以用 git 再挡一道。
+.agents/skills/hx-anime-karaoke-ass/assets/
+.agents/skills/hx-anime-karaoke-ass/**/svg_cache/
+.agents/skills/hx-anime-karaoke-ass/**/stems/
+.agents/skills/hx-anime-karaoke-ass/**/review/
+.agents/skills/hx-anime-karaoke-ass/examples/*/out/
+.agents/skills/hx-anime-karaoke-ass/examples/*/assets/

@@ -1,0 +1,38 @@
+{
+ "jp_kanji": {
+  "top": -24.0,
+  "bottom": 30.0,
+  "top_p10": -24.0,
+  "bottom_p90": 30.0,
+  "half_w": 25.5
+ },
+ "jp_kana": {
+  "top": -21.0,
+  "bottom": 26.0,
+  "top_p10": -22.0,
+  "bottom_p90": 28.0,
+  "half_w": 19.75
+ },
+ "ruby_kana": {
+  "top": -8.0,
+  "bottom": 10.0,
+  "top_p10": -9.0,
+  "bottom_p90": 11.0,
+  "half_w": 8.5
+ },
+ "ruby_offset": -40.0,
+ "RB_Y": 875.0,
+ "cn": {
+  "top": -16.0,
+  "bottom": 17.0,
+  "top_p10": -17.5,
+  "bottom_p90": 17.5,
+  "half_w": 16.75
+ },
+ "cn_offset": 67.5,
+ "CN_Y": 982.5,
+ "block_ink": {
+  "top": -49.0,
+  "bottom": 85.0
+ }
+}

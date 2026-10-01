@@ -1,0 +1,10 @@
+{
+ "schema": 1,
+ "method": "from-timing",
+ "why": "该工程的人工校时已吸收整体偏移；此处据终稿首拍与歌词首行反推，用于补证据。新工程必须跑 --vocals 做语音校准。",
+ "from_timing": "/home/hx/Loli/code/HXLoLis/HXLoLi-Music/.agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/timing.json",
+ "median": -0.639,
+ "dispersion": 0.0,
+ "calibrated_lines": 33,
+ "note": "据终稿首拍与歌词首行反推；仅用于给历史工程补证据，新工程请跑 --vocals"
+}
