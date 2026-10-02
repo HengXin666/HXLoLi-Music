@@ -9,7 +9,7 @@
 能量上升沿（RMS 正差分最大点），delta = onset - t0。全体取中位 = 系统性滞后。
 
     hx-karaoke check_lag.py --project proj
-判据与已核实的假阳性见 ../steps/08-review-timing/impl/lag-verdict.md —— **先读它，不要重新推导**：
+判据与已核实的假阳性见 ../steps/2-lyrics/08-review-timing/impl/lag-verdict.md —— **先读它，不要重新推导**：
 逐句起音法给出的"字幕偏晚"在长句/长音句上是**系统性假阳性**，不要照它平移。
 """
 import argparse

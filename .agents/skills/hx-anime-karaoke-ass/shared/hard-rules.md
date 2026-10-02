@@ -6,20 +6,20 @@
 
 先确认时长与官方完整版一致(不是 TV size 89 秒)、分辨率 ≥1080p, 再做后续所有步骤; 时间轴以最终 base 视频为准.
 **必须用 `scripts/find_source.py` 多源搜(B 站 + YouTube)**, 不要用 `yt-dlp ytsearch` 当唯一来源.
-**素材不达标就停下来反问用户要链接**, 不许自己挑一个 720p 凑合. 详见 `steps/01-source/impl/source-search.md`.
+**素材不达标就停下来反问用户要链接**, 不许自己挑一个 720p 凑合. 详见 `steps/1-source/01-source/impl/source-search.md`.
 
 ## 2. 歌词一律从网络取, 禁止从视频画面识别字幕
 
 网络同步歌词 > 歌词站文本+时间轴 > 纯人工听写(`--why`).
 **不许**用截图 OCR / 看帧抄词充当歌词来源 —— 抄到的是「这一份剪辑剩下的字」,
 且小字混淆的错会一路带到成片; 行数一错, 逐字高亮整句错位.
-门禁只接受 `network` 与 `manual` 两种来源级别. 详见 `steps/02-lyrics/index.md`.
+门禁只接受 `network` 与 `manual` 两种来源级别. 详见 `steps/2-lyrics/02-lyrics/index.md`.
 
 ## 3. 位置对齐靠语音, 不靠画面
 
 网络歌词时间轴与这份视频常差 0.1~0.5s, 用 `calibrate_offset.py` 从**人声**测出中位差.
-离散度异常时先读 `steps/03-offset/impl/verdict.md`, **不许手改 verdict**.
-详见 `steps/03-offset/index.md`.
+离散度异常时先读 `steps/2-lyrics/03-offset/impl/verdict.md`, **不许手改 verdict**.
+详见 `steps/2-lyrics/03-offset/index.md`.
 
 ## 4. 原作内涵必须查, 不能只看 MV
 
@@ -27,7 +27,7 @@
 **原作内涵才决定"这一段该是什么情绪"**. `anime.notes.md` 必须回答四个问题:
 **内核、主题、与原作的关系(改编改掉了什么价值观)、情绪曲线**(要有访谈或乐谱出处).
 实测教训: 只查角色表会让配色方向从头就错 —— 缘之空动画把原作"治愈的夏"改成了"寂寥的夏".
-详见 `steps/10-anime-bg/index.md`.
+详见 `steps/3-anime-bg/10-anime-bg/index.md`.
 
 ## 5. 特效只能在 band 内 —— 永久强制规则, 没有例外
 
@@ -61,12 +61,12 @@ band = 该句歌词块(注音顶~中文底、最左~最右)墨迹包围盒外扩
 
 ## 8. 合いの手单独处理
 
-整句括号的呼喊行标记为 call, 不参与切窗与对齐, 由特效函数呈现. 详见 `steps/02-lyrics/impl/format.md`.
+整句括号的呼喊行标记为 call, 不参与切窗与对齐, 由特效函数呈现. 详见 `steps/2-lyrics/02-lyrics/impl/format.md`.
 
 ## 9. 出片前必须过门禁
 
 `check_gates.py --stage render` 退出码非 0 就不许渲染. 它是这些"不许跳"步骤的唯一机器判据.
-详见 `steps/13-validate/index.md`.
+详见 `steps/5-verify/13-validate/index.md`.
 
 ## 10. skill 目录不带任何一次运行的痕迹
 
@@ -75,4 +75,4 @@ band = 该句歌词块(注音顶~中文底、最左~最右)墨迹包围盒外扩
 skill 里只有代码、契约、模板与一份保留示例.
 
 判据: `git status` 之后 skill 目录下不该出现任何一次具体制作的产物.
-`bake_shapes.py` 会拒绝 `--out` 指向 skill 内部, `svg2ass` 的缓存也不落在 skill 里(见 `steps/11-design/impl/precise-shapes.md`).
+`bake_shapes.py` 会拒绝 `--out` 指向 skill 内部, `svg2ass` 的缓存也不落在 skill 里(见 `steps/4-kfx/42-text-main/impl/precise-shapes.md`).

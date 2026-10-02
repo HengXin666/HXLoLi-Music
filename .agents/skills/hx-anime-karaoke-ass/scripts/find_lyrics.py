@@ -182,7 +182,7 @@ def main():
             if m:
                 lines.append((int(m.group(1)) * 60 + float(m.group(2)), p[1]))
         if not lines:
-            sys.exit("从 %s 里没解析出带时间的行，检查格式（见 ../steps/02-lyrics/impl/format.md）" % lyr_path)
+            sys.exit("从 %s 里没解析出带时间的行，检查格式（见 ../steps/2-lyrics/02-lyrics/impl/format.md）" % lyr_path)
         evi = dict(source=a.source_kind, engine="adopt", score=0, why=a.why, url=a.url or None, synced=True,
                    adopted_from=os.path.abspath(lyr_path),
                    registered_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
@@ -202,7 +202,7 @@ def main():
             if m:
                 lines.append((int(m.group(1)) * 60 + float(m.group(2)), p[1]))
         if not lines:
-            sys.exit("从 %s 里没解析出带时间的行，检查格式（见 ../steps/02-lyrics/impl/format.md）" % lyr_path)
+            sys.exit("从 %s 里没解析出带时间的行，检查格式（见 ../steps/2-lyrics/02-lyrics/impl/format.md）" % lyr_path)
         evi = dict(source="manual", engine="manual", score=0, why=a.why, url=a.lrc_url or None, synced=True,
                    registered_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
         print("[manual] 已登记人工来源: %s（%d 行）" % (a.why, len(lines)))
@@ -266,7 +266,7 @@ def main():
         f.write("# 待办: 补振假名逐字标注 [漢|よみ] 与中文翻译；读音以实际演唱为准\n")
         for t, s in lines:
             f.write("%s | %s | \n" % (fmt(t), s))
-    print("骨架 -> %s（下一步：按 ../steps/02-lyrics/impl/format.md 补注音与翻译）" % lyr_path)
+    print("骨架 -> %s（下一步：按 ../steps/2-lyrics/02-lyrics/impl/format.md 补注音与翻译）" % lyr_path)
     return 0
 
 

@@ -110,7 +110,7 @@ def check_notes(proj, res):
     p = os.path.join(proj, "anime.notes.md")
     if not os.path.exists(p):
         res.append((BAD, "anime.notes.md", "缺失 —— 只有 anime.background.json 等于只查了角色表，"
-                    "没读作品在讲什么（做法见 ../steps/10-anime-bg/impl/background-research.md）"))
+                    "没读作品在讲什么（做法见 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md）"))
         return
     try:
         txt = open(p, encoding="utf-8").read()
@@ -130,7 +130,7 @@ def check_notes(proj, res):
     has_src = bool(re.search(r"来源|出处|https?://|参考文献", txt))
     if missing:
         res.append((WARN, "anime.notes.md", "缺 %s —— 这两条决定配色方向（亮/暗、暖/冷），"
-                    "见 ../steps/10-anime-bg/impl/background-research.md §3" % "、".join(missing)))
+                    "见 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md §3" % "、".join(missing)))
     if not has_src:
         res.append((WARN, "anime.notes.md", "没有来源/出处 —— 结论无法回溯，等于没读"))
     if not missing and has_src:
@@ -216,7 +216,7 @@ def check_design(proj, res, strict=False):
     dtxt = open(dp, encoding="utf-8").read()
     hdr = next((l for l in dtxt.splitlines() if l.startswith("|") and "主·出现" in l), None)
     if hdr is None:
-        msg = ("还是旧格式(入/出/高亮 3 格) —— 新格式见 steps/11-design/impl/design-table.md: "
+        msg = ("还是旧格式(入/出/高亮 3 格) —— 新格式见 steps/4-kfx/42-text-main/impl/design-table.md: "
                "主·出现/逐字/词组/意象/消失 + 副·出现/逐字/消失 + 背景·场景/情绪/番剧 + 承上/启下")
         res.append((BAD if strict else WARN, "review/design-table.md", msg))
         return

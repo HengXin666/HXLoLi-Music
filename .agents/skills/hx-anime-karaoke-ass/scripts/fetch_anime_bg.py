@@ -15,7 +15,7 @@ skill 把"读原作设定"定成第 1 步的必做项，产物就是本脚本写
   bgm.tv   api.bgm.tv/v0/search/subjects         —— 按番名搜条目 id（POST）
   实测 (2026-10-01): 无需 token 即可拿到条目 summary + 26 个角色的中文简介；token 只是提高限额。
   萌娘百科 zh.moegirl.org.cn/<条目>               —— 媒体API 实测 403（只允许白名单 UA），
-                                                   改抓 HTML 正文并用 ../steps/10-anime-bg/impl/background-research.md（萌娘百科正文用 argo_fetch 读）
+                                                   改抓 HTML 正文并用 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md（萌娘百科正文用 argo_fetch 读）
                                                    里的做法抽正文 —— 即"必须由人/AI 读一遍"。
 
 用法:
@@ -123,7 +123,7 @@ def main():
         subs = search_subject(a.anime, a.bgm_token) or []
         if not subs:
             sys.exit("bgm 搜不到「%s」。带 --bgm-id 指定条目，或 --register 手工登记。"
-                     "萌娘百科正文另外用 argo_fetch 读（见 ../steps/10-anime-bg/impl/background-research.md）。" % a.anime)
+                     "萌娘百科正文另外用 argo_fetch 读（见 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md）。" % a.anime)
         print("bgm 候选:")
         for s in subs[:5]:
             print("  %8s  %-28s %-8s %s" % (s["id"], (s["name_cn"] or s["name"])[:28], s["date"], s["platform"]))
@@ -139,7 +139,7 @@ def main():
                               summary=pick_summary(c), id=c.get("id")) for c in chars]
     if sum(1 for c in evi["characters"] if c["summary"]) == 0:
         evi["note"] = ("角色简介全为空 —— 实测 bgm.tv 匿名请求也给简介，出现这种情况通常是条目错了或接口降级。"
-                       "按 ../steps/10-anime-bg/impl/background-research.md 用萌娘百科正文补，并设 BGM_TOKEN 重跑对照。")
+                       "按 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md 用萌娘百科正文补，并设 BGM_TOKEN 重跑对照。")
     evi["moegirl_url"] = a.moegirl or None
     evi["body_sha256"] = hashlib.sha256(json.dumps(evi["characters"], ensure_ascii=False, sort_keys=True).encode()).hexdigest()
     subs_keep = [s for s in subs if s["id"] == sid]
@@ -148,7 +148,7 @@ def main():
     json.dump(evi, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("-> %s  (角色 %d 个, 简介 %d 条)" % (path, len(evi["characters"]),
                                             sum(1 for c in evi["characters"] if c["summary"])))
-    print("下一步: 按 ../steps/10-anime-bg/impl/background-research.md 把「主题/符号/角色→视觉母题」写成 notes.md，"
+    print("下一步: 按 ../steps/3-anime-bg/10-anime-bg/impl/background-research.md 把「主题/符号/角色→视觉母题」写成 notes.md，"
           "design.md 的母题速查必须与它对齐。")
     return 0
 

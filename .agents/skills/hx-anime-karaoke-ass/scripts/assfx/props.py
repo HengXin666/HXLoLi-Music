@@ -5,7 +5,7 @@
 # ///
 r"""番剧道具图形库：把「元素表」里的条目落成**精密矢量路径**，而不是手绘拼贴。
 
-为什么单独一个模块（对应 ../steps/11-design/impl/precise-shapes.md 与 ../steps/11-design/impl/per-line.md §8）：
+为什么单独一个模块（对应 ../steps/4-kfx/42-text-main/impl/precise-shapes.md 与 ../steps/4-kfx/42-text-main/impl/per-line.md §8）：
   * 手绘的 circle+rect 拼不出可辨认的物体。实测同一物体两者差一个量级：
     手绘自行车 = 两个圆圈 + 几条线；网络 SVG 转出 = 3148 字符的真实车架/辐条路径。
   * 本 skill 已有的 shapes.py 提供的是**通用符号**（心/花/星/裂纹）。番剧专属的
