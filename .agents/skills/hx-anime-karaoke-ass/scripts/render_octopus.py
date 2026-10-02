@@ -200,7 +200,14 @@ def render(ass_path, out, times, width, height, fonts_dir=None, scale=None):
     if not pw:
         raise SystemExit("找不到 playwright; 用 ASSFX_PLAYWRIGHT 指到装了 playwright 的目录")
 
-    work = tempfile.mkdtemp(prefix="hxocto-")
+    # 临时工作区必须回收: 每个含 wasm + legacy worker ≈ 105MB.
+    # 实测教训(2026-10-03): 不清理时跑 52 次就积到 5.1GB, 把 /tmp(tmpfs, 8GB)写满,
+    # 之后**连 shell 都无法写输出**(报 `UNKNOWN: unknown error, write`).
+    # 用一个可复用的固定目录 + 结束时清空, 比每次 mkdtemp 更省。
+    work = os.path.join(tempfile.gettempdir(), "hxocto-work")
+    if os.path.isdir(work):
+        shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(work, exist_ok=True)
     for f in ("subtitles-octopus.js", "subtitles-octopus-worker.js",
               "subtitles-octopus-worker-legacy.js", "subtitles-octopus-worker.wasm",
               "default.ttf", "default.woff2"):
@@ -305,6 +312,7 @@ const { chromium } = req('playwright');
     open(sp, "w", encoding="utf-8").write(script)
     r = subprocess.run(["node", sp, pw, cfg_path], capture_output=True, text=True, timeout=600)
     srv.shutdown()
+    # 先把结果帧挪出 work 再删目录(帧在 work 里)
     tail = [l for l in r.stdout.splitlines() if l.startswith("RESULT")]
     if not tail:
         raise SystemExit("渲染失败, node 输出:\n" + r.stdout[-2000:] + r.stderr[-2000:])
@@ -338,6 +346,7 @@ const { chromium } = req('playwright');
         lit = int((rgb.sum(axis=2) > 20).sum())
         Image.fromarray(rgb.astype("uint8")).save(dst)
         print(f"  t={t:8.2f}s  {im.size[0]}x{im.size[1]}  亮像素 {lit:7d} -> {dst}")
+    shutil.rmtree(work, ignore_errors=True)
     print("渲染器: HXLoLi 定制版 libass (VSFilterMod 支持)")
     return 0
 

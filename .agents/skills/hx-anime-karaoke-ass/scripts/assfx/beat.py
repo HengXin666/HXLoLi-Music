@@ -117,18 +117,74 @@ class MusicEvents:
 # 图形族: 必须是"现代、有区分度、不指涉具体人物"的形状.
 # 用户 2026-10-03: 「具有区分的, 然后应该是比较现代的…你不要是番剧元素,
 #   因为突然出现一个人的话在这里作为卡点不是很好」(点兔那种吉祥物图是另一层: 图片层)
-BEAT_SHAPES = {
-    "spark":      lambda r: S.sparkle(r),                       # 四芒星: 高频、锐
-    "streak":     lambda r: S.streak(r * 2.6, r * 0.22),        # 短光条: 速度感
-    "ring":       lambda r: S.ring(r, max(0.6, r * 0.16)),      # 脉冲环: 冲击
-    "shard":      lambda r: S.shard(_RngShim(r), r),            # 碎片: 破碎
-    "bolt":       lambda r: S.bolt(_RngShim(r), r * 2.2, r * 0.2),  # 电弧: 电音
-    "tri":        lambda r: S.poly([(-r, r * 0.62), (r, r * 0.62), (0, -r * 0.86)]),  # 三角: 锐利现代
-    "hex":        lambda r: _hex(r),                            # 六边形: 科技感
-    "diamond":    lambda r: S.poly([(0, -r), (r * 0.72, 0), (0, r), (-r * 0.72, 0)]),
-    "arc":        lambda r: S.arc(r, -70, 70, max(0.8, r * 0.28)),  # 弧: 扫过
-    "beam":       lambda r: S.stroke([(0, 0), (0, -r * 3.2)], max(0.6, r * 0.18)),  # 光束
+# 卡点层的图形族.
+#
+# **实测教训(2026-10-03, 用户指正「图形很粗糙」)**: 第一版用 sparkle/三角/菱形/六边形,
+# 它们都是**手绘多边形**(路径 3~7 段), 放大后就是"粗糙的几何块".
+# 本工程 `assets/shapes.json` 里的烘焙素材精度中位 36 段、最大 115 段(网络 SVG 来的),
+# 而合成路径的中位只有 4 段 —— 这就是"粗糙"的机械证据.
+#
+# 所以卡点层改为**借用烘焙素材**: 用小尺寸的 flower/orbit/snowflake/atom 等,
+# 形状本身有细节, 不靠尺寸取胜.
+BEAT_SHAPES = {}
+
+# 需要图片路径的族(用 assets/shapes.json 的烘焙图), 由 bind_baked() 注入
+# 名字必须**真实存在于 assets/shapes.json** —— 写不存在的名字会静默回退
+# (见 42-text-main/impl/per-line.md §7b). 这里只用实测存在的 8 个.
+_BAKED_SPEC = {
+    "star":   ("star4",     0.55),   # 四芒星: 锐
+    "flower": ("flower",    0.42),   # 花: 花瓣有细节
+    "orbit":  ("orbit",     0.40),   # 轨道环: 多段曲线
+    "snow":   ("snowflake", 0.40),   # 雪花: 92 段
+    "atom":   ("atom",      0.42),   # 原子: 多环
+    "seed":   ("seed",      0.45),
+    "cross":  ("cross",     0.40),
+    "diam":   ("diamond",   0.50),
 }
+BEAT_BAKED = {}          # 运行时填: name -> 归一化系数(见 bind_baked)
+BAKED_NORM = 200.0       # bake_shapes.py 的规范尺寸(实测各素材 bbox 均 ~200)
+
+
+def _hex(r):
+    pts = []
+    for i in range(6):
+        a = math.radians(60 * i - 90)
+        pts.append((math.cos(a) * r, math.sin(a) * r))
+    return S.poly(pts)
+
+
+def bind_baked(baked):
+    """把烘焙素材(assets/shapes.json)接进卡点层的图形族.
+
+    `baked`: {name: {"d": path}} —— 由生成器读入后传入. **必须调用**.
+
+    ⚠ **烘焙素材的坐标是 ±100 的规范尺寸(bbox 200x200), 不是"像素尺寸"**.
+    第一版直接把路径当 sz 用, 于是 `sz=14~26` 实际画出 **200px** 的图,
+    再乘 fade(18~52%) 仍有 100px+ —— 实测单条墨迹达 1063px(而 band 高只有 242px),
+    这就是"图形非常大"的根因.
+    修法: 用 `\fscx/\fscy` 把 200px 的规范路径缩到目标像素尺寸 ——
+    缩放在 `beat_scatter` 里由 `_size_tag()` 统一加.
+    """
+    BEAT_SHAPES.clear()
+    BEAT_BAKED.clear()
+    for key, (bk_name, k) in _BAKED_SPEC.items():
+        if bk_name in baked:
+            BEAT_SHAPES[key] = (lambda n: (lambda r: baked[n]["d"]))(bk_name)
+            BEAT_BAKED[key] = k          # 记录该素材的"归一化系数", 供 _size_tag 用
+    return sorted(BEAT_SHAPES)
+
+
+def _size_tag(name, px):
+    """把烘焙素材(规范 200px)缩放到 px 像素的 ass 标签.
+
+    对于 `BEAT_SHAPES` 里由 `bind_baked` 绑进来的族, 必须用这个;
+    手绘图形(没有 norm 信息)则返回空串.
+    """
+    k = BEAT_BAKED.get(name)
+    if not k:
+        return "", 1.0
+    scale = px / BAKED_NORM * 100.0
+    return "\\fscx%.1f\\fscy%.1f" % (scale, scale), 1.0
 
 
 class _RngShim:
@@ -167,7 +223,7 @@ BEAT_COLORS = {
 
 def beat_scatter(f, me, t0, t1, level=2, cx=None, cy=None, colors=None, seed=7,
                  per_beat=(3, 10), long_ratio=0.35, layer=2, xl=None, xr=None,
-                 base_size=(26.0, 46.0), spread=(38, 150), fade=(18, 40), grow=63.0,
+                 base_size=(14.0, 26.0), spread=(38, 150), fade=(18, 40), grow=52.0,
                  alpha=(190, 250)):
     """按音乐网格铺一整个区间的卡点群发.
 
@@ -227,17 +283,21 @@ def beat_scatter(f, me, t0, t1, level=2, cx=None, cy=None, colors=None, seed=7,
             rad = R.uniform(*spread)
             x1 = x0 + math.cos(ang) * rad
             y1 = y0 + math.sin(ang) * rad * 0.75
-            sz = R.uniform(*base_size) * (0.8 if level <= 1 else (1.0 if level == 2 else 1.25))
+            # 尺寸纪律: 单个图形 30~70px 是**含细节的素材**的量级; 这里是缩放前的基准,
+            # 乘 fade(18~52%) 后落在 2.5~13px —— 卡点层要"多而小", 不要"少而大".
+            sz = R.uniform(*base_size) * (0.8 if level <= 1 else (1.0 if level == 2 else 1.2))
             # 寿命分布对齐参考实测: 中位 1.09s, 均值 1.41s, >2s 占 23%
             life = R.uniform(0.55, 1.35) if R.random() > long_ratio else R.uniform(2.0, 2.9)
             nm = names[int(R.random() * len(names)) % len(names)]
             dr = BEAT_SHAPES[nm](sz)
             col = cols[int(R.random() * len(cols)) % len(cols)]
-            # 起手 18%~40% -> 300ms 到 63%; 这是"爆发"的来源
             s0 = R.uniform(*fade)
             spin = R.uniform(300, 600) * (1 if R.random() < 0.5 else -1)
-            ex = (f"\\fscx{s0:.0f}\\fscy{s0:.0f}"
-                  f"\\t(0,300,0.7,\\fscx{grow:.0f}\\fscy{grow:.0f})"
+            # 烘焙素材是 200px 规范尺寸: 必须先按目标像素算出基准缩放, 再叠起手/成长动画.
+            # 直接给 fscx18 会让 200px 的图从 36px 起手 —— 尺寸完全不可控(实测墨迹达 1063px).
+            base = (sz / BAKED_NORM * 100.0) if nm in BEAT_BAKED else 100.0
+            ex = (f"\\fscx{base*s0/100:.1f}\\fscy{base*s0/100:.1f}"
+                  f"\\t(0,300,0.7,\\fscx{base*grow/100:.1f}\\fscy{base*grow/100:.1f})"
                   f"\\t(0,{int(life*1000)},\\frz{spin:.0f})")
             f.shape(layer, g, g + life, x0, y0, x1, y1, draw=dr, c1=col,
                     a_peak=R.randint(*alpha), blur=R.uniform(0.6, 1.5),
@@ -247,7 +307,7 @@ def beat_scatter(f, me, t0, t1, level=2, cx=None, cy=None, colors=None, seed=7,
 
 
 def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0, every=4,
-               blur=10.0, alpha=90):
+               blur=10.0, alpha=90, span=0.08):
     """拍级脉动: 在强拍上给 band 一整片柔光呼吸.
 
     **`blur` 必须压住.** 实测教训(2026-10-03): 卡点层原先用 blur=24 的柔光,
@@ -256,6 +316,15 @@ def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0,
     但仍看不清). 背景层才该用大 blur; 卡点层与每句特效必须锐.
 
     `every`: 每几格一次; 4 = 每四分音符(拍)一次
+    `span`: 柔光的半宽, 相对 band 半宽的比例.
+
+    ⚠ **这个函数默认不应使用.** 它是"整片柔光", 无论 span 给多小, 只要它是
+    一个**大椭圆**就压不住尺度: 实测 span=0.20 时椭圆直径仍是 602px(band 高只有 242px),
+    在窄带里就是一层糊住字的雾, 且不产生任何信息.
+    **卡点层的职责由 `beat_scatter`(有形状的小元素群发)承担** —— 那是"卡点",
+    而这个是"呼吸"; 两者叠在一起就是噪音.
+
+    只在**确实需要一次整体呼吸**(如段落起爆)时用, 且必须配合 span<=0.08.
     """
     b = f.b
     if cx is None:
@@ -263,8 +332,8 @@ def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0,
     if cy is None:
         cy = (b[1] + b[3]) / 2
     cols = BEAT_COLORS.get(colors, colors)
-    rx = (b[2] - b[0]) * 0.5
-    ry = (b[3] - b[1]) * 0.5
+    rx = (b[2] - b[0]) * max(0.05, min(0.6, span))
+    ry = (b[3] - b[1]) * max(0.05, min(0.6, span))
     n = 0
     for gi, g in enumerate(me.grid_between(t0, t1)):
         if gi % every:
@@ -302,8 +371,15 @@ def beat_drop(f, me, t, level=3, cx=None, cy=None, colors=None, layer=1, size=12
     return rings + 14
 
 
-def beat_sink(f, me, t0, t1, cx=None, layer=0, colors=("#2A2036", "#1A1424")):
-    """低频下沉: 低频峰处的暗色重量块(不亮, 只给"压下去"的感觉)"""
+def beat_sink(f, me, t0, t1, cx=None, layer=0, colors=("#2A2036", "#1A1424"), span=0.10):
+    """低频下沉: 低频峰处的暗色重量块.
+
+    **尺寸必须收住.** 实测教训(2026-10-03, 用户指正「非常大」): 第一版用
+    `rx = (b[2]-b[0]) * 0.40` = band 全宽的 40%, 实际墨迹 **1205px**,
+    而 band 只有 242px 高 —— 一个 1205x166 的暗椭圆横在字上, 就是"糊住字的雾".
+    现在默认 `span=0.30` 且**只画在 band 下缘**(不压文字行), 并且它本来就该是可选的:
+    低频下沉是"重量感", 在很多句里并不需要.
+    """
     b = f.b
     if cx is None:
         cx = (b[0] + b[2]) / 2
@@ -311,10 +387,13 @@ def beat_sink(f, me, t0, t1, cx=None, layer=0, colors=("#2A2036", "#1A1424")):
     for t in me.sub:
         if not (t0 <= t < t1):
             continue
-        rx = (b[2] - b[0]) * 0.40
-        ry = (b[3] - b[1]) * 0.34
-        f.shape(layer, t, t + 0.42, cx, b[3] - ry * 0.6,
+        # span 是**半径相对 band 宽的比例**, 直径是它的两倍 ——
+        # 给 0.30 就是直径 0.6*band = 902px(实测), 仍然是糊住字的尺寸.
+        # 收到 0.10 (直径约 300px) 才是"一块重量感", 不是"一层雾".
+        rx = (b[2] - b[0]) * max(0.03, min(0.14, span))
+        ry = (b[3] - b[1]) * 0.07
+        f.shape(layer, t, t + 0.42, cx, b[3] - ry * 0.5,
                 draw=S.ellipse(rx, ry), c1=colors[n % len(colors)],
-                a_peak=70, blur=26, fade_in=0.04, fade_out=0.24)
+                a_peak=60, blur=20, fade_in=0.04, fade_out=0.24)
         n += 1
     return n
