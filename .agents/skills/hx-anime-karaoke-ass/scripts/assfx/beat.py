@@ -44,6 +44,7 @@ class MusicEvents:
     """music_events.py 的产物 (review/music-events.json).
 
     grid      十六分/八分网格点(秒)
+    grid_fit  起音对网格的归一化误差中位; <0.30 = 贴合, 0.5 = 随机
     onset     谱通量起音(鼓点), strength 里带归一化强度
     sub       低频峰(重量感)
     section   段落边界(与 chordwiki 的转调点互验)
@@ -59,6 +60,7 @@ class MusicEvents:
         self.step = self.d.get("grid_step") or (60.0 / self.bpm / (self.d.get("grid_div") or 4)
                                                 if self.bpm else None)
         self.strength = self.d.get("strength") or {}
+        self.grid_fit = self.d.get("grid_fit")
 
     @classmethod
     def load(cls, path):

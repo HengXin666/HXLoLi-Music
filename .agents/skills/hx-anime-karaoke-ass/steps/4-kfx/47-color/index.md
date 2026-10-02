@@ -74,9 +74,50 @@ hx-karaoke voices.py --vocals proj/stems/vocals16k.wav --timing proj/timing.json
   亮端色(`#FFFFFF`)不能直接当描边色 —— 它会连描边一起吃掉.
 - 单色族 = 无色彩叙事; 彩虹 = 可读性灾难. 专业成品的区间是 **1~4 个色相族**.
 
+## 实测: 修之前是"每句一色", 修之后是"每句 12 色"
+
+用本项目漆黑子弹 ED 重做过一次对照(`dev/漆黑子弹/トコハナ/review/v4-vs-v5.md`),
+输入文件完全相同, 只改配色接法:
+
+| 量 | 未接 `hl_color` | 接了 `make_hl_color` |
+|---|---|---|
+| 高亮层填充色种类 | 17 | **587** |
+| **每句有彩填充色种类(中位)** | **1** | **12** |
+| 每句有彩填充色种类(最大) | 1 | **36** |
+
+中位 1 说明旧版**确实是一句一色**(不是"看起来差不多"), 这条判据可以直接拿来量。
+
+**量法**(不改代码就能跑):
+
+```bash
+hx-karaoke python -c "
+import re,colorsys,collections,statistics
+per=collections.defaultdict(set)
+for ln in open('proj/out.ass',encoding='utf-8-sig'):
+    if not ln.startswith('Dialogue:'): continue
+    f=ln.split(',',9)
+    if len(f)<10 or not f[4].startswith('ly:') or int(f[0].split(':')[1])<23: continue
+    for m in re.finditer(r'\\\\1c&H00([0-9A-Fa-f]{6})&', f[9]):
+        c=m.group(1).upper(); r,g,b=[int(c[i:i+2],16)/255 for i in (0,2,4)]
+        h,s,v=colorsys.rgb_to_hsv(r,g,b)
+        if s>0.25 and v>0.25: per[f[4]].add(c)
+print('每句有彩色 中位', statistics.median([len(v) for v in per.values()]))
+"
+```
+
+**只看 Layer >= 23 的 `ly:` 事件** —— 那是高亮层(`Doc.ev` 把文字统一抬到特效之上).
+数 Layer 21/22 是底字层, 它的颜色本来就不该分化, 拿它当判据会得出错误的结论.
+
+## 一个真实的坑: 声部 key 要对齐
+
+`voices.py` 的 key 是 `<line>.<unit>.<mora>`, 而一个字可能**跨多个音拍**.
+`make_hl_color` 里写死 `mora=0` 时命中率极低, 声部色等于没生效(全部退回 solo).
+必须按该字的 `ch["morae"]` 列表逐个查, 取第一个命中的.
+
 ## 过关条件
 
 - 全曲色相族 **1~4 个**; 同族内**有变化**(逐字游走或按段变档).
+- **每句有彩填充色种类 中位 >= 3**(旧版是 1; 实测接上后可到 12).
 - 目检: 任意帧的填充/描边对比度达标(`doc/KFX-RULES.md` 的三条命令).
 - 声部配色必须附**反验数字**(人声 vs 伴奏的 `none` 占比).
 

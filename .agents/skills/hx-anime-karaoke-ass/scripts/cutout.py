@@ -103,9 +103,16 @@ def grab_frame(video, t, out):
     return out
 
 
-def rembg_cut(im):
-    from rembg import remove
-    return remove(im)
+def rembg_cut(im, model="isnet-anime"):
+    """按模型抠图.
+
+    **默认 isnet-anime, 不是 u2net.** 本 skill 处理的是番剧画面(平涂色块 + 清晰轮廓),
+    动漫专用模型比通用模型贴合得多; 而且本机 ~/.u2net/ 里已有 `isnet-anime.onnx`,
+    用默认的 u2net 会**现场下载 1.02GB**(实测卡在 4% 十几分钟)。
+    换模型前先看 ~/.u2net/ 有什么: `ls ~/.u2net/`.
+    """
+    from rembg import remove, new_session
+    return remove(im, session=new_session(model))
 
 
 def main():
@@ -118,6 +125,8 @@ def main():
     ap.add_argument("--pad", type=int, default=16,
                     help="抠图前加透明边距(px). 防'头发被切平'的第一道保险, 默认 16")
     ap.add_argument("--check-only", action="store_true", help="只体检不重抠")
+    ap.add_argument("--model", default="isnet-anime",
+                    help="rembg 模型名; 动漫画面用 isnet-anime(本机已有), 不要用会下 1GB 的 u2net")
     ap.add_argument("--json", help="把体检结果写到 json")
     a = ap.parse_args()
 
@@ -139,7 +148,7 @@ def main():
         else:
             src_im = load_rgba(src)
             padded = pad_image(src_im, a.pad)
-            cut = rembg_cut(padded)
+            cut = rembg_cut(padded, a.model)
             im = cut
             if a.out and len(jobs) == 1:
                 dst = a.out

@@ -60,6 +60,27 @@ Status: implemented
 - **把"用哪个渲染器"写成文档约定, 不加脚本**: 否决。这正是本项目反复踩的坑 ——
   约定停留在描述层面就没人执行(与 `2026-09-28-kfx-quality-redline.md` 的结论一致).
 
+## 重做对照中又发现三处(2026-10-03 当天, 用 v4/v5 对照暴露)
+
+**1. 字体名必须用字体文件里的真实族名, 不是文件名.**
+`dev/漆黑子弹/トコハナ/make_ass.py` 里写的是 `LXGW WenKai Medium`,
+而 `LXGWWenKai-Medium.ttf` 的实际族名是 **`霞鹜文楷 Medium`**.
+定制版 libass 找不到就回落, 症状是**满屏豆腐块**;
+而系统 ffmpeg 有自己的字体回退, **把这个缺陷完全掩盖了** —— 它一直存在却没被发现.
+这是"必须用真渲染器目检"的第二个理由(第一个是 MOD 标签静默退化).
+`render_octopus.py --probe` 现在会打印 `img` 引用与全部样式字体, 先跑它.
+
+**2. 写进 Worker FS 之后必须 `setTrack` 重载.**
+只 `writeFile` 不重载时, libass 仍在用 fallback 字体(图片同理不生效 ——
+这与 `img` 的 `can't fopen` 是同一处机制). 主站的做法就是
+**写 FS → `setTrack(subContent)` 热重载**(见 `AssLyrics.tsx`). 已照做.
+
+**3. 取帧不能按秒逐帧推进.**
+第一版让渲染器从 0 按 1/8 秒推到 194s 才截图(1556 次渲染), 之后所有文字变成豆腐块 ——
+看起来像字体缺失, 实际是 libass 的**字形缓存被挤掉**.
+按日志区分: 真缺字形有 `libass: Glyph 0x... not found in font for (...)`, 缓存淘汰**没有这条日志**.
+现在只走两跳(目标前 0.05s → 目标), 足以让 `\t` 取到正确插值.
+
 ## Consequences
 
 - 新增 `scripts/render_octopus.py`; 用法 `hx-karaoke render_octopus.py <ass> --probe` /
@@ -71,3 +92,5 @@ Status: implemented
   找不到时报错点名, 不静默降级。
 - `steps/5-verify/14-inspect` 的目检清单新增四条: 卡点层与字音拍不重合 / 卡点不排成一条横线 /
   图片无平铺重复 / 图片边缘未被切平。
+- 实跑对照(`dev/漆黑子弹/トコハナ/review/v4-vs-v5.md`): 同一份 ass 用定制版渲染,
+  图片层从 0 到 4 条, 左右各一张延珠, 发丝完整。

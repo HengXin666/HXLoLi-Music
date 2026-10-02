@@ -224,6 +224,18 @@ def main():
             grid.append(round(t, 3))
             t += step
         print(f"网格点 {len(grid)} 个")
+        # 自检: 起音应当落在网格上. 归一化误差 中位 <0.30 = 贴合, 0.5 = 随机.
+        # 实测本工程 0.051(BPM 84.5), 是"网格与 BPM 都对"的机械证据.
+        import bisect
+        errs = []
+        for tt in onset_t:
+            i = bisect.bisect_left(grid, tt)
+            d = min(abs(grid[j] - tt) for j in (i - 1, i, i + 1) if 0 <= j < len(grid))
+            errs.append(d / step)
+        errs.sort()
+        med = errs[len(errs) // 2] if errs else 1.0
+        grid_fit = round(float(med), 4)
+        print(f"起音对网格的归一化误差 中位 {med:.3f}  ({'贴合' if med < 0.30 else '不贴合 -- BPM 或相位错了'})")
 
     # 低频峰
     lp_pk = pick_peaks(low_energy(x, sr, int(sr / fr)), fr, min_gap=0.08, rel=0.45)
@@ -241,6 +253,7 @@ def main():
         bpm=(round(float(bpm), 2) if bpm else None), grid_div=a.div,
         phase=phase, grid_step=(round(60.0 / float(bpm) / a.div, 4) if bpm else None),
         grid=grid, onset=onset_t, sub=sub_t, section=secs, strength=strength,
+        grid_fit=grid_fit if bpm else None,
     )
 
     if a.verify and a.vocals and a.timing:

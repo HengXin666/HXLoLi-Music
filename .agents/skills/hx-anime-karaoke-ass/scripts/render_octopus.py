@@ -100,15 +100,18 @@ window.__init=function(o){
 });};
 window.__write=function(name,b64){ var bin=atob(b64); var u=new Uint8Array(bin.length);
   for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); window.__inst.writeFile(name,u); return u.length; };
+// 字体与图片写进 Worker FS 之后必须 setTrack 重载才生效 —— 这是主站的做法
+// (HX-LoLis/HXLoLi/src/components/MusicPlayer/AssLyrics.tsx: 写 FS -> setTrack(subContent)).
+// 只 writeFile 不重载, libass 仍用 fallback 字体, 症状是满屏豆腐块(实测踩过).
+window.__reload=function(text){ window.__inst.setTrack(text); return true; };
 window.__at=function(t){ var i=window.__inst;
-  // 必须从小逐帧推进: renderer 用内部时钟算 \t 的当前值, 一次跳几秒会
-  // 只重绘一次且取错插值点 —— 实测直接 seek 到 193/194.5/196/198 得到四张
-  // 像素数完全相同的图(内容没刷新)。这里按 1/8 秒步进逼近目标。
-  var cur = window.__t || 0;
-  if (t < cur) { cur = 0; i.setCurrentTime(0); }
-  var step = 0.125;
-  while (cur < t - 1e-6) { cur = Math.min(t, cur + step); i.setCurrentTime(cur); }
-  i.setCurrentTime(t); window.__t = t; return true; };
+  // 只走两跳: 目标前 0.05s -> 目标. 不要逐帧推进 ——
+  // 实测按 1/8 秒从 0 走到 194s 要 1556 次渲染, 会把 libass 的字形缓存挤爆,
+  // 之后所有文字渲染成"豆腐块"(看起来像字体缺失, 其实是缓存淘汰)。
+  // 两跳足以让 \t 的插值取到正确时刻(renderer 按时间差决定重绘)。
+  i.setCurrentTime(Math.max(0, t - 0.05));
+  i.setCurrentTime(t);
+  return true; };
 window.__grab=function(){ return document.getElementById('c').toDataURL('image/png'); };
 </script></body></html>
 """
@@ -222,12 +225,31 @@ def render(ass_path, out, times, width, height, fonts_dir=None, scale=None):
             img_payload[rel] = base64.b64encode(open(src, "rb").read()).decode()
 
     # 字体: 既写 FS(供 libass 按名取用), 也通过 availableFonts 注册
-    font_payload, avail = {}, {}
+    font_payload = {}
+    avail = {}
+    def _family_of(ttf_path):
+        """读字体文件的真实族名. ASS 里写的必须是这个, 不是文件名 ——
+        实测 'LXGW WenKai Medium' 与文件里的 '霞鹜文楷 Medium' 不一致, libass 找不到就回落,
+        症状是满屏豆腐块(而系统 ffmpeg 有自己的字体回退, 会掩盖这个问题)."""
+        try:
+            from fontTools.ttLib import TTFont
+            t0 = TTFont(ttf_path)
+            for rec in t0["name"].names:
+                if rec.nameID == 1:
+                    try:
+                        return rec.toUnicode()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return os.path.splitext(os.path.basename(ttf_path))[0]
     fdir = fonts_dir or os.path.join(os.path.dirname(HERE), "fonts")
     if os.path.isdir(fdir):
         for f in sorted(os.listdir(fdir)):
             if f.lower().endswith((".ttf", ".otf", ".ttc")):
-                font_payload["fonts/" + f] = base64.b64encode(open(os.path.join(fdir, f), "rb").read()).decode()
+                fp = os.path.join(fdir, f)
+                font_payload["fonts/" + f] = base64.b64encode(open(fp, "rb").read()).decode()
+                avail[_family_of(fp)] = "fonts/" + f
 
     port = free_port()
     srv = serve(work, port)
@@ -237,7 +259,7 @@ def render(ass_path, out, times, width, height, fonts_dir=None, scale=None):
     cfg_path = os.path.join(work, "_cfg.json")
     json.dump(dict(chrome=chrome, w=width, h=height, url=f"http://127.0.0.1:{port}/page.html",
                    imgs=img_payload, fonts=font_payload, times=times, wait=420,
-                   out_dir=work), open(cfg_path, "w"))
+                   out_dir=work, subText=txt, avail=avail), open(cfg_path, "w"))
 
     script = r"""
 const fs = require('fs');
@@ -259,6 +281,11 @@ const { chromium } = req('playwright');
   await p.waitForTimeout(900);
   for (const [name, b64] of Object.entries(cfg.imgs)) await p.evaluate(([n,d]) => window.__write(n,d), [name, b64]);
   for (const [name, b64] of Object.entries(cfg.fonts)) await p.evaluate(([n,d]) => window.__write(n,d), [name, b64]);
+  // 写完之后必须重载 track, 否则 libass 还在用 fallback 字体/找不到图片(满屏豆腐块)
+  if (cfg.subText && (Object.keys(cfg.imgs).length || Object.keys(cfg.fonts).length)) {
+    await p.evaluate(txt => window.__reload(txt), cfg.subText);
+    await p.waitForTimeout(cfg.wait);
+  }
   // 帧直接写盘, 不经过 stdout: 一次 1920x1080 PNG 的 base64 约 1MB, 多帧会撑爆管道
   const saved = [];
   let idx = 0;

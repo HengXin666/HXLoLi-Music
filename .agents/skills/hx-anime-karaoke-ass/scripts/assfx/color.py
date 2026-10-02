@@ -160,7 +160,18 @@ def make_hl_color(ph, palette, voices=None, t_in=None, t_end=None, use_voice=Tru
         base = sc.at((ch["x"] - x0) / max(1e-6, x1 - x0)) if use_ramp else sc.hi
         role = "solo"
         if use_voice and voices is not None:
-            role = voices.get("%d.%d.%d" % (ch.get("line", 0), ch.get("unit", 0), 0), "solo")
+            # voices.json 的 key 是 "<line>.<unit>.<mora>"; 一个字符可能跨多个音拍,
+            # 所以按该字的音拍列表逐个查, 取第一个命中的. **不能写死 mora=0** ——
+            # 实测写死 mora=0 时命中率极低, 声部色等于没生效(全部退回 solo).
+            line = ch.get("line"); unit = ch.get("unit")
+            morae = ch.get("morae") or []
+            cand = ["%d.%d.%d" % (line, unit, m.get("mora", i)) for i, m in enumerate(morae)]
+            for k in cand:
+                if k in voices:
+                    role = voices[k]
+                    break
+            else:
+                role = voices.get("%d.%d.0" % (line, unit), "solo")
         c = sc.role_color(role, base)
         return c, lighten(c, 0.35)
 
