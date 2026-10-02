@@ -43,7 +43,7 @@ hx-karaoke scripts/setup_env.py # 缺什么补什么 (幂等; 一条命令, 不�
 | `2-lyrics` | **歌词校准**: 来源定级 → 读音 → 偏移 → 人声分离 → 音拍对齐 → 逐字时间 → 节拍网格 → 人工校时 → 排版校准 | `02-lyrics` `03-offset` `04-vocals` `05-align` `06-kf-timing` `07-grid` `08-review-timing` `09-ruby` |
 | `3-anime-bg` | **番剧背景调研**: 原作内涵考据 + 番剧元素表(带来源计数) | `10-anime-bg` |
 | `4-kfx` | **字幕特效设计制作**: 全链路的重心, 十个子步骤; 见 `steps/4-kfx/index.md` | `40-music-events` `41-channels` `42-text-main` `43-text-sub` `44-beat` `45-bg` `46-image` `47-color` `48-thread` `49-generate` |
-| `5-verify` | **门禁检验**: 硬门禁 + 自动校验 + 真渲染器抽帧目检 + 封装出片 | `13-validate` `14-inspect` `15-render` |
+| `5-verify` | **门禁检验**: 硬门禁 + 自动校验 + 真渲染器抽帧目检 + **子代理盲审** + 封装出片 | `13-validate` `14-inspect` `15-render` `16-blind-review` |
 
 `4-kfx` 是唯一被细分的组 —— 前面三组产出的都是**输入**, 后面一组只做**拦截**,
 **观众能看到的东西全部产在 `4-kfx` 里**.

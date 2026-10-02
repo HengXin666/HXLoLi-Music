@@ -50,6 +50,7 @@
 - `<skill>/scripts/assfx/bg.py` - 背景层发射器 (`45`)
 - `<skill>/scripts/cutout.py` - 抠图 + 边缘体检 (`46`)
 - `<skill>/scripts/render_octopus.py` - **真正的渲染器**(定制版 libass), 目检与迭代 (`44`~`49` 都要)
+- `<skill>/scripts/score_kfx.py` - 六组判据打分, 出 `review/score.md`; 盲审与自评都用它
 - `<skill>/scripts/assfx/beat.py` - 卡点层发射器 (`44`)
 - `<skill>/scripts/assfx/image.py` - `\1img` 图片层 (`46`)
 - `<skill>/scripts/assfx/color.py` - 段落色系 / 声部色 / 折返点 (`47`)

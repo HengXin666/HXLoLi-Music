@@ -61,6 +61,14 @@ hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232 
 烧好字幕的 MP4 走 `render_video.py`(见 `../15-render/index.md`), **不要用 ffmpeg 渲字幕** ——
 它不支持 VSFilterMod 标签, `\1img` 会变成白块。
 
+## 与盲审的关系
+
+`13` 过的是**可机械证伪的下限**(文件在不在、越界没有、看得见没有).
+**它过了不等于能交** —— 实测门禁 6/6 通过、用户仍连提三次问题.
+所以出片前必须再走 `../16-blind-review/index.md`: 开子代理按 `score_kfx.py` 独立打分.
+
+    13 门禁 -> 14 目检 -> 16 盲审 -> 15 出片
+
 ## 产物与过关条件
 
 - `check_gates.py --stage render` 退出码 0(输出里是 `PASSED`, 不是"看着都做了").

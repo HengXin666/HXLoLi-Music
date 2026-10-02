@@ -46,6 +46,8 @@
 10. **绘图要归一化**: libass 把 `\an5` 绘图的原点放在对齐框左上角, 以 (0,0) 为中心画的图会偏移 (xmin,ymin);
    `shapes.norm()`(`FX.shape` 已自动调用).
 
-另有两条来自实测的绘图格式要求:
+另有（`scripts/score_kfx.py` 是判据汇总器, 不属 `assfx/` 库: 它读成品 ass 算六组分数, 见 `../../5-verify/16-blind-review/index.md`.）
+
+两条来自实测的绘图格式要求:
 - **`\p1` 里必须逐点带 `l`**: `m x y a b c d` 会被 libass 当成「一串单点路径」, 填充面积为 0, 图形退化成 1px 点.
 - **多个绘图叠加时每个部件要各自 `\pos`**: `FX.shape` 会 `norm()` 居中, 图形里写的偏移会丢失.
