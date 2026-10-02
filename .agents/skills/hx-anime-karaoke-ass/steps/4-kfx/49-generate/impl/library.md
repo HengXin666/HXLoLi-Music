@@ -22,6 +22,9 @@
 - `image.py` **图片层**: `put_image`(纹理必须按图片真实尺寸出矩形, 否则平铺成 N 张) /
   `pop_image`(卡点弹出) / `side_slots`(左右元素) / `check_images`(边缘体检).
   注意 `a_peak` 是 **alpha 值**(0=不透明, 255=全透明), 图片默认 8. 见 `../../46-image/index.md`.
+- `carry.py` **句间承接**: `Carry`(跨句状态: 末色/末位置/剩余动量/末图形/强度) /
+  `entry`(入场接上一句动量) / `tint`(色温承接) / `boost`(意象长一级) / `from_events`(从刚发射的事件反解).
+  见 `../../48-thread/index.md`.
 - `color.py` **色彩系统**: `Scheme`(段落色域, 逐字在折线上游走) / `Palette` / `make_hl_color`(接 `Karaoke` 的
   `hl_color` 回调) / `fold` / `find_break`(句内折返点挂在语义反转词上). 见 `../../47-color/index.md`.
 - `svg2ass.py` **精细图形: 网络 SVG -> ASS 绘图代码**. `from_url/from_file/fetch`.
