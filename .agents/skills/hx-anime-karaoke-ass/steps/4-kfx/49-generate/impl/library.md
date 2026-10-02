@@ -17,6 +17,8 @@
 - `beat.py` **卡点层**: `MusicEvents`(载 `review/music-events.json`) / `beat_scatter`(按十六分网格群发) /
   `beat_pulse`(拍级呼吸) / `beat_drop`(段落起爆) / `beat_sink`(低频下沉); `BEAT_SHAPES` 是 10 种现代几何.
   **独立时钟** —— 不要用 `k.t_in/k.t_end` 当区间(那又跟句走了). 规格与实测参数见 `../../44-beat/index.md`.
+- `bg.py` **背景层**: `SceneTimeline`(载 `review/scene-timeline.json`) / `bg_drift`(色温跟着画面的低存在感颗粒) /
+  `bg_frames`(镜头切换处的整片柔光) / `hue_to_hex`. 与卡点层的分工(平坦 vs 脉冲)见 `../../45-bg/index.md`.
 - `image.py` **图片层**: `put_image`(纹理必须按图片真实尺寸出矩形, 否则平铺成 N 张) /
   `pop_image`(卡点弹出) / `side_slots`(左右元素) / `check_images`(边缘体检).
   注意 `a_peak` 是 **alpha 值**(0=不透明, 255=全透明), 图片默认 8. 见 `../../46-image/index.md`.

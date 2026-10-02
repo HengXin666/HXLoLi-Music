@@ -20,9 +20,43 @@
 
 | 源 | 从哪来 | 变成什么 |
 |---|---|---|
-| **MV 场景** | `review/scene_timeline.md` 的抽帧时间线 | 该秒的主色 → 背景色温; 亮度 → 背景明暗 |
+| **MV 场景** | `review/scene-timeline.json`(`scene_timeline.py` 自动抽) | 该秒主色 → 背景色温; 亮度 → 背景明暗 |
 | **情感** | `anime.notes.md` 的情绪曲线 | 段落等级 L0~L3 → 背景的量与速度 |
 | **番剧符号** | `anime.elements.md` 的 A 级元素 | 背景里反复出现的**同一个符号**的变体 |
+
+## 命令
+
+```bash
+hx-karaoke scene_timeline.py --video proj/base.mp4 --out proj/review/scene-timeline.json
+```
+
+产物里两个东西是背景层直接要用的:
+
+- `per_sec[秒] = [hue, sat, val]` —— 该秒画面主色(HSV). 实测本工程 261 秒采到 261 帧,
+  切成 39 个镜头段, 暗场 15 段(38%)、亮场 8 段.
+- `shots[] = {t0,t1,hue,sat,val,rgb,is_dark}` —— 镜头段. **`t0` 就是"特效对齐镜头切换"的那个时刻.**
+
+用法:
+
+```python
+from assfx.bg import SceneTimeline, bg_drift, bg_frames
+ST = SceneTimeline.load("proj/review/scene-timeline.json")
+bg_drift(f, ST, t0, t1, n_per_sec=1.7, follow_hue=True)   # 色温跟着画面
+bg_frames(f, ST, t0, t1, alpha=60, blur=26)               # 镜头切换处的整片柔光
+```
+
+## 怎么验"背景真的跟了画面"(可机械判)
+
+取该秒**画面主色的 hue** 与**背景层事件的 `\1c` hue** 做同向比对:
+
+```python
+# ASS 的 &HBBGGRR& 要按 BGR 解析再转 HSV; 正则写成 \1c&H([0-9A-F]{6})&,
+# **不要写 &H00 = 前缀** —— 实测颜色是 &HD1854F& 这种 6 位形式, 写死 00 会一条都匹配不到.
+同向率 = 差值 < 60° 的秒数 / 参与比对的秒数
+```
+
+**判据: 同向率 >= 60%.** 实测本工程接上镜头数据后 **158/170 = 93%**(逐秒差 0~2°).
+不接镜头数据时这个值会掉到接近随机 —— 那就是"背景没读画面".
 
 ## band 铁律不变(先读这条, 否则白做)
 
@@ -41,6 +75,7 @@
 
 ## 过关条件
 
+- **背景层色相与画面色相同向率 ≥60%**(判据与量法见上). 实测 93%.
 - **逐秒覆盖率 ≥55%**(句间空隙也要有事件). 判据: 把背景事件的存活区间按秒展开, 看零事件秒的占比.
 - **图形种类在全曲层面受控**: 核心图形 2~4 种 + 每 10~20s 引入一个变体.
   不是每句换一套(那会失去统一性), 也不是全曲一种(那是 `impl/density.md` §1b 的"没分层").

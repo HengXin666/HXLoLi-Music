@@ -46,6 +46,8 @@
 
 - `<skill>/scripts/music_events.py` - 伴奏 → 卡点网格与事件表 (`40`)
 - `<skill>/scripts/voices.py` - 声部归属检测, 供句内配色 (`47`)
+- `<skill>/scripts/scene_timeline.py` - 从 MV 抽帧算镜头段与逐秒主色, 驱动背景层 (`45`)
+- `<skill>/scripts/assfx/bg.py` - 背景层发射器 (`45`)
 - `<skill>/scripts/cutout.py` - 抠图 + 边缘体检 (`46`)
 - `<skill>/scripts/render_octopus.py` - **真正的渲染器**(定制版 libass), 目检与迭代 (`44`~`49` 都要)
 - `<skill>/scripts/assfx/beat.py` - 卡点层发射器 (`44`)
