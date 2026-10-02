@@ -56,6 +56,11 @@ hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232 
 实测踩过 clamp 仅 10 次(看着很守规矩)但整帧只有 35~1144 个亮像素的工程 —— **特效等于不存在, 而 validate 照样判通过**.
 判据: 整帧 <2000 亮像素 = 太淡太小. 尺寸参照与透明度量级见 `impl/checklist.md`.
 
+## 出片
+
+烧好字幕的 MP4 走 `render_video.py`(见 `../15-render/index.md`), **不要用 ffmpeg 渲字幕** ——
+它不支持 VSFilterMod 标签, `\1img` 会变成白块。
+
 ## 产物与过关条件
 
 - `check_gates.py --stage render` 退出码 0(输出里是 `PASSED`, 不是"看着都做了").
