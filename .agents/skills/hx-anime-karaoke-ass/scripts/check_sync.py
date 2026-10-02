@@ -19,7 +19,7 @@
      （只在起点附近没有更好的峰、且偏移方向一致时才报，避免把颤音/滑音当成起音）
 
 用法:
-  uv run check_sync.py --vocals stems/vocals16k.wav --timing timing.json [--report sync.txt] [--fixes-out sync_fixes.json]
+  hx-karaoke check_sync.py --vocals stems/vocals16k.wav --timing timing.json [--report sync.txt] [--fixes-out sync_fixes.json]
 输出每条可疑音拍（line,unit,mora 文本 起点 建议起点 Δ 依据），以及按句汇总。
 --fixes-out 会写出建议修正（只含 A 类 + 置信度高的 B 类），人工复核频谱后再合并进 fixes.json。
 """

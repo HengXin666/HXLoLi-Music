@@ -45,15 +45,15 @@
 ## 用法
 
     # 1) 抓逐字（--lddc 指向 HX-Music 的 pyTool 目录，即 LDDC 包所在）
-    uv run scripts/kf_timing.py fetch --lddc ~/Loli/code/HX-Music/pyTool \
+    hx-karaoke kf_timing.py fetch --lddc ~/Loli/code/HX-Music/pyTool \
         --title "果てなき風の軌跡さえ" --artist "少女フラクタル" --project proj \
         --source QM --lang orig
 
     # 2) 融合（缺 kf.json 时自动退回 CTC，不报错）
-    uv run scripts/kf_timing.py align --project proj --auto timing_auto.json --out timing_kf.json
+    hx-karaoke kf_timing.py align --project proj --auto timing_auto.json --out timing_kf.json
 
     # 3) 复核
-    uv run scripts/kf_timing.py verify --project proj --a timing_kf.json --b timing.json --top 20
+    hx-karaoke kf_timing.py verify --project proj --a timing_kf.json --b timing.json --top 20
 
 依赖：numpy。fetch 阶段额外需要 HX-Music 的 pyTool 环境（LDDC + PySide6）。
 注意 LDDC 的 `g2p_en` 需要 nltk 语料，离线会被拦；纯日语歌曲直接 stub 掉即可（脚本已处理）。

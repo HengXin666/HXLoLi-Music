@@ -16,17 +16,17 @@
 ## 10a 先看邻居, 再动手搜
 
 ```bash
-grep -l "<番名>" $S/../examples/*/anime.notes.md
+grep -l "<番名>" $SKILL_ROOT/examples/*/anime.notes.md
 ```
 
 命中就**必读**, 并在自己的 notes 里写一行**继承声明**: 继承了哪几条母题、为什么这次不同.
-(当前 skill 只保留一份 `examples/mushoku_ed1`; 其余历史工程在 `static/music/<番名>/` 下. )
+(当前 skill 只保留一份 `examples/mushoku_ed1`; 其余历史工程在 `dev/<番名>/<歌曲名>/` 下, 成品发布到 `static/music/<番名>/`. )
 
 ## 10b 抓结构化条目(bgm.tv)
 
 ```bash
-uv run $S/fetch_anime_bg.py --project proj --anime "<番名>" --song "<曲名>"
-uv run $S/fetch_anime_bg.py --project proj --anime "無職転生" --bgm-id 287982
+hx-karaoke fetch_anime_bg.py --project proj --anime "<番名>" --song "<曲名>"
+hx-karaoke fetch_anime_bg.py --project proj --anime "無職転生" --bgm-id 287982
 ```
 
 产物里要用的是三样: `summary`(故事前提)、`characters[].summary`(每角色设定细节 → 可画的视觉母题)、

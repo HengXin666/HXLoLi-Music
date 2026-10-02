@@ -8,7 +8,7 @@
 ## 8a 看频谱
 
 ```bash
-uv run $S/review_spectrogram.py --vocals proj/stems/vocals16k.wav --timing proj/timing_snap.json \
+hx-karaoke review_spectrogram.py --vocals proj/stems/vocals16k.wav --timing proj/timing_snap.json \
    --grid proj/grid.json --out proj/review/r1.png --windows 45.0-51.5,57.0-63.4
 ```
 
@@ -22,7 +22,7 @@ uv run $S/review_spectrogram.py --vocals proj/stems/vocals16k.wav --timing proj/
 用 `"_why"` 记一句「这轮看了哪几段、结论是什么」—— 门禁会读它, 0 条修正也要写.
 
 ```bash
-uv run $S/apply_fixes.py --timing proj/timing_snap.json --fixes proj/fixes.json \
+hx-karaoke apply_fixes.py --timing proj/timing_snap.json --fixes proj/fixes.json \
     --vocals proj/stems/vocals16k.wav --out proj/timing.json
 ```
 
@@ -31,7 +31,7 @@ uv run $S/apply_fixes.py --timing proj/timing_snap.json --fixes proj/fixes.json 
 ## 8b 同步体检
 
 ```bash
-uv run $S/check_sync.py --vocals proj/stems/vocals16k.wav --timing proj/timing.json --report proj/review/sync.txt
+hx-karaoke check_sync.py --vocals proj/stems/vocals16k.wav --timing proj/timing.json --report proj/review/sync.txt
 ```
 
 三类告警: A 起点时人声还没出来(字幕**早**了); B 最近起音在起点后 >0.18s; C 有人声起音但附近没有音拍起点.
@@ -45,7 +45,7 @@ uv run $S/check_sync.py --vocals proj/stems/vocals16k.wav --timing proj/timing.j
 ## 8c 时间轴体检(会非零退出, 不许跳过)
 
 ```bash
-uv run $S/check_timing_health.py --vocals proj/stems/vocals16k.wav --timing proj/timing.json \
+hx-karaoke check_timing_health.py --vocals proj/stems/vocals16k.wav --timing proj/timing.json \
     --report proj/review/health.txt
 echo $?     # 非 0 = 有 CTC 塌缩或句内间奏，不许进下一步
 ```
@@ -53,7 +53,7 @@ echo $?     # 非 0 = 有 CTC 塌缩或句内间奏，不许进下一步
 它交叉三个互相独立的量: 音拍时长分布、人声谱通量起音、句内静音段.
 **判定行必须满足 CTC塌缩 0 处 且 句内间奏 0 处**; `check_gates.py --stage render` 会读这一行.
 
-为什么它现在会拦截: 历史版本只打印报告、退出码恒为 0. 实测 `proj-touhou` 里它正确报出 2 处塌缩,
+为什么它现在会拦截: 历史版本只打印报告、退出码恒为 0. 实测 `dev/东方/果てなき風の軌跡さえ` 里它正确报出 2 处塌缩,
 但因为没人读报告, 错误一路进了成片, 那句歌词比声音晚了 20 秒.
 `--max-collapse -1` 可显式放行(等于书面声明"我看过且认可").
 

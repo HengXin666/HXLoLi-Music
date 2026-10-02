@@ -9,7 +9,7 @@
 ```bash
 cp <skill>/templates/make_ass_template.py proj/make_ass.py
 # 改：ASSFX 路径、字体、JP_Y、PHRASES、fx_xxx 函数
-uv run proj/make_ass.py proj/out.ass
+hx-karaoke proj/make_ass.py proj/out.ass
 ```
 
 这一步要用的脚本: `<skill>/scripts/assfx/gen.py`(`Generator` / `card()` 的实现在这里).
@@ -20,6 +20,10 @@ uv run proj/make_ass.py proj/out.ass
 - `assfx.gen.Generator` 负责**逐句出入场窗口规划**、`band()` 登记、`card()` 卡片.
 - 你只写 `fx_xxx(f, ph, k)` 函数, **只通过** `f.shape / f.text / f.burst / f.drift / f.pulse / f.glow / f.floor_spin` 发射.
 - 合いの手行**不放进 PHRASES**, 在所属句的 fx 函数里用 `TM` 中 `call` 音拍时间触发.
+- **句内多色**走 `Karaoke` 的 `hl_color` 回调(库早就支持, 见 `assfx/color.py` 的 `make_hl_color`):
+  段落色系 + 声部色(由 `scripts/voices.py` 从人声轨测出) + 语义折返点.
+  **句间承接**是跨句状态: 生成器里维护一个 `carry` 对象, 逐句把"留在右缘的颜色/位置/动量"传下去 ——
+  现在 `Generator.plan()` 只规划"别叠字", 不传任何状态, 所以每句都从零重起(见 `steps/11-design/impl/thread.md`).
 
 ```python
 G = Generator(doc, L, lines, TM)      # lead=0.8：最早提前 0.8s 入场
@@ -52,8 +56,10 @@ band 只是上限不是目标尺寸: 实测某工程 clamp 仅 10 次(看着很�
 - `<skill>/examples/mushoku_ed1/` —— 唯一保留的完整工程(30 句逐句设计 + 71 处人工校时 fixes +
   标题/片尾卡 + 合格的 `anime.notes.md`). **卡住时读它的 `make_ass.py`**, 不要重新发明写法.
   它按 `examples/<曲目>/` 上两级定位本 skill 的 `scripts/`, 直接跑即可;
-  拷到别处时用 `ASSFX` 覆盖 scripts 路径、`ASSFX_FONTS` 覆盖字体目录.
-  其余历史工程在 `static/music/<番名>/` 下(属工程, 不属 skill).
+  **在工程区(dev/)里的生成器不要抄这个相对层数** —— 工程会在 dev/ 与 static/ 之间搬家,
+  层数会变; 统一用 `ASSFX` (hx-karaoke 会导出) 取 scripts、`$(hx-karaoke --fonts)` 取字体,
+  见 `steps/00-setup/index.md` 的「工作区」一节.
+  其余历史工程在 `dev/<番名>/<歌曲名>/` 下(属工程, 不属 skill), 成品发布到 `static/music/<番名>/`.
 
 ## 这一步要用的脚本
 
@@ -65,4 +71,8 @@ band 只是上限不是目标尺寸: 实测某工程 clamp 仅 10 次(看着很�
 - `impl/library.md` —— `scripts/assfx/` 逐模块说明(含 `gen.py` 的 `Generator` / `card()` 契约).
   **写生成器之前读. **
 - `steps/11-design/impl/motif-catalog.md` —— 母题 → 图形速查表与动画语汇清单.
+- `steps/11-design/impl/layers.md` / `design-table.md` —— **15 格维度表**: 副文本与承上/启下的列名与填法.
+- `steps/11-design/impl/color.md` —— 句内多色的接法(`hl_color` 回调、声部色、折返点).
+- `steps/11-design/impl/thread.md` —— 句间承接: 五种可核对类型与 `carry` 该传什么.
 - `steps/11-design/impl/density.md` —— 给完特效觉得"差口气"时读(密度下限与分层).
+- `<skill>/scripts/voices.py` —— 声部归属检测(先跑它, 写 `review/voices.json`, 再传给 `make_hl_color`).

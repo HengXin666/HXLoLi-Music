@@ -16,10 +16,10 @@ CTC 强制对齐在**长音与间奏**处会塌缩: 把整段拖长/间奏算给
 
 ```bash
 export HX_LDDC_PATH=~/Loli/code/HX-Music/pyTool      # 亦可每次传 --lddc
-uv run $S/kf_timing.py fetch --title "<曲名>" --artist "<艺人>" --source QM --project proj
+hx-karaoke kf_timing.py fetch --title "<曲名>" --artist "<艺人>" --source QM --project proj
 #   打印候选表让你核对；给 --song-id 定版本（别让 Inst./TV size/翻唱混进来）
-uv run $S/kf_timing.py align --project proj --auto proj/timing_auto.json --out proj/timing_kf.json
-uv run $S/kf_timing.py verify --project proj --a proj/timing_kf.json --b proj/timing.json
+hx-karaoke kf_timing.py align --project proj --auto proj/timing_auto.json --out proj/timing_kf.json
+hx-karaoke kf_timing.py verify --project proj --a proj/timing_kf.json --b proj/timing.json
 ```
 
 产物: `kf.json`(原始逐字)、`timing_kf.json`(融合结果)、`review/kf-report.md`(塌缩行清单 + 逐行偏移表).

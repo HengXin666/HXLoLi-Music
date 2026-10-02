@@ -20,11 +20,11 @@ TV size 删减版；从画面截图识别的文本会引入识别噪声（假名
 
 用法:
   # 1) 自动：lrclib 同步歌词（推荐起点）
-  uv run scripts/find_lyrics.py --project proj --title "比翼の羽根" --artist eufonius --duration 282
+  hx-karaoke find_lyrics.py --project proj --title "比翼の羽根" --artist eufonius --duration 282
   # 2) 指定本地 lrc + 从歌词站复制的纯文本（文本来自网络，时间轴可另配）
-  uv run scripts/find_lyrics.py --project proj --title "比翼の羽根" --lrc proj/utaten.lrc --text proj/utaten.txt
+  hx-karaoke find_lyrics.py --project proj --title "比翼の羽根" --lrc proj/utaten.lrc --text proj/utaten.txt
   # 3) 只是登记已有的 lyrics.txt 来源（人工听写）
-  uv run scripts/find_lyrics.py --project proj --register-manual --why "lrclib 无此曲，按官方 PV 听写"
+  hx-karaoke find_lyrics.py --project proj --register-manual --why "lrclib 无此曲，按官方 PV 听写"
 """
 import argparse, csv, difflib, hashlib, io, json, os, re, sys, time, unicodedata, urllib.parse, urllib.request
 

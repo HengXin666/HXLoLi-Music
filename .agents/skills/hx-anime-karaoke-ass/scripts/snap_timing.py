@@ -11,7 +11,7 @@
 网格吸附 + 挤压段展开（自动修正 CTC 的两类典型错误）
   1) 起点在网格(+lag)±tol 内 → 吸附到网格（提高精度）
   2) 连续“过短”音拍（<min_dur，CTC 没找到而堆在一起）→ 在前后可信锚点之间按网格槽均匀展开
-用法: uv run snap_timing.py --timing timing_auto.json --grid grid.json --out timing_snap.json [--div 4 --lag 0.035]
+用法: hx-karaoke snap_timing.py --timing timing_auto.json --grid grid.json --out timing_snap.json [--div 4 --lag 0.035]
 输出后仍需 review_spectrogram.py --grid 人工复核；人工修正写 fixes.json 再 apply_fixes.py
 """
 import argparse, json, os, sys

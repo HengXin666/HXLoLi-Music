@@ -8,7 +8,7 @@
 做法：对每一句，取它的第一个音拍起点 t0；在人声 stem 上于 [t0-0.45, t0+0.35] 找
 能量上升沿（RMS 正差分最大点），delta = onset - t0。全体取中位 = 系统性滞后。
 
-    uv run check_lag.py --project proj
+    hx-karaoke check_lag.py --project proj
 判据与已核实的假阳性见 ../steps/08-review-timing/impl/lag-verdict.md —— **先读它，不要重新推导**：
 逐句起音法给出的"字幕偏晚"在长句/长音句上是**系统性假阳性**，不要照它平移。
 """

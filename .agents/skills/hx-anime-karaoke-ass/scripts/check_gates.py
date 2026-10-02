@@ -27,7 +27,7 @@
   * lyrics.txt 是否被补过注音（含 [漢|よみ] 的行占比）
 
 用法:
-  uv run scripts/check_gates.py --project proj [--min-ruby 0.8] [--stage all|design|render]
+  hx-karaoke check_gates.py --project proj [--min-ruby 0.8] [--stage all|design|render]
 退出码非 0 = 有未通过的强制项。--stage design 只查设计前的门禁（source/background/lyrics），
 --stage render 追加时间轴与排版门禁。
 """
@@ -190,6 +190,89 @@ def check_elements(proj, res, min_ambient_ratio=0.35):
                     % (len(rows), amb, ratio * 100, min_ambient_ratio * 100)))
 
 
+def check_design(proj, res, strict=False):
+    """15 格设计表: 每句一行, 每格要么填要么显式写「—」(决定不做), 不许留白.
+
+    为什么加这一项（2026-10-03）: `impl/three-layers.md` 写的判据「一句里不同图形种类 >= 6」
+    **从来没有被门禁查过**, 实测漆黑子弹 ED 每句图形种类中位只有 4(按绘图路径哈希),
+    却 13 步全绿交付了. 门禁不管的判据 = 不存在的判据.
+
+    这一版把"设计维度"本身变成可查的列: 3 个文本对象(主/副/背景) × 5 个生命阶段(出现/逐字/
+    词组/意象/消失) = 15 格, 加 3 个定位列. 查五件事:
+      * 15 列齐全、每行无空串(留白 = 忘了做, `—` = 决定不做);
+      * 全曲取值有变化(全曲同一个值 = 从没设计过);
+      * `副·出现` / `副·逐字` 被填过 —— 副文本(注音/中文)在旧表里一列都没有,
+        于是 33 句全走默认(注音永远晚 0.06s、中文永远晚 0.20s), 用户看到的"一句里全都在同时动"就是这个;
+      * `承上` 与上一行的 `启下` 有同名变量 —— 句间关联的机械形式(见 `impl/thread.md`);
+      * `背景·场景` 多数行非空 —— 背景层必须由 MV 画面驱动.
+
+    阈值与 `impl/density.md` 同源: 定在"低于它一定不合格"的位置.
+    默认 WARN(旧格式的表还没迁移), 加 `--strict-design` 升为 FAIL.
+    """
+    dp = os.path.join(proj, "review", "design-table.md")
+    if not os.path.exists(dp):
+        res.append((WARN, "review/design-table.md", "缺失 —— 15 格设计表没写"))
+        return
+    dtxt = open(dp, encoding="utf-8").read()
+    hdr = next((l for l in dtxt.splitlines() if l.startswith("|") and "主·出现" in l), None)
+    if hdr is None:
+        msg = ("还是旧格式(入/出/高亮 3 格) —— 新格式见 steps/11-design/impl/design-table.md: "
+               "主·出现/逐字/词组/意象/消失 + 副·出现/逐字/消失 + 背景·场景/情绪/番剧 + 承上/启下")
+        res.append((BAD if strict else WARN, "review/design-table.md", msg))
+        return
+    cols = [c.strip() for c in hdr.strip().strip("|").split("|")]
+    rows = [l for l in dtxt.splitlines()
+            if l.startswith("|") and l.count("|") >= len(cols) and "主·出现" not in l
+            and not re.match(r"^\|\s*[-: ]+\|", l)]
+    if not rows:
+        res.append((BAD if strict else WARN, "review/design-table.md", "表头在但解析不出数据行"))
+        return
+    cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows]
+    n, bad = len(cells), 0
+
+    blank = [i for i, c in enumerate(cells) if any(x == "" for x in c)]
+    if blank:
+        res.append((BAD if strict else WARN, "review/design-table.md",
+                    "%d 行有空串(第 %s 行) —— 空着=忘了做, `—`=决定不做, 两者必须区别"
+                    % (len(blank), ",".join(str(i + 1) for i in blank[:5]))))
+        bad += 1
+
+    def col(name):
+        i = cols.index(name)
+        return [c[i] for c in cells]
+
+    # 空串在上一条已经报过; 这里的统计只认"真的填了"(既不是空也不是放弃符)
+    def filled(name):
+        return sum(1 for x in col(name) if x not in ("", "—"))
+
+    # 样本太少时多样性的分母不可信(3 种取值要求至少 3 行), 降级为 WARN 而不是假 FAIL
+    diverse = n >= 4
+    lvl = (lambda ok: (OK if ok else BAD)) if (strict and diverse) else (lambda ok: (OK if ok else WARN))
+
+    def varies(name, need):
+        v = set(col(name)) - {"—", ""}
+        ok = len(v) >= need
+        res.append((lvl(ok), "design-table:" + name,
+                    "%d 种取值%s%s" % (len(v), "" if ok else "（需 >=%d, 全曲同一个值=从没设计过）" % need,
+                                        "" if diverse else "；仅 %d 行, 样本不足只给 WARN" % n)))
+        return ok
+
+    varies("主·逐字", 3)
+    varies("副·出现", 3)
+    nz = filled("副·逐字") / n
+    res.append((lvl(nz >= 0.5), "design-table:副·逐字", "%.0f%% 的行填了注音逐拍" % (nz * 100)))
+    carry = sum(1 for a, b in zip(cells, cells[1:])
+                if set(re.findall(r"[\u4e00-\u9fffA-Za-z_]+", a[cols.index("启下")]))
+                & set(re.findall(r"[\u4e00-\u9fffA-Za-z_]+", b[cols.index("承上")])))
+    cr = carry / max(1, n - 1)
+    res.append((lvl(cr >= 0.6), "design-table:承上/启下",
+                "%d/%d 行的承上与上一行启下有同名变量（需 >=60%%）" % (carry, n - 1)))
+    sc = filled("背景·场景") / n
+    res.append((lvl(sc >= 0.7), "design-table:背景·场景", "%.0f%% 的行指到具体镜头（需 >=70%%）" % (sc * 100)))
+    if not bad:
+        res.append((OK, "review/design-table.md", "%d 句 15 格齐全" % n))
+
+
 def check_lyrics(proj, res, min_ruby):
     p = os.path.join(proj, "lyrics.txt")
     if not os.path.exists(p):
@@ -323,6 +406,8 @@ def main():
     ap.add_argument("--min-chars", type=int, default=6)
     ap.add_argument("--max-ambient", type=float, default=0.35,
                     help="设计表里「氛围句」占比的上限；指不到番剧元素时不许用氛围句兜底")
+    ap.add_argument("--strict-design", action="store_true",
+                    help="把 15 格设计表的缺项从 WARN 升为 FAIL（新工程用；旧格式的表还没迁移时保持 WARN）")
     a = ap.parse_args()
     proj = a.project
     res = []
@@ -332,6 +417,7 @@ def main():
     mora = check_lyrics(proj, res, a.min_ruby)
     if a.stage in ("all", "design", "render"):
         check_elements(proj, res, a.max_ambient)
+        check_design(proj, res, a.strict_design)
     if a.stage in ("all", "render"):
         check_offset(proj, res)
         check_timing(proj, res, mora)

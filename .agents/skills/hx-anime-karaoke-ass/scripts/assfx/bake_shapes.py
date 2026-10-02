@@ -15,7 +15,7 @@ r"""把网络图标渲染成**实心**ASS 绘图路径并缓存。
   没有一处是我手画的。
 
 产物：**写进调用者指定的工程目录**，不是 skill 目录。
-    uv run bake_shapes.py --out proj/assets/shapes.json [--video proj/base.mp4]
+    hx-karaoke bake_shapes.py --out proj/assets/shapes.json [--video proj/base.mp4]
 没有 --out 时只烧网络图标、不碰 MV 帧（也就不会去猜某份 base.mp4 在哪）。
 """
 import argparse

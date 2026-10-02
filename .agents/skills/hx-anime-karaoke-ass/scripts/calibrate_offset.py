@@ -22,10 +22,10 @@
       离散度（Δ 的 p90-p10）>0.8s 说明网络歌词与这份视频不是同一剪辑 —— 停下来换源，不要硬套。
 
 用法:
-  uv run scripts/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
-  uv run scripts/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
+  hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
+  hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
   # 已有终稿时间轴时（历史工程补证据）：从 timing.json 反推实际使用的 offset
-  uv run scripts/calibrate_offset.py --lyrics proj/lyrics.txt --from-timing proj/timing.json --out proj/offset.json \
+  hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --from-timing proj/timing.json --out proj/offset.json \
       --why "该工程的人工校时已吸收整体偏移，此处据终稿反推"
 """
 import argparse, json, os, re, sys

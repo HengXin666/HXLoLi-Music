@@ -14,8 +14,8 @@
 ## 命令
 
 ```bash
-uv run $S/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
-uv run $S/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
+hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
+hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
 ```
 
 两条证据通道:

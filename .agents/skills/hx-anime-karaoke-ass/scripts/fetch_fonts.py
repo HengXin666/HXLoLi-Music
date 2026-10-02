@@ -8,9 +8,9 @@
 
 字体不进 git（体积大且都是 OFL），用这个脚本重建。已存在的文件会跳过。
 用法:
-  uv run scripts/fetch_fonts.py                 # 装到 <skill>/fonts/
-  uv run scripts/fetch_fonts.py --out /tmp/f    # 装到别处
-  uv run scripts/fetch_fonts.py --only LXGWWenKai-Medium.ttf ShipporiMinchoB1-Bold.ttf
+  hx-karaoke fetch_fonts.py                 # 装到 <skill>/fonts/
+  hx-karaoke fetch_fonts.py --out /tmp/f    # 装到别处
+  hx-karaoke fetch_fonts.py --only LXGWWenKai-Medium.ttf ShipporiMinchoB1-Bold.ttf
 """
 import argparse, os, sys, urllib.request
 

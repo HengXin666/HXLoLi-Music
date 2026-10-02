@@ -10,8 +10,8 @@
 """
 从伴奏估计 BPM 与节拍相位，输出十六分音符网格；可把音拍起点吸附到网格（仅作建议）。
 用法:
-  uv run beat_grid.py --inst stems/inst.wav --out grid.json [--bpm-min 70 --bpm-max 200]
-  uv run beat_grid.py --grid grid.json --timing timing.json --report     # 列出偏离网格>60ms 的音拍
+  hx-karaoke beat_grid.py --inst stems/inst.wav --out grid.json [--bpm-min 70 --bpm-max 200]
+  hx-karaoke beat_grid.py --grid grid.json --timing timing.json --report     # 列出偏离网格>60ms 的音拍
 原理: 伴奏频谱通量(onset envelope) → 自相关找节拍周期 → 梳状滤波找相位 → 用局部 onset 峰做分段相位微调
 J-pop 人声基本落在 1/16 网格（少量切分音落在 1/32 或三连音），网格是判断"这个音拍到底在哪"的最强先验。
 """

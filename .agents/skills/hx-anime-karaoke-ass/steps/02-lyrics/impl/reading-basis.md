@@ -15,7 +15,7 @@
 ## 判据: 用 `ctc_read.py` 读「模型听到了什么」
 
 ```bash
-uv run scripts/ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 71.5-76.0
+hx-karaoke ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 71.5-76.0
 ```
 
 输出是逐帧贪心解码的假名 + 时间, 括号内是次优候选. **这就是演唱的实测读音. **

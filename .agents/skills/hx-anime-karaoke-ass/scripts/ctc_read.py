@@ -8,7 +8,7 @@
 # ///
 
 # 缓存整首 CTC 后验（与 grid_align --emis 同格式）；打印指定区间“模型听到的”假名及时间（贪心 + 次优）
-# 用法: uv run ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 80.0-82.5 85.5-87.0
+# 用法: hx-karaoke ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 80.0-82.5 85.5-87.0
 import sys, os, json, numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from align_ctc import read_wav, MID

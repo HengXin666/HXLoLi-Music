@@ -9,7 +9,7 @@
 # ///
 
 """人声分离（demucs htdemucs_ft，CPU 可跑）
-用法: uv run separate_vocals.py <input_media> <out_dir> [--start S] [--dur D]
+用法: hx-karaoke separate_vocals.py <input_media> <out_dir> [--start S] [--dur D]
 输出: out_dir/vocals.wav(44.1k 立体声) vocals16k.wav(16k 单声道, 供对齐/分析) inst.wav
 依赖: torch, demucs(可 pip install --no-deps --target <dir> demucs julius openunmix dora-search lameenc ... 再加 PYTHONPATH)
 """

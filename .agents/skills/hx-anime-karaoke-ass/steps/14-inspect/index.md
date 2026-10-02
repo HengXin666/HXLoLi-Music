@@ -7,7 +7,7 @@
 ## 命令
 
 ```bash
-uv run $S/snapshots.py --video proj/base.mp4 --ass proj/out.ass --fontsdir fonts \
+hx-karaoke snapshots.py --video proj/base.mp4 --ass proj/out.ass --fontsdir "$(hx-karaoke --fonts)" \
     --times 26.4,33,51.1 --out proj/review/s1.jpg --crop-bottom 0.3 --width 1100 --bands
 ```
 

@@ -11,7 +11,7 @@
 ASS 特效字幕自动校验。
 
 用法:
-  uv run validate_ass.py subs.ass --fontsdir fonts [--timing timing.json] [--max-overlap 1.2] [--density-warn 900] [--report out.txt]
+  hx-karaoke validate_ass.py subs.ass --fontsdir fonts [--timing timing.json] [--max-overlap 1.2] [--density-warn 900] [--report out.txt]
 
 检查项:
   [E] band 越界      Name=fx:/ly:/card:<band> 的事件包围盒（含缩放/旋转/边框/模糊）必须在该 band 矩形内

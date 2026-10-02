@@ -27,9 +27,9 @@ CTC 会把这 3 秒**全部**算给这个音拍, 它后面的所有音拍起点�
 ## 修法(首选: 别让塌缩产生 —— 用网络逐字定句内形状)
 
 ```bash
-uv run scripts/kf_timing.py fetch --lddc ~/Loli/code/HX-Music/pyTool \
+hx-karaoke kf_timing.py fetch --lddc ~/Loli/code/HX-Music/pyTool \
     --title "<曲名>" --artist "<艺人>" --source QM --project proj      # -> kf.json
-uv run scripts/kf_timing.py align --project proj --auto timing_auto.json  # -> timing_kf.json
+hx-karaoke kf_timing.py align --project proj --auto timing_auto.json  # -> timing_kf.json
 ```
 
 **为什么这一招有效(实测 2026-10-02, 东方《果てなき風の軌跡さえ》)**:
@@ -73,7 +73,7 @@ CTC 塌缩只影响**句内相对形状**; 整体的"这份视频与那份音源
 
 ## 一个真实的漏网案例(为什么必须把它变成门禁)
 
-工程 `proj-touhou` 的 train 里, 行 27「教えてくれた」:
+`dev/东方/果てなき風の軌跡さえ` 的 train 里, 行 27「教えてくれた」:
 
 ```
 纯 CTC (timing_auto.json) : 首 166.160  尾 188.930  跨度 22.77s

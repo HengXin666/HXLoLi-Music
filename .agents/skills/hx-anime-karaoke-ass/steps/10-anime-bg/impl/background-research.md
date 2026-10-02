@@ -26,10 +26,10 @@
 
 ## 0.5 先看邻居, 再动手搜
 
-同一个番可能已经做过别的歌. **先查本 skill 的 `examples/`, 再查工程区 `static/music/<番名>/`**:
+同一个番可能已经做过别的歌. **先查本 skill 的 `examples/`, 再查工程区 `dev/<番名>/*/anime.notes.md`**:
 
 ```bash
-grep -rl "<番名>" <skill>/examples/*/anime.notes.md static/music/*/ 2>/dev/null
+grep -rl "<番名>" <skill>/examples/*/anime.notes.md dev/*/*/anime.notes.md 2>/dev/null
 ```
 
 命中就**必读**, 并在自己的 notes 里写一行**继承声明**: 继承了哪几条母题、为什么这次不同.
@@ -40,9 +40,9 @@ grep -rl "<番名>" <skill>/examples/*/anime.notes.md static/music/*/ 2>/dev/nul
 ## 1. 抓结构化条目(bgm.tv)
 
 ```bash
-uv run $S/fetch_anime_bg.py --project proj --anime "ヨスガノソラ" --song "比翼の羽根"
+hx-karaoke fetch_anime_bg.py --project proj --anime "ヨスガノソラ" --song "比翼の羽根"
 # 条目不确定时先看候选表，再 --bgm-id 指定
-uv run $S/fetch_anime_bg.py --project proj --anime "無職転生" --bgm-id 287982
+hx-karaoke fetch_anime_bg.py --project proj --anime "無職転生" --bgm-id 287982
 ```
 
 实测(2026-10-01, 未带 token): `--anime "ヨスガノソラ"` → 条目 id 7157、简介 198 字、**26 个角色全部带中文简介**.

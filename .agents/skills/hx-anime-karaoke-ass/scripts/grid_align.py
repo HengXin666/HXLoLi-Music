@@ -18,7 +18,7 @@
   * 不会再有 <1 槽的挤压（最短 = 1 个 16 分音符）
   * 没尖峰的音（っ、ー、弱辅音）由前后有证据的音夹住，按节奏先验落位
 用法:
-  uv run grid_align.py --lyrics lyrics.txt --vocals stems/vocals16k.wav --timing timing_auto.json \
+  hx-karaoke grid_align.py --lyrics lyrics.txt --vocals stems/vocals16k.wav --timing timing_auto.json \
       --grid grid.json --div 8 --lag 0.03 --out timing_grid.json [--emis stems/ctc_lp.npz] [--anchors fixes.json]
   --div：每个 grid period 的细分数（beat_grid 把 180BPM 测成 90BPM 时，16 分音符 = div 8）
   --anchors：fixes.json 中的人工起点当作硬约束（该音拍只能在其最近的槽位）

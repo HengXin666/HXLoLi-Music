@@ -10,8 +10,8 @@
 ## 命令
 
 ```bash
-uv run $S/align_ctc.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --estimate-offset     # 先估偏移
-uv run $S/align_ctc.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav \
+hx-karaoke align_ctc.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --estimate-offset     # 先估偏移
+hx-karaoke align_ctc.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav \
     --offset <03 步的中位差> --out proj/timing_auto.json
 ```
 

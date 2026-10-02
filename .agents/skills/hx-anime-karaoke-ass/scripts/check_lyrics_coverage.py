@@ -27,11 +27,11 @@
 
 ## 用法
 
-    uv run scripts/check_lyrics_coverage.py --project proj \
+    hx-karaoke check_lyrics_coverage.py --project proj \
         --title "ツナグキズナ" --artist "Team.ねこかん" --song-id 1710293
 
     # 无网络源时也能跑第 2 条（只查时间空档 vs 音频）
-    uv run scripts/check_lyrics_coverage.py --project proj --vocals proj/stems/vocals16k.wav
+    hx-karaoke check_lyrics_coverage.py --project proj --vocals proj/stems/vocals16k.wav
 
 退出码非 0 = 有漏句嫌疑，不许进设计步骤。
 """

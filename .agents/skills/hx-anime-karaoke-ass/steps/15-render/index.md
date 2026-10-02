@@ -7,7 +7,7 @@
 ## 命令
 
 ```bash
-bash $S/render.sh proj/base.mp4 proj/out.ass fonts out.mkv ffmpeg
+hx-karaoke render.sh proj/base.mp4 proj/out.ass "$(hx-karaoke --fonts)" out.mkv ffmpeg
 ```
 
 `render.sh` 走 MKV 外挂: 视频/音频 `-c copy` 原样封装、ASS 单独一轨、字体做附件、
@@ -21,7 +21,7 @@ bash $S/render.sh proj/base.mp4 proj/out.ass fonts out.mkv ffmpeg
 上传视频网站、对方只看 mp4 这类场景:
 
 ```bash
-bash $S/render_burn.sh proj/base.mp4 proj/out.ass fonts out.mp4 16 ffmpeg ffmpeg
+hx-karaoke render_burn.sh proj/base.mp4 proj/out.ass "$(hx-karaoke --fonts)" out.mp4 16 ffmpeg ffmpeg
 ```
 
 系统 ffmpeg 无 libx264(openh264 报错)时只影响烧录, 不影响 MKV 外挂.

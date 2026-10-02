@@ -19,8 +19,8 @@
         1 帧 = 20ms。位移 ≤1 帧(<20ms) 视为不影响；>1 帧就老老实实用 CPU 出终稿。
 
 用法:
-  uv run scripts/device_check.py --vocals proj/stems/vocals16k.wav --seconds 60
-  uv run scripts/device_check.py --vocals ... --lyrics proj/lyrics.txt   # 顺带报每句首字的位移
+  hx-karaoke device_check.py --vocals proj/stems/vocals16k.wav --seconds 60
+  hx-karaoke device_check.py --vocals ... --lyrics proj/lyrics.txt   # 顺带报每句首字的位移
 """
 import argparse, os, sys
 import numpy as np

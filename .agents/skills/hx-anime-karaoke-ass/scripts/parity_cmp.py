@@ -3,7 +3,7 @@
 # dependencies = []
 # ///
 # 副歌/重复段对比：同一句词在两次出现中的相对节奏（差 >0.12s 标 <<）
-# 用法: uv run parity_cmp.py timing.json 15:48,16:49
+# 用法: hx-karaoke parity_cmp.py timing.json 15:48,16:49
 import json,sys
 T=json.load(open(sys.argv[1]))
 def L(li): return [m for m in T if m["line"]==li]

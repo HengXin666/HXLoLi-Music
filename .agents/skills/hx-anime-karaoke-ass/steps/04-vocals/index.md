@@ -7,7 +7,7 @@
 ## 命令
 
 ```bash
-uv run $S/separate_vocals.py proj/base.mp4 proj/stems --threads 32
+hx-karaoke separate_vocals.py proj/base.mp4 proj/stems --threads 32
 ```
 
 ## 产物

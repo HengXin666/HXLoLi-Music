@@ -9,7 +9,7 @@
 # ///
 
 """把人工复核的修正应用到自动对齐结果，并重算终点
-用法: uv run apply_fixes.py --timing timing_auto.json --fixes fixes.json --vocals vocals16k.wav --out timing.json
+用法: hx-karaoke apply_fixes.py --timing timing_auto.json --fixes fixes.json --vocals vocals16k.wav --out timing.json
 fixes.json: {"line,unit,mora": 起点秒, ...}；可选 "_end": {"line": 句尾终点秒}
 """
 import argparse, json, os, sys

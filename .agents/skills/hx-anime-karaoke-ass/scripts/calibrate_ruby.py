@@ -16,7 +16,7 @@
 做法：把样本字逐个用 \\an5\\pos(x,y) 渲染到黑底，量出墨迹上下沿相对 y 的偏移，取中位数。
 
 用法:
-  uv run calibrate_ruby.py --fontsdir fonts --jp "Shippori Mincho B1" --jp-fs 66 --jp-bold 1 \\
+  hx-karaoke calibrate_ruby.py --fontsdir fonts --jp "Shippori Mincho B1" --jp-fs 66 --jp-bold 1 \\
          --rb "Shippori Mincho B1" --rb-fs 27 --rb-bold 1 --cn "LXGW WenKai Medium" --cn-fs 42 \\
          --jp-y 930 --ruby-gap 5 --cn-gap 16 [--ffmpeg ffmpeg] [--out calib.json]
 输出: 各字体墨迹偏移 + 建议 RB_Y / CN_Y（JSON）

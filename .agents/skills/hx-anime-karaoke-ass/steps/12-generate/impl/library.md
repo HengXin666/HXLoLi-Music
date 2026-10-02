@@ -18,7 +18,7 @@
   手绘拼贴(circle+rect)做不出"精细"的物体; 改用现成矢量图, 实测自行车转出 **3148 字符**的真实路径.
   缓存**不在 skill 目录**(`ASSFX_SVG_CACHE` 或 `~/.cache/hx-anime-karaoke-ass/svg`), 可离线复现.
 - `bake_shapes.py` 把网络图标渲染成**实心**路径(线稿直接采样出来只有 1~2px 细线, 等于没画).
-  用法: `uv run $S/assfx/bake_shapes.py --out proj/assets/shapes.json [--video proj/base.mp4]`.
+  用法: `hx-karaoke assfx/bake_shapes.py --out proj/assets/shapes.json [--video proj/base.mp4]`.
   **产物必须写进工程目录**, 脚本会拒绝把 `--out` 指向 skill 内部.
 - `fx.py` band 约束发射器: `shape/text/burst/drift/pulse/glow/floor_spin`
 - `geom.py` 事件包围盒估算(缩放、frz/frx/fry 含 libass 透视、`\org`、边框/模糊、clip)

@@ -19,9 +19,9 @@ skill 把"读原作设定"定成第 1 步的必做项，产物就是本脚本写
                                                    里的做法抽正文 —— 即"必须由人/AI 读一遍"。
 
 用法:
-  uv run scripts/fetch_anime_bg.py --project proj --anime "ヨスガノソラ" --bgm-id 7157
-  uv run scripts/fetch_anime_bg.py --project proj --anime "無職転生" --bgm-token "$BGM_TOKEN"
-  uv run scripts/fetch_anime_bg.py --project proj --register --why "..." --url "https://zh.moegirl.org.cn/..."
+  hx-karaoke fetch_anime_bg.py --project proj --anime "ヨスガノソラ" --bgm-id 7157
+  hx-karaoke fetch_anime_bg.py --project proj --anime "無職転生" --bgm-token "$BGM_TOKEN"
+  hx-karaoke fetch_anime_bg.py --project proj --register --why "..." --url "https://zh.moegirl.org.cn/..."
 """
 import argparse, hashlib, json, os, re, sys, time, urllib.parse, urllib.request
 

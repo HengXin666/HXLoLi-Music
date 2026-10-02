@@ -7,8 +7,9 @@
 ## 13a 强制门禁(`--stage render`)
 
 ```bash
-uv run $S/check_gates.py --project proj --stage design    # 进第 11 步设计之前
-uv run $S/check_gates.py --project proj --stage render    # 出片之前（追加时间轴/排版）
+hx-karaoke check_gates.py --project proj --stage design                  # 进第 11 步设计之前
+hx-karaoke check_gates.py --project proj --stage design --strict-design  # 新工程: 15 格缺项也 FAIL
+hx-karaoke check_gates.py --project proj --stage render                  # 出片之前（追加时间轴/排版）
 ```
 
 它查的是**文件在不在 + 内容够不够硬**, 不是"有没有做过样子":
@@ -19,6 +20,7 @@ uv run $S/check_gates.py --project proj --stage render    # 出片之前（追�
 | `anime.background.json` | 没读番剧设定, 特效会退化成通用图形 | summary 非空且角色 ≥6 |
 | `anime.notes.md` | 只交了角色表 = 没读作品在讲什么, 配色会从头就错 | **存在**且 ≥500 字(占位即 FAIL); 缺"内核/主题"或"与原作的关系"、或没写出处 → WARN |
 | `anime.elements.md` + 设计表 | 母题没有白名单, 特效会退化成**通用图形** | 元素表**带来源计数**的条目 ≥4; 每句主母题必须指到表里条目, 否则须标「氛围句」, 且**氛围句占比 ≤35%** |
+| 设计表 15 格 | 维度缺列: 副文本(注音/中文)从没被设计、句间没有任何量承接 | 列齐全且每格**要么填要么写 `—`**; `主·逐字`/`副·出现` 取值 ≥3 种; `副·逐字` 填写率 ≥50%; `承上` 与上一行 `启下` 同名 ≥60%; `背景·场景` 填写率 ≥70%. 默认 WARN, 新工程加 `--strict-design` 升 FAIL(见 `steps/11-design/impl/design-table.md`) |
 | `lyrics.txt` 注音率 | 振假名没做完 | 带 `[漢\|よみ]` 的行 ≥ `--min-ruby`(默认 80%) |
 | `offset.json` | 没测过网络歌词时间轴与这份视频的差量 | 中位差 + 离散度; verdict 写明通过的是哪条通道 |
 | `timing.json` | 人工校时(第 08 步)没做 | 音拍数必须等于 `lyrics.txt` 的音拍数; 且相对 `timing_auto.json` **必须发生过修正** |
@@ -30,7 +32,7 @@ uv run $S/check_gates.py --project proj --stage render    # 出片之前（追�
 `check_lyrics_coverage.py` 单独跑法(第 02 步之后、设计之前):
 
 ```bash
-uv run $S/check_lyrics_coverage.py --project proj --vocals proj/stems/vocals16k.wav \
+hx-karaoke check_lyrics_coverage.py --project proj --vocals proj/stems/vocals16k.wav \
     --lyrics proj/lyrics.txt --timing proj/timing.json
 ```
 
@@ -40,8 +42,8 @@ uv run $S/check_lyrics_coverage.py --project proj --vocals proj/stems/vocals16k.
 ## 13b 自动校验
 
 ```bash
-uv run $S/validate_ass.py proj/out.ass --fontsdir fonts --timing proj/timing.json --report proj/validate.txt
-uv run $S/check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232    # 校验通过 != 看得见
+hx-karaoke validate_ass.py proj/out.ass --fontsdir fonts --timing proj/timing.json --report proj/validate.txt
+hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232    # 校验通过 != 看得见
 ```
 
 `validate_ass.py`(必须"通过", 警告逐条过):

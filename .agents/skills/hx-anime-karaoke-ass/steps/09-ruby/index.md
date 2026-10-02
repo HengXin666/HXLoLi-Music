@@ -12,7 +12,7 @@ fs66 时实际墨迹只有 ~42px —— 按行框摆注音会离汉字很远.
 ## 命令
 
 ```bash
-uv run $S/calibrate_ruby.py --fontsdir fonts --jp "Shippori Mincho B1" --jp-fs 84 --rb-fs 34 \
+hx-karaoke calibrate_ruby.py --fontsdir fonts --jp "Shippori Mincho B1" --jp-fs 84 --rb-fs 34 \
    --cn "LXGW WenKai Medium" --cn-fs 50 --jp-y 915 --ruby-gap 5 --cn-gap 20 --out proj/calib.json
 ```
 

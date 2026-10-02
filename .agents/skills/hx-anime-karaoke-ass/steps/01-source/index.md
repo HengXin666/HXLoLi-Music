@@ -8,7 +8,7 @@
 ## 命令
 
 ```bash
-uv run $S/find_source.py "<番剧> <曲名>" --target <官方完整版秒数> --probe \
+hx-karaoke find_source.py "<番剧> <曲名>" --target <官方完整版秒数> --probe \
     --extra "<曲名> 完整版" --extra "<中文译名>"
 ```
 

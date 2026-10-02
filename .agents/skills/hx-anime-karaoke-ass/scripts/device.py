@@ -17,7 +17,7 @@
   --device cuda|cpu|auto  # 单次覆盖（四个入口脚本都接受）
 
 要确认某台机器上 GPU/CPU 到底差多少，跑:
-  uv run scripts/device_check.py --vocals <proj>/stems/vocals16k.wav --sample 60
+  hx-karaoke device_check.py --vocals <proj>/stems/vocals16k.wav --sample 60
 它把同一段音频在两种设备上各跑一遍 CTC，给出前后验帧级最大位移与起音时间差。
 判据: 若最大位移 >1 帧(20ms)，就当它会影响对齐，用 CPU 出终稿。
 

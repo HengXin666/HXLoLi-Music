@@ -16,8 +16,8 @@ a_peak 中位 110，等于没画。这个文件就是把这个失败模式变成
 同时列出图形尺寸与 a_peak 的分布，跟示例工程的量级对照。
 
 用法:
-  uv run check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232
-  uv run check_fx_visible.py proj/out.ass --fontsdir fonts --auto   # 自动挑 FX 最密的几句
+  hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232
+  hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --auto   # 自动挑 FX 最密的几句
 """
 import argparse, os, re, subprocess, sys, tempfile
 from PIL import Image

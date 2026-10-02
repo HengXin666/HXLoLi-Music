@@ -8,8 +8,8 @@
 ## 命令
 
 ```bash
-uv run $S/beat_grid.py --inst proj/stems/inst.wav --out proj/grid.json
-uv run $S/snap_timing.py --timing proj/timing_kf.json --grid proj/grid.json --out proj/timing_snap.json --lag 0.035
+hx-karaoke beat_grid.py --inst proj/stems/inst.wav --out proj/grid.json
+hx-karaoke snap_timing.py --timing proj/timing_kf.json --grid proj/grid.json --out proj/timing_snap.json --lag 0.035
 ```
 
 **输入用 `timing_kf.json`**(若第 06 步拿到了). 没有逐字源时用 `timing_auto.json`.
@@ -27,7 +27,7 @@ CTC 在齐唱、rap、快歌里会把没听清的几拍挤成 20ms 或整段漂�
 `grid_align.py` 把每个音拍起点限制在网格槽位上做 DP.
 
 ```bash
-uv run $S/grid_align.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav \
+hx-karaoke grid_align.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav \
    --timing proj/timing_auto.json --grid proj/grid.json --div 8 --emis proj/stems/ctc_lp.npz \
    --anchors proj/fixes.json --parity 15:48,16:49,17:50 --out proj/timing_grid.json
 ```
@@ -37,8 +37,8 @@ uv run $S/grid_align.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.w
 - `--lag` 缺省自动估计; 8 分槽位 +0.3 奖励; 偏离原对齐 >0.25s 起罚(先验).
 - `--anchors` 把 `fixes.json` 的人工起点当硬约束; `--parity a:b` 让两段同词句**联合对齐**
   (相对节奏强制一致, 偏移在 ±3 槽内搜索)——**副歌、重复段必用**.
-- 查「模型到底听到了什么」: `uv run $S/ctc_read.py vocals16k.wav ctc_lp.npz 80.0-82.5`.
-- 对比重复段: `uv run $S/parity_cmp.py proj/timing.json 15:48,16:49`(差 >0.12s 标 `<<`).
+- 查「模型到底听到了什么」: `hx-karaoke ctc_read.py vocals16k.wav ctc_lp.npz 80.0-82.5`.
+- 对比重复段: `hx-karaoke parity_cmp.py proj/timing.json 15:48,16:49`(差 >0.12s 标 `<<`).
 
 ## 这一步要用的脚本
 

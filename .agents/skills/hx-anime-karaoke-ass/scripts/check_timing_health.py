@@ -17,7 +17,7 @@
 输出：可直接抄进 fixes.json 的建议 {"line,unit,mora": 新起点}。
 
 用法:
-  uv run check_timing_health.py --vocals stems/vocals16k.wav --timing timing.json \
+  hx-karaoke check_timing_health.py --vocals stems/vocals16k.wav --timing timing.json \
        [--grid grid.json] --report review/health.txt [--fixes-out review/suggest.json]
 """
 import argparse, bisect, json, wave
@@ -161,8 +161,8 @@ if bad:
     print("\n[FAIL] " + "；".join(bad))
     print("[FAIL] 修法二选一：")
     print("   1) 有网络逐字歌词时走 kf_timing.py（推荐，实测把塌缩 2→0、句内间奏 3→0）：")
-    print("        uv run scripts/kf_timing.py fetch --title ... --artist ... --project proj")
-    print("        uv run scripts/kf_timing.py align --project proj --auto timing_auto.json")
+    print("        hx-karaoke kf_timing.py fetch --title ... --artist ... --project proj")
+    print("        hx-karaoke kf_timing.py align --project proj --auto timing_auto.json")
     print("   2) 没有逐字源时，按 report 里列出的 (line,unit,mora) 手工写 fixes.json 再 apply_fixes.py")
     print("   确认无需修改时用 --max-collapse -1（或把 -1 视为放行）显式声明，不要静默放过。")
     sys.exit(1)

@@ -72,7 +72,10 @@ class Layout:
             for ui, u in enumerate(ln["units"]):
                 if u["kind"] == "space":
                     items.append(dict(gap=True, w=gap)); continue
-                mts = [TM[(li, ui, mi)] for mi in range(len(u["morae"]))]
+                # timing.json 的 unit 索引保持原始 lyrics 索引（space 等无音拍单元自然跳过）
+                # 因此直接用 ui 查询，对于无音拍单元会自然 miss
+                mts = [TM.get((li, ui, mi)) for mi in range(len(u["morae"]))]
+                mts = [m for m in mts if m is not None]  # 过滤掉 None（无音拍或缺失）
                 if not mts:          # 孤立标点：跟随前一个字
                     prev = chars[-1] if chars else None
                     mts = prev["morae"] if prev else []
@@ -94,6 +97,10 @@ class Layout:
                 grp = []
                 for ci, s in enumerate(u["surf"]):
                     mm = per[ci] or mts
+                    if not mm:  # 完全无音拍数据（如孤立标点在 timing 中被跳过）
+                        mm = chars[-1]["morae"] if chars else []
+                    if not mm:  # 仍无数据则跳过该字符
+                        continue
                     kind = u["kind"] if s not in "？！?!、。…" else "punct"
                     ch = dict(ch=s, w=self.MJ.adv(s, c["jp_fs"]) + c["jp_sp"], s=mm[0]["s"], e=mm[-1]["e"], kind=kind,
                               line=li, unit=ui, morae=mm, style="JP")

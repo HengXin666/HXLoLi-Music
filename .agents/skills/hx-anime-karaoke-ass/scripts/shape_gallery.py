@@ -3,7 +3,7 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""把 assfx.shapes 里的图形平铺渲染成一张图，检查造型（uv run shape_gallery.py out.png [--ffmpeg ffmpeg]）"""
+"""把 assfx.shapes 里的图形平铺渲染成一张图，检查造型（hx-karaoke shape_gallery.py out.png [--ffmpeg ffmpeg]）"""
 import os, random, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
 from assfx import shapes as S

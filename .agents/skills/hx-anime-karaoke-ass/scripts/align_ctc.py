@@ -11,8 +11,8 @@
 """
 音拍级强制对齐（CTC Viterbi）：分离人声 + 平假名 wav2vec2 → 每个音拍起止
 用法:
-  uv run align_ctc.py --lyrics lyrics.txt --vocals stems/vocals16k.wav --offset 0.05 --out timing_auto.json
-  uv run align_ctc.py ... --estimate-offset        # 只估计 lrc→视频 偏移
+  hx-karaoke align_ctc.py --lyrics lyrics.txt --vocals stems/vocals16k.wav --offset 0.05 --out timing_auto.json
+  hx-karaoke align_ctc.py ... --estimate-offset        # 只估计 lrc→视频 偏移
 流程:
   1) 歌词 lrc 时间 + offset → 视频时间
   2) 人声能量检测“换气空隙”，在空隙处把相邻行切成独立块；连唱（无空隙）的行合并成一个块一起对齐

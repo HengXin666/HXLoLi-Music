@@ -6,7 +6,7 @@
 ## 2a 来源定级(一律从网络取)
 
 ```bash
-uv run $S/find_lyrics.py --project proj --title "<曲名>" --artist "<艺人>" --duration <完整版秒数>
+hx-karaoke find_lyrics.py --project proj --title "<曲名>" --artist "<艺人>" --duration <完整版秒数>
 ```
 
 产物 `lyrics.source.json`(来源级别 + URL + 行数 + 正文 sha256 + 时间列 sha256)= 门禁要查的证据.
@@ -27,7 +27,7 @@ uv run $S/find_lyrics.py --project proj --title "<曲名>" --artist "<艺人>" -
 用 `ctc_read.py` 读"模型听到了什么"来定, 判据与实测案例见 `impl/reading-basis.md`.
 
 ```bash
-uv run $S/ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 71.5-76.0
+hx-karaoke ctc_read.py stems/vocals16k.wav stems/ctc_lp.npz 71.5-76.0
 ```
 
 (依赖第 04 步的人声与 ctc_lp; 顺序上先做 04 再回来做 2c 也可以. )

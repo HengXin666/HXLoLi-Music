@@ -21,8 +21,8 @@
 用**人声**把这个差量测出来 —— 识别**时间**, 不识别**文字**:
 
 ```bash
-uv run $S/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
-uv run $S/calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
+hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --out proj/offset.json
+hx-karaoke calibrate_offset.py --lyrics proj/lyrics.txt --vocals proj/stems/vocals16k.wav --ctc --out proj/offset.json
 ```
 
 两条证据通道:

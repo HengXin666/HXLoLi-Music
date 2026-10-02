@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# hx-karaoke —— hx-anime-karaoke-ass skill 的唯一入口命令。
+#
+# 为什么需要它:
+#   `uv run <脚本>` 会给每个带 inline 依赖块的脚本建一个独立的脚本环境, 于是**每个新脚本
+#   首次运行都要现场装包** —— 实测一个依赖 scipy+matplotlib 的新脚本 `uv run` 首跑 14.5s,
+#   而共享环境里已有这些包时本命令 0.0s。
+#   本命令改成"一个共享环境 + 一条路径", 顺便把 skill 的 scripts/ 放进 PYTHONPATH,
+#   于是 `hx-karaoke align_ctc.py ...` 与 `hx-karaoke make_ass.py ...` 用同一个解释器。
+#
+#   注意: 理由**不是**省盘。uv 的包内容本来就靠硬链接共用 (按 inode 实测, 124 个脚本环境
+#   对 archive-v0 的独占增量只有 0.65 GiB); 用多次独立 du 求和会得到假的"12GB 重复"。
+#   `uv run` 也**不是不能用** (它会把脚本目录放进 sys.path[0], 跨脚本 import 一样通),
+#   只是新脚本首跑要等装包。
+#
+# 用法:
+#   hx-karaoke <脚本> [参数...]       # 例: hx-karaoke align_ctc.py --lyrics proj/lyrics.txt ...
+#   hx-karaoke python -c '...'        # 直接跑 python (脚本路径可省)
+#   hx-karaoke --env                  # 打印环境位置与关键版本
+#   hx-karaoke --check                # 体检 (缺依赖/缺字体时退出码非 0)
+#   hx-karaoke --fonts                # 打印字体目录绝对路径 (供父 shell 拼接)
+#   hx-karaoke --scripts|--skill-root # 同上, 打印 scripts/ 与 skill 根
+#   hx-karaoke --help                 # 本帮助
+#
+# 脚本名先在 <skill>/scripts/ 下找, 再按原样当路径找 —— 所以
+# `hx-karaoke scripts/ctc_read.py ...` 与 `hx-karaoke ctc_read.py ...` 都对。
+#
+# 环境本身由 <skill>/scripts/setup_env.py 建 (幂等), 位置在仓库之外:
+#   ${XDG_CACHE_HOME:-~/.cache}/hx-anime-karaoke-ass/venv
+# 放仓库外的理由: skill 在仓库内, uv 的项目发现会把 skill 里的 .venv 认成仓库的 venv
+# 并重新同步成仓库的 Python/依赖 (实测会变成 py3.14 + 根项目依赖)。
+set -euo pipefail
+
+SKILL="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+STATE="${HX_KARAOKE_STATE:-${XDG_CACHE_HOME:-$HOME/.cache}/hx-anime-karaoke-ass}"
+VENV="$STATE/venv"
+PY="$VENV/bin/python"
+
+if [ ! -x "$PY" ]; then
+  echo "hx-karaoke: 还没有环境, 正在建 (一次性, 之后秒进)..." >&2
+  python3 "$SKILL/scripts/setup_env.py" >&2
+fi
+
+case "${1:-}" in
+  "")
+    sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+  --help|-h)
+    sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+  --env)
+    "$PY" - <<'PY'
+import os, sys, platform
+print(f"python      {sys.version.split()[0]} ({platform.machine()})")
+print(f"exe         {sys.executable}")
+for m in ("numpy", "scipy", "torch", "transformers", "demucs", "fontTools", "PIL"):
+    try:
+        __import__(m)
+        mod = sys.modules[m]
+        print(f"{m:<12}{getattr(mod, '__version__', '(no __version__)')}")
+    except Exception as e:
+        print(f"{m:<12}MISSING: {e}")
+try:
+    import torch
+    print(f"cuda        {torch.cuda.is_available()}"
+          + (f" ({torch.cuda.get_device_name(0)})" if torch.cuda.is_available() else ""))
+except Exception:
+    pass
+PY
+    exit 0
+    ;;
+  --skill-root)
+    # 供调用方在**父 shell** 里拼路径: --fontsdir "$(hx-karaoke --skill-root)/fonts"
+    printf '%s\n' "$SKILL"
+    exit 0
+    ;;
+  --fonts|--fontsdir)
+    printf '%s\n' "${ASSFX_FONTS:-$SKILL/fonts}"
+    exit 0
+    ;;
+  --scripts)
+    printf '%s\n' "$SKILL/scripts"
+    exit 0
+    ;;
+  --check)
+    shift
+    exec python3 "$SKILL/scripts/setup_env.py" --check "$@"
+    ;;
+esac
+
+# scripts/ 上 PYTHONPATH: ctc_read 依赖 align_ctc, make_ass.py 依赖 assfx.*,
+# 全都按"同目录平铺"的假设 import, 所以与其让每个调用方自己插 path, 不如在这里给一次。
+export PYTHONPATH="$SKILL/scripts${PYTHONPATH:+:$PYTHONPATH}"
+export SKILL_ROOT="$SKILL"
+export ASSFX="${ASSFX:-$SKILL/scripts}"
+export ASSFX_FONTS="${ASSFX_FONTS:-$SKILL/fonts}"
+
+# python / python3 / sh / bash 直接透传; 其余按"脚本名"解析
+case "$1" in
+  python|python3)
+    # 丢掉 "python" 这个词元, 用 venv 的解释器跑剩下的参数。
+    # 不能 exec "$@" —— 那会命中 PATH 上的系统 python (没有 torch), 而本命令的
+    # 全部意义就是"用那个装好的环境"。
+    shift
+    exec "$PY" "$@"
+    ;;
+  sh|bash)
+    # hx-karaoke bash render.sh ... —— 交给真 shell, shell 脚本不经过 python
+    shift
+    exec bash "$@"
+    ;;
+esac
+
+resolve() {
+  # 依次找: 原样路径 -> <skill>/scripts/<名> -> <skill>/<名>
+  for c in "$1" "$SKILL/scripts/$1" "$SKILL/$1"; do
+    [ -f "$c" ] && { printf '%s\n' "$c"; return 0; }
+  done
+  return 1
+}
+
+if ! target="$(resolve "$1")"; then
+  echo "hx-karaoke: 找不到脚本 '$1'" >&2
+  echo "  已找过: 当前目录/相对路径, $SKILL/scripts/, $SKILL/" >&2
+  echo "  可用: $(cd "$SKILL/scripts" && ls *.py *.sh 2>/dev/null | tr '\n' ' ')" >&2
+  exit 2
+fi
+shift
+
+case "$target" in
+  *.sh) exec bash "$target" "$@" ;;
+  *)    exec "$PY" "$target" "$@" ;;
+esac

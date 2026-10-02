@@ -9,7 +9,7 @@
 抽帧目检：在指定时间点用 libass 渲染“视频+字幕”，拼成网格图。可叠加 band 边框（--bands）检查特效范围。
 
 用法:
-  uv run snapshots.py --video base.mp4 --ass subs.ass --fontsdir fonts --times 26.5,30.2,51.3 --out sheet.jpg
+  hx-karaoke snapshots.py --video base.mp4 --ass subs.ass --fontsdir fonts --times 26.5,30.2,51.3 --out sheet.jpg
         [--cols 2 --width 960 --bands --crop-bottom 0.45 --ffmpeg ffmpeg]
   --times 也可写成 auto:<ass>  → 对每个 band 取“第一个音拍后 0.3s”和“中点”
 提示: 目检重点——注音贴字(4~6px)、中文不压画面主体、特效是否贴合画面、亮场可读性、切换时是否打架

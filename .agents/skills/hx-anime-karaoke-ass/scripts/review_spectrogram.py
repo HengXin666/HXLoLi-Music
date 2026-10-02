@@ -6,8 +6,8 @@
 """
 人工复核卡拉OK时间：人声频谱（0-1500Hz，看谐波=音符）+ 音拍起点竖线
 用法:
-  uv run review_spectrogram.py --vocals stems/vocals16k.wav --timing timing.json --lines 0-3 --out review.png
-  uv run review_spectrogram.py ... --windows 20.1-25.8,26.1-31.0 --out review.png
+  hx-karaoke review_spectrogram.py --vocals stems/vocals16k.wav --timing timing.json --lines 0-3 --out review.png
+  hx-karaoke review_spectrogram.py ... --windows 20.1-25.8,26.1-31.0 --out review.png
 读图要点:
   - 横向亮条=持续的音符；音符起点处谐波断开/跳变/辅音噪声(竖向宽带)
   - 每个音拍竖线应落在对应音符的起音处；落在换气噪声/长音中间的都是错的
