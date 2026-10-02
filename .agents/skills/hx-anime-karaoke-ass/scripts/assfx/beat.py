@@ -33,6 +33,10 @@
    观众会拿它判断"唱到哪了", 结果是觉得字幕错了. 所以它只做光/粒子/形变/位移.
 2. **起手必须小.** 实测 18%~40%, 不是 100%. 从满尺寸开始就没有"爆发".
 3. **同刻多色.** 一次群发里 5~7 种颜色并置, 这是"颜色区分"在专业作品里的真实出处.
+4. **柔光预算: 同一个带里最多一层大 blur.** 实测(2026-10-03)失败模式: 每句 fx 里
+   已有两处 blur=26~46 的 `f.glow`, 卡点层再叠一层 blur=24, 三者在 758x242 的窄带里
+   糊成一片雾 —— 逐字多色被整片盖掉. 分工: **背景层用大 blur(>=20), 卡点层 <=10,
+   每句特效的柔光只留一处**.
 """
 import math
 
@@ -242,8 +246,14 @@ def beat_scatter(f, me, t0, t1, level=2, cx=None, cy=None, colors=None, seed=7,
     return emit
 
 
-def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0, every=4):
-    """拍级脉动: 在强拍上给 band 一整片柔光呼吸(低存在感, 不与散射抢).
+def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0, every=4,
+               blur=10.0, alpha=90):
+    """拍级脉动: 在强拍上给 band 一整片柔光呼吸.
+
+    **`blur` 必须压住.** 实测教训(2026-10-03): 卡点层原先用 blur=24 的柔光,
+    而每句的 fx 里已经有两处 blur=26~46 的大柔光(`f.glow`), 三层柔光叠在同一个
+    758x242 的窄带里 -> 糊成一片雾, **把逐字多色整片盖掉**(逐字色相跨度中位只有 26°,
+    但仍看不清). 背景层才该用大 blur; 卡点层与每句特效必须锐.
 
     `every`: 每几格一次; 4 = 每四分音符(拍)一次
     """
@@ -259,10 +269,10 @@ def beat_pulse(f, me, t0, t1, level=2, cx=None, cy=None, colors="cyan", layer=0,
     for gi, g in enumerate(me.grid_between(t0, t1)):
         if gi % every:
             continue
-        a = 90 + 45 * level
+        a = alpha + 30 * level
         f.glow(layer, g, g + (me.step or 0.125) * every * 0.9,
                cx, cy, rx, ry, cols[n % len(cols)],
-               a_peak=min(150, a), blur=24, fade_in=0.03, fade_out=0.12)
+               a_peak=min(150, a), blur=blur, fade_in=0.03, fade_out=0.12)
         n += 1
     return n
 
