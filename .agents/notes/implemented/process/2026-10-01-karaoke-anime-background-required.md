@@ -2,20 +2,23 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/fetch_anime_bg.py`（新增）、
-  `steps/10-anime-bg/impl/background-research.md`（新增）、`steps/11-design/impl/motif-catalog.md` 第 1 节、
-  `steps/10-anime-bg/index.md`、`shared/hard-rules.md` 规则 4。
+Decision-ID: karaoke-anime-background-required
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/source/fetch_anime_bg.py`
 
 ## Problem
 
 第 11 步的设计文档原本就写了「三层理解：番剧背景 → 歌曲意图 → MV 镜头」，但它只是**正文里的一段话**，
 没有任何产物、也没有任何检查点。实际做起来，最省力的路径是「搜一下番名 + 看 MV」就下结论，
-于是 30 句歌词的特效退化成通用心形/星星/光点，靠换配色撑完整首歌 —— 技术上全部合法，
+于是 30 句歌词的特效退化成通用心形/星星/光点，靠换配色撑完整首歌  技术上全部合法，
 validate_ass.py 照样通过，只有成片「缺内涵」，而这是没有机器判据能抓的失败。
 
 仓库里已经有两个正例可以作为对照：無職転生 ED1 的工程里写了洛琪希=魔女帽/水魔法、艾莉丝=红发/剑、
 塞妮丝=治愈魔法；ヨスガノソラ OP 的工程里写了比翼鸟一目一翼。这些符号不是从 MV 画面里看出来的，
-是从设定里读出来的 —— 但它们只存在于 `make_ass.py` 的注释里，下一个 agent 看不到它们从哪来。
+是从设定里读出来的  但它们只存在于 `make_ass.py` 的注释里，下一个 agent 看不到它们从哪来。
 
 ## Decision
 

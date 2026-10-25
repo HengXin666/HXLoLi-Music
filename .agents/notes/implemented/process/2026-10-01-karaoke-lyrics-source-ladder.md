@@ -1,16 +1,20 @@
-# Agent Note: 歌词来源定级 —— 一律从网络取，时间轴校准走语音
+# Agent Note: 歌词来源定级  一律从网络取，时间轴校准走语音
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/find_lyrics.py`（新增）、
-  `scripts/calibrate_offset.py`（新增）、`steps/02-lyrics/impl/source-ladder.md`（新增）、
-  `scripts/check_gates.py`（来源级别与 offset.json 判据）、
-  `steps/00-setup/index.md` 第 2/2b 步与 `SKILL.md` 硬性规则 2/3。
+Decision-ID: karaoke-lyrics-source-ladder
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/align/calibrate_offset.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/source/find_lyrics.py`
 
 ## Problem
 
 原流程第 2 步只写「歌词与翻译：歌词站 + 自译」，没有说**哪个源优先**，也没有产物证据。
-结果是遇到不在 lrclib 的曲目时，最容易的路径变成「照 MV 画面抄一遍」—— 抄出来的东西看起来没问题，
+结果是遇到不在 lrclib 的曲目时，最容易的路径变成「照 MV 画面抄一遍」 抄出来的东西看起来没问题，
 但 MV 硬字幕常被裁切、被台标/水印遮挡、或本身就是 TV size 删段；日文小字在识别里还会混淆
 （し↔つ、は↔ば、促音脱落）。这些错误不会自己暴露，它们会一路带到 timing.json 与成片。
 尤其致命的是**行数**：本 skill 的逐字高亮按音拍切，多一个字少一个字会让整句错位。
@@ -22,9 +26,9 @@ Status: implemented
 
 歌词来源定成三级阶梯，并把「用了哪一级、为什么」落成可校验的证据文件：
 
-1. 网络同步歌词（lrclib）—— `find_lyrics.py` 自动打分挑版本（曲名/艺人/时长/是否带时间轴）。
-2. 歌词站纯文本 + 时间轴 —— 日文歌词站的逐字振假名可直接照抄切分。
-3. 人工听写 —— 必须 `--register-manual --why "..."` 说明前两级为何不可用。
+1. 网络同步歌词（lrclib） `find_lyrics.py` 自动打分挑版本（曲名/艺人/时长/是否带时间轴）。
+2. 歌词站纯文本 + 时间轴  日文歌词站的逐字振假名可直接照抄切分。
+3. 人工听写  必须 `--register-manual --why "..."` 说明前两级为何不可用。
 
 **画面截图识别不在这条链里，且被明令禁止。** `check_gates.py` 只接受 `network` 与 `manual` 两种来源级别，
 其它值直接判 FAIL。抽帧看画面的正当用途只有一个：**读镜头**（配色/构图/亮暗）与找水印时段，
@@ -36,7 +40,7 @@ Status: implemented
 即「识别时间，不识别文字」。
 
 产物两份: `lyrics.source.json` 记来源、URL、行数与**两条指纹**（正文 sha256 与时间列 sha256）；
-分开记的原因是正文必然被人工补注音改掉，时间列不该被改 ——
+分开记的原因是正文必然被人工补注音改掉，时间列不该被改 
 这样「补注音」不会被误报成换了来源，而「偷偷挪了某句时间」会被抓住。
 `offset.json` 记逐行 Δ、中位差与离散度（p90−p10），离散度 >0.8s 判 FAIL（不是同一剪辑）。
 历史工程用 `--from-timing --why` 据终稿反推，强制写 why。
@@ -51,7 +55,7 @@ Status: implemented
 - **把画面识别作为兜底来源 + 用它校准时间轴**（本 note 的上一版就是这么定的）:
   最强理由是「画面直接来自手上这份视频，天然对齐；OCR 有帧级时间」。
   否决（用户明确要求）：文本准确度是硬伤，且它抄的是「这一份剪辑剩下的字」而不是作品本身；
-  时间轴这件事并不需要画面 —— 人声本身就是更干净的时间证据源（`calibrate_offset.py`），
+  时间轴这件事并不需要画面  人声本身就是更干净的时间证据源（`calibrate_offset.py`），
   而且人声通道顺带解决了「上一句长音拖过来」这类画面根本看不出来的问题。
   这一条取代了旧做法，`scripts/ocr_subs.py` 已删除。
 - **把 lrclib 换成本地歌词库/离线缓存**: 否决。曲目覆盖会立刻退化，而离线缓存对首次遇到的曲子无效。
@@ -62,7 +66,7 @@ Status: implemented
 ## Consequences
 
 - 实测（2026-10-01）：`find_lyrics.py --title 比翼の羽根 --artist eufonius --duration 282` 命中 lrclib 45 行带时间轴；
-  lrclib 会偶发 503，脚本重试 3 次 —— 一次 503 不再等于「这首没有」。
+  lrclib 会偶发 503，脚本重试 3 次  一次 503 不再等于「这首没有」。
 - `find_lyrics.py` 有两处诚实退出：行数与时间轴对不上时列出差异并中止（不静默截断），
   最高分低于阈值时要求换源或走人工（不降级凑合）。
 - `calibrate_offset.py` 实测：合成人声 3 行全部测到起唱、Δ 一致（离散 0.000s），给出 `--offset` 建议；

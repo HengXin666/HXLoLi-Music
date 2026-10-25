@@ -1066,23 +1066,10 @@
             "rightB": 1147
         },
         {
-            "t": 92.5,
-            "topYMin": 0,
-            "topYMax": 90,
-            "btmYMin": 1029,
-            "btmYMax": 1074,
-            "left": 0,
-            "right": 1309,
-            "leftT": 580,
-            "rightT": 1309,
-            "leftB": 0,
-            "rightB": 1147
-        },
-        {
             "t": 93.5,
             "topYMin": 0,
             "topYMax": 91,
-            "btmYMin": 1029,
+            "btmYMin": 1031,
             "btmYMax": 1074,
             "left": 0,
             "right": 1309,
@@ -1093,6 +1080,19 @@
         },
         {
             "t": 100.0,
+            "topYMin": 0,
+            "topYMax": 90,
+            "btmYMin": 1031,
+            "btmYMax": 1074,
+            "left": 0,
+            "right": 1309,
+            "leftT": 580,
+            "rightT": 1309,
+            "leftB": 0,
+            "rightB": 1147
+        },
+        {
+            "t": 102.5,
             "topYMin": 0,
             "topYMax": 90,
             "btmYMin": 1029,
@@ -1864,11 +1864,11 @@
             "topYMax": 130,
             "btmYMin": 856,
             "btmYMax": 920,
-            "left": 30,
+            "left": 29,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 30,
+            "leftB": 29,
             "rightB": 452
         },
         {
@@ -1877,11 +1877,11 @@
             "topYMax": 129,
             "btmYMin": 856,
             "btmYMax": 916,
-            "left": 31,
+            "left": 30,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 31,
+            "leftB": 30,
             "rightB": 452
         },
         {
@@ -1890,11 +1890,11 @@
             "topYMax": 128,
             "btmYMin": 856,
             "btmYMax": 913,
-            "left": 32,
+            "left": 31,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 32,
+            "leftB": 31,
             "rightB": 452
         },
         {
@@ -1903,11 +1903,11 @@
             "topYMax": 127,
             "btmYMin": 856,
             "btmYMax": 910,
-            "left": 33,
+            "left": 32,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 33,
+            "leftB": 32,
             "rightB": 452
         },
         {
@@ -1916,11 +1916,11 @@
             "topYMax": 127,
             "btmYMin": 856,
             "btmYMax": 908,
-            "left": 34,
+            "left": 33,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 34,
+            "leftB": 33,
             "rightB": 452
         },
         {
@@ -1929,11 +1929,11 @@
             "topYMax": 127,
             "btmYMin": 856,
             "btmYMax": 906,
-            "left": 38,
+            "left": 37,
             "right": 1301,
             "leftT": 580,
             "rightT": 1301,
-            "leftB": 38,
+            "leftB": 37,
             "rightB": 452
         },
         {
@@ -3134,6 +3134,7 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf"
+        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/music/fonts/kfx-subset.ttf"
     ]
 }

@@ -2,11 +2,21 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/SKILL.md`（重写为步骤表 + 索引）、
-  `steps/00-setup/` … `steps/15-render/`（16 个步骤目录，各含 `index.md` 契约与可选 `impl/`）、
-  `shared/hard-rules.md`（新增：十条跨步骤铁律）、`references/` 整个目录被拆解并删除
+Decision-ID: karaoke-steps-restructure
+
 - 决策依据: `hx-make-skill` 的两条硬约定（索引写裸路径+一句描述；一个步骤=一个文件夹=`index.md`+`impl/`），
   以及用户对旧版的原话「现在 skill 太垃圾了。文本也没有转化」「ref/ 下的 md 可以按照步骤分到 01_xxx 这种文件夹里」
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/align/calibrate_offset.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset/props.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/deco/motifs.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/qa/check_lag.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/source/find_lyrics.py`
+- `.agents/skills/hx-kfx/scripts/tools/motifs.py`
 
 ## Problem
 
@@ -19,10 +29,10 @@ Status: implemented
 1. **同一件事散在三份文件里。** "长音塌缩"这个判据在 `workflow.md` 第 5c 步、`kfx-tuning.md` §2、
    `SKILL.md` 硬性规则 5 各有一份措辞不同的版本；改一处不会改另两处，于是三份互相矛盾。
 2. **读者没有"我该做什么"的落点。** `SKILL.md` 的流程表列 13 步，每步只写"产物/检查点"，
-   而"具体怎么做"要靠读者自己从 12 份长文里拼 —— 没有一步有**明确边界**（这一步不做什么、
+   而"具体怎么做"要靠读者自己从 12 份长文里拼  没有一步有**明确边界**（这一步不做什么、
    什么条件算过）。结果是跳过一步不会有任何后果，直到成片不对味。
 3. **超长文件按主题切，切不出"什么时候读"。** `kfx-tuning.md` 346 行里塞了四类互不相干的缺陷，
-   做密度的时候要读它、做时间轴的时候也要读它，但两者需要的段落完全不同 ——
+   做密度的时候要读它、做时间轴的时候也要读它，但两者需要的段落完全不同 
    索引写不出"什么时候读这个文件的哪一段"，只能整个读。
 
 ## Decision
@@ -39,7 +49,7 @@ Status: implemented
 - `SKILL.md` **只留步骤表**（步骤 key / 关心什么），45 行。表格写**目录 key** 而不是完整路径：
   契约路径恒为 `steps/<key>/index.md`，把那一段在表头部说明一次即可，
   每行不必重复 `steps/` 前缀与 `index.md` 后缀（实测省 452 字符 / 37 字符每行）。
-  **它不再列脚本、模板与示例**——这三类都下移到"用到它们的那一步"：
+  **它不再列脚本、模板与示例**这三类都下移到"用到它们的那一步"：
   每步的契约里有一节"这一步要用的脚本"（路径 + 一句话作用），
   模板与参考工程写在 `steps/12-generate`（生成器那一步），
   跨步骤的铁律（band、素材、来源定级……）抽到 `shared/hard-rules.md`，SKILL.md 只点它一次。
@@ -53,7 +63,7 @@ Status: implemented
 ## Alternatives considered
 
 - **什么都不做，继续用 `references/` 平铺长文**：最强理由是「内容已经写全了，结构是外观问题」。
-  否决（实测）：上面第 1、2 条不是外观问题 —— 同一判据三处不一致**已经造成了交付事故**
+  否决（实测）：上面第 1、2 条不是外观问题  同一判据三处不一致**已经造成了交付事故**
   （`proj-touhou` 带着 2 处 CTC 塌缩交付，报告里写了"应为 0"却没人读它，成片慢了 20 秒）。
   修法不是再写一份文档，是让判据有**唯一的归处**。
 - **保留 `references/` 目录名，只在它下面建 `01_xxx` 子目录**：最强理由是「用户的字面表述是
@@ -67,12 +77,12 @@ Status: implemented
   又回到"一份文件什么都讲"。实测这一步的 `impl/` 里有 5 份互斥场景的实现
   （逐句设计的 four 个角度 + 图形精度），拆开之后每份都能独立改。
 - **保留 `examples/` 下全部 5 个工程**：最强理由是「示例越多，模型越容易照着做」。
-  否决：见 [karaoke-layout-consolidation](./2026-10-02-karaoke-layout-consolidation.md) ——
+  否决：见 [karaoke-layout-consolidation](2026-10-02-karaoke-layout-consolidation.md) 
   其中 `blackbullet_ed` 一个工程占 726MB（含 169MB 的 `base.mp4`、96MB 的 stems、356MB 成片），
   且它是**一次具体制作的产物**，不是 skill 的一部分。
 - **把脚本/模板/示例的中心化索引留在 SKILL.md**（第一版的写法：26 行脚本清单 + 示例与模板节）：
   最强理由是「模型一眼就能看到全部工具，不用翻 16 个文件」。否决（用户指正）：
-  它违反**渐进式披露**——那份清单是**每次触发出场**的 L2 成本，而它的内容只有在走到对应步骤时才有用。
+  它违反**渐进式披露**那份清单是**每次触发出场**的 L2 成本，而它的内容只有在走到对应步骤时才有用。
   实测代价：SKILL.md 105 行里 48 行是这个索引（约 46%），而 0 次触发需要它；
   下移之后 SKILL.md 45 行，每步的 35~76 行只在真正走到那步时读。
   **"函数索引"和"调用它的地方"应该是同一个位置**，否则读者要在两处同步。
@@ -81,7 +91,7 @@ Status: implemented
   第 4 列产物在每步契约里已有；恒定不变的前后缀重复 16 遍是纯冗余。
   改成表头说明一次约定 + 只写 key 之后，省 452 字符（每行 37），
   且**契约路径仍然唯一可推导**（`steps/<key>/index.md`）。
-- **把示例/模板继续留在 SKILL.md 的「示例与模板」节**：同上，且它比脚本清单更容易误导 ——
+- **把示例/模板继续留在 SKILL.md 的「示例与模板」节**：同上，且它比脚本清单更容易误导 
   示例的一句话描述（"30 句逐句设计 + 71 处 fixes"）在读 `make_ass.py` 之前没有意义，
   读了之后又不再需要。现在它写在 `steps/12-generate/index.md`，紧挨着"复制模板 → 改 → 跑"的命令。
 

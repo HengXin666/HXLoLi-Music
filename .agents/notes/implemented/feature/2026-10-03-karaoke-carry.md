@@ -1,9 +1,13 @@
-# Agent Note: 句间承接 —— 跨句状态对象与可核对的承接量
+# Agent Note: 句间承接  跨句状态对象与可核对的承接量
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/carry.py`(新增)、
-  `steps/4-kfx/48-thread/index.md`
+Decision-ID: karaoke-carry
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/carry.py`
 
 ## Problem
 
@@ -19,13 +23,13 @@ Status: implemented
 | fx 事件终点晚于下一句 band 起点 | 31.3% |
 
 六条边里四条在动, 但整段读起来是 33 个独立片段。那 31.3% 跨句事件是
-`Generator` 的**退场淡出尾巴**(α 在降, 颜色/位置/图形全不变) —— **不携带任何变量**。
+`Generator` 的**退场淡出尾巴**(α 在降, 颜色/位置/图形全不变)  **不携带任何变量**。
 `Generator.render()` 逐句循环, 每句独立构造 `FX(seed=1000+i)`、独立选色、独立定生死,
 **句与句之间零状态**。
 
 ## Decision
 
-新增 `scripts/assfx/carry.py`: 一个逐句传递的 `Carry` 对象, 含五种**可核对**的量:
+新增 `scripts/assfx/layer/carry.py`: 一个逐句传递的 `Carry` 对象, 含五种**可核对**的量:
 
 | 字段 | 含义 | 承接类型 |
 |---|---|---|
@@ -37,12 +41,12 @@ Status: implemented
 
 三个方法对应三种承接的**用法**:
 
-- `entry(f, pull)` —— 入场接上上一句的动量与位置(位置夹进 band);
-- `tint(base, k)` —— 把上一句末色混进本句基色, `k=0` 等于没有承接;
-- `boost(level)` —— 同一意象**长一级**(`意象承接 ≠ 意象重复`: 加一级是承接, 原样再来是偷懒)。
+- `entry(f, pull)`  入场接上上一句的动量与位置(位置夹进 band);
+- `tint(base, k)`  把上一句末色混进本句基色, `k=0` 等于没有承接;
+- `boost(level)`  同一意象**长一级**(`意象承接 ≠ 意象重复`: 加一级是承接, 原样再来是偷懒)。
 
 `from_events()` 是关键: 从**刚刚发射过的事件**反解末状态(取最晚结束的那条,
-读它的 `\move` 终点与速度), 于是"承接"不需要手写 `update` —— 只要生成器逐句
+读它的 `\move` 终点与速度), 于是"承接"不需要手写 `update`  只要生成器逐句
 调一次 `carry.from_events(f)` 就自动成立。
 
 判据仍是设计表里的那一条: **`承上` 的变量必须能在上一行的 `启下` 里找到同名项**.
@@ -50,7 +54,7 @@ Status: implemented
 ## Alternatives considered
 
 - **什么都不做, 靠"每句都用同一个母题"制造连续感**: 最强理由是"观众感知的是整体风格".
-  否决(实测): 本工程 33 句**每句都有主母题且都不同**, 正是这个做法的结果 ——
+  否决(实测): 本工程 33 句**每句都有主母题且都不同**, 正是这个做法的结果 
   它保证了"每句都有意义", 却保证不了"句与句连得起来"。母题相同也不等于承接:
   同一个图形原样再用一遍是**重复**, 不是承接。
 
@@ -67,7 +71,7 @@ Status: implemented
 
 ## Consequences
 
-- 新增 `scripts/assfx/carry.py`。
+- 新增 `scripts/assfx/layer/carry.py`。
 - 用法(生成器里):
 
       carry = Carry(color="#8A98A8")

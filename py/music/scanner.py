@@ -21,7 +21,9 @@ from .fonts import ensure_ass_fonts, find_fonts_in_dir
 
 
 def scan_music_dir() -> list[dict]:
-    """扫描 static/music/ 目录, 收集所有音频文件信息"""
+    """
+    .agents/notes/implemented/process/2026-09-28-kfx-quality-redline.md
+扫描 static/music/ 目录, 收集所有音频文件信息"""
     if not STATIC_MUSIC_DIR.exists():
         print(f"[错误] 音乐目录不存在: {STATIC_MUSIC_DIR}")
         sys.exit(1)
@@ -73,8 +75,24 @@ def scan_music_dir() -> list[dict]:
         }
 
         if ass_path:
+            # Agent Notes: KFX 质量红线（静态拦截）
+            # 
             track["assUrl"] = path_to_url(ass_path)
             print(f"    └─ 歌词: {ass_path.name}")
+
+            # KFX 质量红线: 光有卡拉OK效果不算成品。
+            # 判据见 
+            # 其中注音层/特效贴合/配色三条已改为结构式判据, 见
+            # 
+            from .kfx_gate import run_gate
+            gate = run_gate(ass_path)
+            if gate is not None:
+                if gate["ok"]:
+                    print(f"    └─ 红线: 通过 ({gate['events']} 事件, {gate['size_mb']:.1f} MB)")
+                else:
+                    print(f"    └─ 红线: 未通过 — {'; '.join(gate['fails'])}")
+                    print(f"    └─ 已跳过该曲目（不达标不进播放列表）")
+                    continue
 
             # 计算 ASS 文件哈希
             ass_hash = file_md5(ass_path)

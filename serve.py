@@ -193,7 +193,12 @@ async def serve_file(request: Request, full_path: str):
 # ---------------------------------------------------------------------------
 # 入口
 # ---------------------------------------------------------------------------
+# Agent Notes: HXLoLi-Music 接入 Agent Notes v2
+# 
 def main():
+    """Agent Notes
+    .agents/notes/implemented/process/2026-10-08-repository-agent-notes-v2-adoption.md
+    """
     port = DEFAULT_PORT
     if len(sys.argv) > 1:
         try:

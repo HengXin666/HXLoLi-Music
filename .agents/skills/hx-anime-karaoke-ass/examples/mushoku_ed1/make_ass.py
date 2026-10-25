@@ -7,10 +7,10 @@
 # ]
 # ///
 """
-無職転生 ED1「オンリー」（大原ゆい子）—— 中日双语 + 振假名 卡拉OK 特效字幕
+無職転生 ED1「オンリー」（大原ゆい子） 中日双语 + 振假名 卡拉OK 特效字幕
 
 设计总纲
-  * 歌曲：以第一人称向“唯一的你”告白——愛/守りたい/壊したい 的矛盾与决意；MV 以回忆蒙太奇串起
+  * 歌曲：以第一人称向“唯一的你”告白愛/守りたい/壊したい 的矛盾与决意；MV 以回忆蒙太奇串起
     出生、旅途、战斗、魔法课、家族、离别。特效跟随每一句对应的画面（见 PHRASES 注释的时间点）。
   * 硬约束：所有特效（含歌词自身的出入场）只在“歌词块墨迹包围盒 + 5% 画面”(band) 内；
     FX 发射器生成期夹取，validate_ass.py 复核。
@@ -22,14 +22,24 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # 本 skill 的根目录: examples/<曲目>/ -> 上两级。ASSFX 可覆盖成拷到别处后的 scripts 路径。
 SKILL = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.environ.get("ASSFX", os.path.join(SKILL, "scripts")))
-from assfx.core import Doc, col, al, ms, lerp_hex, grad
-from assfx.lyrics import load
-from assfx.layout import Layout, Metric
-from assfx.anim import Karaoke, life, exit_vec
-from assfx.fx import FX
-from assfx import shapes as S
+from assfx.base.core import Doc, col, al, ms, lerp_hex, grad
+from assfx.base.lyrics import load
+from assfx.text.layout import Layout, Metric
+from assfx.text.anim import Karaoke, life, exit_vec
+from assfx.layer.fx import FX
+from assfx.draw import shapes as S
 
+# Agent Notes: 卡拉OK 制作工作区统一为 dev/<番名>/<歌曲名>/，整棵屏蔽 git; skill 只保留一份可复现示例，模板只留一个
+# 
+# 
+# Agent Notes: 卡拉OK 制作工作区统一为 dev/<番名>/<歌曲名>/，整棵屏蔽 git; skill 只保留一份可复现示例，模板只留一个
+# .agents/notes/implemented/process/2026-10-02-karaoke-dev-workspace.md
+# .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md
 FONTS = os.environ.get("ASSFX_FONTS", os.path.join(SKILL, "fonts"))
+# Agent Notes: 卡拉OK skill 按步骤重构成 steps/NN-<key>/ 的契约 + impl 结构
+# 
+# Agent Notes: 卡拉OK skill 按步骤重构成 steps/NN-<key>/ 的契约 + impl 结构
+# .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md
 lines = load(os.path.join(HERE, "lyrics.txt"))
 timing = json.load(open(os.path.join(HERE, "timing.json")))
 TM = {(m["line"], m["unit"], m["mora"]): m for m in timing}
@@ -243,10 +253,15 @@ def fx_autumn(f, ph, k):
 
 
 def fx_promise(f, ph, k):
+    """Agent Notes
+    .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
+    """
     R = f.rng
     lat = ph.chars[0]; se = seq(ph, "背中"); ma = seq(ph, "任せて")
     xa = lat["x"] + lat["w"] / 2 - 20; xb = ma[-1]["x"]
     y = JY + 40
+    # Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
+    # 
     th = S.thread((0, 0), (xb - xa, 0), 16, 3)
     t0 = lat["s"]; t1 = ma[-1]["s"] + 0.2
     f.shape(5, t0, k.t_out + 0.3, (xa + xb) / 2, y, draw=th, c1="#FF3B4A", a_peak=30, blur=1.2, c3="#FF7080", bord=1.2, a3=120,

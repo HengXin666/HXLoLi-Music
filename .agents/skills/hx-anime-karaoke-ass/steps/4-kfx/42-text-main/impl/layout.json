@@ -1,0 +1,4 @@
+{
+  "maxFiles": 12,
+  "reason": "这一步是「每句特效的一个设计维度 = 一份契约」的插拔结构: color/density/layers/thread/per-line/three-layers/design-table/motif-catalog/precise-shapes 各自回答一个正交问题(配色 / 密度 / 层次 / 句间关联 / 逐句写法 / 三层拆分 / 15 格设计表格式 / 母题目录 / 精密图形来源), 42-text-main/index.md 按维度点名何时读哪一份. 合并会让「改配色」和「改密度」重新挤进同一份长文, 读者就没法只读需要的那一段."
+}

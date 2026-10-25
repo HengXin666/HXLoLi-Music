@@ -2,9 +2,12 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/score_kfx.py`(新增)、
-  `steps/5-verify/16-blind-review/index.md`(新增)、`steps/5-verify/index.md`、
-  `steps/5-verify/13-validate/index.md`、`SKILL.md`
+Decision-ID: karaoke-blind-review-gate
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/kfx/score/score_kfx.py`
 
 ## Problem
 
@@ -12,20 +15,20 @@ Status: implemented
 **每一步都写了判据, 但没有一处把它们算成一张总分**。
 
 后果实测(2026-10-03, 漆黑子弹 v5): 门禁 6/6 全绿、主代理自评"效果更好了",
-用户看完连提三次 —— 「特效太多了」「图形很粗糙」「尺寸这么大」。
+用户看完连提三次  「特效太多了」「图形很粗糙」「尺寸这么大」。
 **判据不汇总 = 没有判据**; 而主代理是设计者, 会替自己的设计找理由。
 
 ## Decision
 
 两件事, 都在出片(`15-render`)之前强制:
 
-1. **`scripts/score_kfx.py`**: 把六组判据机械化, 出 `review/score.md` + 总分,
+1. **`scripts/kfx/score/score_kfx.py`**: 把六组判据机械化, 出 `review/score.md` + 总分,
    退出码 = 是否达 `--min-score`(默认 8.0)。
    A 设计表 15 格 / B 素材来源 / C 密度与层次 / D 色彩 / E 层的时间基 / F 生成器结构。
    每组阈值都标了出处(哪份 impl 的哪条), 改阈值必须同时改注释。
 
 2. **`steps/5-verify/16-blind-review`**: **必须开 fresh 子代理**独立复评。
-   - 只用 `subagent`(fresh), **不许用 `subagent_fork`** —— fork 继承本轮思考, 等于自查。
+   - 只用 `subagent`(fresh), **不许用 `subagent_fork`**  fork 继承本轮思考, 等于自查。
    - 给它的 prompt 里只放判据与路径, 不放设计意图、"我觉得"。
    - 它必须**自己跑** `score_kfx.py`, 不许采信主代理的分。
    - 分差 >= 1.5 或 PASS/FAIL 冲突时**以子代理为准**。
@@ -40,12 +43,12 @@ Status: implemented
 
 **它抓到的判据缺陷(比产物缺陷更重要)**:
 
-- **C3 是循环论证**: 脚本用"事件数前 25%"定义高潮, 再测"高潮/非高潮密度比" ——
+- **C3 是循环论证**: 脚本用"事件数前 25%"定义高潮, 再测"高潮/非高潮密度比" 
   分子分母由同一组数决定, 必然自证(脚本给 1.81 PASS, 按真实 L 等级复算只有 1.17 FAIL)。
   修法: 等级必须来自**设计表的 L 列**; 判据不能用自己的被测量来分组。
 - **E1 阈值低于随机基线, 无区分度**: 在 482 个音拍上随机撒 1840 个点, 落在 ±40ms 内的
   概率本来就是 **18.6%**(实测 20 次随机: 16.2%~19.9%), 而"<=10%"任何产物都必 FAIL。
-  修法: 改为**与随机基线比**(`< 基线 * 0.6`)。修后本工程实测 17.6% vs 基线 18.9% ——
+  修法: 改为**与随机基线比**(`< 基线 * 0.6`)。修后本工程实测 17.6% vs 基线 18.9% 
   结论从"必 FAIL"变成"**卡点层确实是随机的, 没跟音乐**", 这才是有信息量的判断。
 
 **它抓到的产物缺陷**: 卡点层 9 条硬指标 7 条 FAIL(起手缩放中位 5.2% 而应 18~40%;
@@ -56,14 +59,14 @@ Status: implemented
 ## Alternatives considered
 
 - **什么都不做, 靠主代理自查**: 最强理由是"能省一次子代理调用, 且主代理掌握全部上下文"。
-  否决(实测): 这正是当时的现状 —— 主代理在被用户连提三次之前, 一直认为"效果更好了"。
+  否决(实测): 这正是当时的现状  主代理在被用户连提三次之前, 一直认为"效果更好了"。
   设计者自查的结构性缺陷是**会为自己的选择找理由**, 多给上下文只是让它更会找理由。
 
 - **用 `subagent_fork` 而不是 fresh**: 最强理由是"fork 懂上下文, 能问更准的问题"。
   否决: fork 继承本轮思考过程, 它会带着主代理的结论去"验证", 而不是独立判断。
   盲审的价值在独立, 不在懂更多。
 
-- **判据写成文档让人读, 不做成脚本**: 否决。这正是"判据散在六份文档里"的失败模式 ——
+- **判据写成文档让人读, 不做成脚本**: 否决。这正是"判据散在六份文档里"的失败模式 
   每一步都写了, 没有一处算总分。能返回退出码的脚本才能挂进流程(与
   `2026-09-28-kfx-quality-redline.md` 的结论一致)。
 
@@ -73,10 +76,10 @@ Status: implemented
 
 ## Consequences
 
-- 新增 `scripts/score_kfx.py` 与 `steps/5-verify/16-blind-review/index.md`;
+- 新增 `scripts/kfx/score/score_kfx.py` 与 `steps/5-verify/16-blind-review/index.md`;
   `5-verify/index.md` 新建(此前这一组没有组级契约)。
 - 实跑: `score_kfx.py --project dev/漆黑子弹/トコハナ` → **2.4/10**, 退出码 1。
 - 盲审子代理报告在 `/tmp/blind/review-blind.md`(工程外的临时区, 不入库)。
-- 已知边界: A 组(设计表 15 格)在本工程**全 FAIL** —— 判据写了、表没改。
+- 已知边界: A 组(设计表 15 格)在本工程**全 FAIL**  判据写了、表没改。
   脚本对此如实报 FAIL 而不是跳过, 这是刻意的: 判据与产物不一致时,
   应该暴露不一致, 而不是选一个能过的。

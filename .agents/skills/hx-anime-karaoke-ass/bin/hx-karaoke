@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# hx-karaoke —— hx-anime-karaoke-ass skill 的唯一入口命令。
+# hx-karaoke  hx-anime-karaoke-ass skill 的唯一入口命令。
 #
 # 为什么需要它:
 #   `uv run <脚本>` 会给每个带 inline 依赖块的脚本建一个独立的脚本环境, 于是**每个新脚本
-#   首次运行都要现场装包** —— 实测一个依赖 scipy+matplotlib 的新脚本 `uv run` 首跑 14.5s,
+#   首次运行都要现场装包**  实测一个依赖 scipy+matplotlib 的新脚本 `uv run` 首跑 14.5s,
 #   而共享环境里已有这些包时本命令 0.0s。
 #   本命令改成"一个共享环境 + 一条路径", 顺便把 skill 的 scripts/ 放进 PYTHONPATH,
 #   于是 `hx-karaoke align_ctc.py ...` 与 `hx-karaoke make_ass.py ...` 用同一个解释器。
@@ -22,7 +22,7 @@
 #   hx-karaoke --scripts|--skill-root # 同上, 打印 scripts/ 与 skill 根
 #   hx-karaoke --help                 # 本帮助
 #
-# 脚本名先在 <skill>/scripts/ 下找, 再按原样当路径找 —— 所以
+# 脚本名先在 <skill>/scripts/ 下找, 再按原样当路径找  所以
 # `hx-karaoke scripts/ctc_read.py ...` 与 `hx-karaoke ctc_read.py ...` 都对。
 #
 # 环境本身由 <skill>/scripts/setup_env.py 建 (幂等), 位置在仓库之外:
@@ -36,9 +36,22 @@ STATE="${HX_KARAOKE_STATE:-${XDG_CACHE_HOME:-$HOME/.cache}/hx-anime-karaoke-ass}
 VENV="$STATE/venv"
 PY="$VENV/bin/python"
 
+# scripts/ 必须在 PYTHONPATH 上: 脚本之间按"同目录平铺"互相 import,
+# 且 setup/setup_env.py 里 from setup.env import ... 需要 scripts/ 作为包根。
+# 原先这一行在 --check 分支之后才 export, 于是 --check 必然 ModuleNotFoundError。
+export PYTHONPATH="$SKILL/scripts${PYTHONPATH:+:$PYTHONPATH}"
+
+# setup_env.py 的实际位置(历史上在 scripts/ 根下, 现移到 scripts/setup/): 两处都试
+_find_setup_env() {
+  for c in "$SKILL/scripts/setup/setup_env.py" "$SKILL/scripts/setup_env.py"; do
+    [ -f "$c" ] && { printf '%s\n' "$c"; return 0; }
+  done
+  printf '%s\n' "$SKILL/scripts/setup/setup_env.py"
+}
+
 if [ ! -x "$PY" ]; then
   echo "hx-karaoke: 还没有环境, 正在建 (一次性, 之后秒进)..." >&2
-  python3 "$SKILL/scripts/setup_env.py" >&2
+  python3 "$(_find_setup_env)" >&2
 fi
 
 case "${1:-}" in
@@ -86,13 +99,10 @@ PY
     ;;
   --check)
     shift
-    exec python3 "$SKILL/scripts/setup_env.py" --check "$@"
+    exec python3 "$(_find_setup_env)" --check "$@"
     ;;
 esac
 
-# scripts/ 上 PYTHONPATH: ctc_read 依赖 align_ctc, make_ass.py 依赖 assfx.*,
-# 全都按"同目录平铺"的假设 import, 所以与其让每个调用方自己插 path, 不如在这里给一次。
-export PYTHONPATH="$SKILL/scripts${PYTHONPATH:+:$PYTHONPATH}"
 export SKILL_ROOT="$SKILL"
 export ASSFX="${ASSFX:-$SKILL/scripts}"
 export ASSFX_FONTS="${ASSFX_FONTS:-$SKILL/fonts}"
@@ -101,30 +111,35 @@ export ASSFX_FONTS="${ASSFX_FONTS:-$SKILL/fonts}"
 case "$1" in
   python|python3)
     # 丢掉 "python" 这个词元, 用 venv 的解释器跑剩下的参数。
-    # 不能 exec "$@" —— 那会命中 PATH 上的系统 python (没有 torch), 而本命令的
+    # 不能 exec "$@"  那会命中 PATH 上的系统 python (没有 torch), 而本命令的
     # 全部意义就是"用那个装好的环境"。
     shift
     exec "$PY" "$@"
     ;;
   sh|bash)
-    # hx-karaoke bash render.sh ... —— 交给真 shell, shell 脚本不经过 python
+    # hx-karaoke bash render.sh ...  交给真 shell, shell 脚本不经过 python
     shift
     exec bash "$@"
     ;;
 esac
 
 resolve() {
-  # 依次找: 原样路径 -> <skill>/scripts/<名> -> <skill>/<名>
-  for c in "$1" "$SKILL/scripts/$1" "$SKILL/$1"; do
+  # 依次找: 原样路径 -> <skill>/scripts/<名> -> <skill>/scripts/**/<名> -> <skill>/<名>
+  # 第三项是分组目录: scripts/ 按职责拆成子目录后, 调用方仍可以只给脚本名。
+  local name="$1" c
+  for c in "$name" "$SKILL/scripts/$name" "$SKILL/$name"; do
     [ -f "$c" ] && { printf '%s\n' "$c"; return 0; }
   done
+  c="$(find "$SKILL/scripts" -name "${name##*/}" -not -path '*__pycache__*' -type f -print -quit 2>/dev/null)"
+  [ -n "$c" ] && { printf '%s\n' "$c"; return 0; }
   return 1
 }
 
 if ! target="$(resolve "$1")"; then
   echo "hx-karaoke: 找不到脚本 '$1'" >&2
-  echo "  已找过: 当前目录/相对路径, $SKILL/scripts/, $SKILL/" >&2
-  echo "  可用: $(cd "$SKILL/scripts" && ls *.py *.sh 2>/dev/null | tr '\n' ' ')" >&2
+  echo "  已找过: 当前目录/相对路径, $SKILL/scripts/, $SKILL/scripts/ 子目录, $SKILL/" >&2
+  echo "  可用: $(cd "$SKILL/scripts" && find . -type f \( -name '*.py' -o -name '*.sh' \) \
+          -not -path '*__pycache__*' | sed 's|^\./||' | sort | tr '\n' ' ')" >&2
   exit 2
 fi
 shift

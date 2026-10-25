@@ -7,7 +7,7 @@
 # ]
 # ///
 """
-卡拉OK 特效字幕生成器模板 —— **五层结构**.
+卡拉OK 特效字幕生成器模板  **五层结构**.
 
 复制到工程目录(与 lyrics.txt / timing.json / calib.json 同级)后修改:
   1) ASSFX 环境变量(hx-karaoke 会导出)与字体文件
@@ -28,7 +28,6 @@
 查真实族名: `hx-karaoke render_octopus.py <ass> --probe`.
 
 完整示例: examples/mushoku_ed1/make_ass.py(单层手写规划 + 卡片);
-五层的实战对照: dev/漆黑子弹/トコハナ/ 与它的 review/v4-vs-v5.md.
 """
 import json, math, os, random, sys
 
@@ -37,15 +36,15 @@ SKILL_SCRIPTS = os.environ.get("ASSFX", "")  # 必填: 指向本 skill 的 scrip
 if not SKILL_SCRIPTS:
     sys.exit("请先设置 ASSFX 指向本 skill 的 scripts/ 目录, 例如: export ASSFX=~/.agents/skills/hx-anime-karaoke-ass/scripts")
 sys.path.insert(0, SKILL_SCRIPTS)
-from assfx.core import Doc, col, al, ms
-from assfx.lyrics import load
-from assfx.layout import Layout, Metric
-from assfx.gen import Generator, find, seq, span, mid, flicker, sway   # 出入场规划/卡片/查字工具
-from assfx.fx import FX
-from assfx import shapes as S
-from assfx.beat import (MusicEvents, beat_scatter, beat_pulse, beat_drop, beat_sink, BEAT_COLORS)
-from assfx.image import put_image, pop_image, side_slots, check_images
-from assfx.color import Palette, Scheme, make_hl_color, find_break, fold
+from assfx.base.core import Doc, col, al, ms
+from assfx.base.lyrics import load
+from assfx.text.layout import Layout, Metric
+from assfx.layer.gen import Generator, find, seq, span, mid, flicker, sway   # 出入场规划/卡片/查字工具
+from assfx.layer.fx import FX
+from assfx.draw import shapes as S
+from assfx.layer.music.beat import (MusicEvents, beat_scatter, beat_pulse, beat_drop, beat_sink, BEAT_COLORS)
+from assfx.draw.image import put_image, pop_image, side_slots, check_images
+from assfx.text.color import Palette, Scheme, make_hl_color, find_break, fold
 
 FONTS = os.environ.get("ASSFX_FONTS", os.path.join(HERE, "fonts"))
 lines = load(os.path.join(HERE, "lyrics.txt"))
@@ -132,15 +131,19 @@ FXMAP = {k[3:]: v for k, v in globals().items() if k.startswith("fx_")}
 
 G = Generator(doc, L, lines, TM)          # lead=0.8: 最早提前 0.8s 入场
 
-# 实测 33 句 band 的并集 —— 卡点/背景/图片三层用这一个 band 登记
+# 实测 33 句 band 的并集  卡点/背景/图片三层用这一个 band 登记
 BAND_ALL = None   # 首次 render 后从 G.ks 反解; 不想反解就直接写 (x0,y0,x1,y1)
 
 
 # ================================================================
 # 卡点层 / 背景层 / 图片层: 独立时钟, 按段落遍历(不跟句)
 # ================================================================
+# Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
+# 
 def beat_layer(f, t0, t1):
-    """跟音乐事件网格走. 规格(起手 18~40%, 同刻多色, 存活密度)见 steps/4-kfx/44-beat."""
+    """
+    .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
+跟音乐事件网格走. 规格(起手 18~40%, 同刻多色, 存活密度)见 steps/4-kfx/44-beat."""
     lv, col = seg_of((t0 + t1) / 2)
     n = beat_pulse(f, ME, t0, t1, level=lv, colors=col, layer=0, every=4 if lv < 2 else 2)
     n += beat_scatter(f, ME, t0, t1, level=lv, colors=col,
@@ -193,12 +196,17 @@ def title_card():
 
 
 def main(out):
+    """Agent Notes
+    .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md
+    """
     global BAND_ALL, ME
     try:
+        # Agent Notes: skill 只保留一份可复现示例，模板只留一个
+        # 
         ME = MusicEvents.load(os.path.join(HERE, "review", "music-events.json"))
     except Exception:
         ME = None
-        print("[warn] 没有 review/music-events.json —— 卡点层会跳过. 先跑: hx-karaoke music_events.py ...")
+        print("[warn] 没有 review/music-events.json  卡点层会跳过. 先跑: hx-karaoke music_events.py ...")
 
     # 句内多色: 段落色系 + 声部色. voices.json 由 voices.py 生成; 没有就只按色域游走
     try:

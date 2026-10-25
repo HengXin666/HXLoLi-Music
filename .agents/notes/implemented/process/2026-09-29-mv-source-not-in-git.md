@@ -2,14 +2,19 @@
 
 Status: implemented
 
+Decision-ID: mv-source-not-in-git
+
 - **引入于**: <short-sha>
 - **引用落点**: `.gitignore` 末尾的 `*.mp4 / *.mkv / *.webm` 三行注释块
   (它约束的声明是 `static/music/**/*.mp4` 的存在方式: 本地有、git 里没有)
-- 影响: `HXLoLi-Music/.gitignore` 新增 3 行; `static/music/` 下 5 份 mp4 变为未追踪
+
+## Code
+
+- `.agents/skills/hx-kfx/scripts/tools/mv_bands.py`
 
 ## Problem
 
-做 ASS 特效字幕的位置必须按真实 MV 画面算 —— 拿封面替代不成立, 实测缘之空 OP 的画面亮度
+做 ASS 特效字幕的位置必须按真实 MV 画面算  拿封面替代不成立, 实测缘之空 OP 的画面亮度
 中位跨度是 0.002 (纯黑) 到 0.982 (纯白), 而封面只覆盖其中一个瞬间; 23 帧里 15 帧在整个画面
 任何位置都放不下可读的白字。所以本地必须有 MV。
 
@@ -19,7 +24,7 @@ Status: implemented
    一份 11.8MB 的 ASS, 引入百兆级二进制会把仓库体积抬一个量级。
 2. **可重取**: 它们有稳定的公开来源 (B 站), 且取法已写进
    `HXLoLi/.agents/skills/hx-kfx/SKILL.md` 的「第 0 步」。丢失可重下, 不需要版本控制保命。
-3. **无衍生价值**: 仓库对它们的用法只有一种 —— 逐帧测亮度分布求安全区。测完就只剩占位。
+3. **无衍生价值**: 仓库对它们的用法只有一种  逐帧测亮度分布求安全区。测完就只剩占位。
 
 ## Decision
 
@@ -35,7 +40,7 @@ Status: implemented
 最强的理由: `git status` 里它们本来就只是 `??`, 只要没人 `git add .` 就不会进仓库,
 加 ignore 反而多一行要维护的配置。
 
-否决理由: 未追踪不等于安全 —— `git add .` / `git add -A` / 图形客户端的一键全选都会把它们带进去,
+否决理由: 未追踪不等于安全  `git add .` / `git add -A` / 图形客户端的一键全选都会把它们带进去,
 而这类误提交要到 push 之后、仓库已经胖了才发现。ignore 是把"靠人记得"换成"工具保证"。
 
 ### 压缩到更低码率 (如 crf 32 / 640 宽) 后进仓库
@@ -57,5 +62,5 @@ Status: implemented
 ## Consequences
 
 - 换机器或重新 clone 后 `static/music/` 下没有 mp4, 做特效前需按 SKILL.md 的「第 0 步」重取。
-- `mv_bands.py` 在找不到视频时会直接报取不到时长并退出 2, 不会静默用封面替代 ——
+- `mv_bands.py` 在找不到视频时会直接报取不到时长并退出 2, 不会静默用封面替代 
   这一点是刻意的: 静默降级会让"位置未经真实画面验证"这件事从交付说明里消失。

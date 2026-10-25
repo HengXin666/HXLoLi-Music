@@ -1,33 +1,38 @@
-# Agent Note: 背景层必须读画面 —— 镜头时间线与"同向率"判据
+# Agent Note: 背景层必须读画面  镜头时间线与"同向率"判据
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/scene_timeline.py`(新增)、
-  `scripts/assfx/bg.py`(新增)、`steps/4-kfx/45-bg/index.md`
+Decision-ID: karaoke-bg-from-scene
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/music/bg.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/source/scene_timeline.py`
 
 ## Problem
 
 `45-bg` 的契约写着背景层"由**镜头 / 情感 / 番剧符号**三者驱动", 但在此之前
-**只有情感那一维是真的** —— 段落表是手写的, 镜头那一维没有可读的数据,
+**只有情感那一维是真的**  段落表是手写的, 镜头那一维没有可读的数据,
 番剧符号只有手选的主母题。
 
 实测证据(v5 生成器第一次跑): 背景层 290 条, 全部是"每 0.6s 一颗固定色族的颗粒",
 色温**不随画面变化**。而同一份工程里, MV 的段落主色是明确可测的:
 A 段画面 rgb `[0,49,110]`(冷蓝)、B 段 `[215,0,3]`(橙红)。
 
-这违反 `45-bg` 自己写的判据: 「把背景层事件的色温均值, 与该句覆盖镜头的抽帧主色做符号比对 ——
+这违反 `45-bg` 自己写的判据: 「把背景层事件的色温均值, 与该句覆盖镜头的抽帧主色做符号比对 
 同号才算"背景跟了画面"」。判据写了, **但没人能执行它**, 因为镜头主色不是机器可读的。
 
 ## Decision
 
-新增 `scripts/scene_timeline.py`: 按 `--step`(默认 1s)从 MV 抽帧, 用**中位色**
-(不是均值 —— 均值会被黑边与字幕拉偏)算 HSV, 按相邻采样的 HSV 距离切镜头段,
+新增 `scripts/source/scene_timeline.py`: 按 `--step`(默认 1s)从 MV 抽帧, 用**中位色**
+(不是均值  均值会被黑边与字幕拉偏)算 HSV, 按相邻采样的 HSV 距离切镜头段,
 产出 `review/scene-timeline.json`:
 
     shots[]   {t0,t1,hue,sat,val,rgb,is_dark}   镜头段; t0 就是"对齐镜头切换"用的时刻
     per_sec   秒 -> [hue, sat, val]             背景层直接查
 
-新增 `scripts/assfx/bg.py`: `SceneTimeline`(at/shot/cuts/is_bright) +
+新增 `scripts/assfx/layer/music/bg.py`: `SceneTimeline`(at/shot/cuts/is_bright) +
 `bg_drift`(铺满段落的低存在感颗粒, `follow_hue` 让色温跟着画面) +
 `bg_frames`(镜头切换处的整片柔光, 量级按 `doc/KFX-RULES.md` 压到 a_peak 60 / blur 26)。
 
@@ -41,7 +46,7 @@ A 段画面 rgb `[0,49,110]`(冷蓝)、B 段 `[215,0,3]`(橙红)。
 ## Alternatives considered
 
 - **什么都不做, 靠人看抽帧写死色温**: 最强理由是"人眼判断色温比脚本准, 且脚本要多扫一遍视频".
-  否决(实测): 这就是当时的现状 —— 段落表是手写的, 但**句级**的色温仍然跟不了画面
+  否决(实测): 这就是当时的现状  段落表是手写的, 但**句级**的色温仍然跟不了画面
   (一个段落里 MV 会切好几次镜头)。而且手写的东西不可复算: 换一首歌要从头看一遍。
   脚本扫 261 秒的 MV 用了几十秒, 产物 11.9 KB, 可反复重跑。
 
@@ -52,20 +57,20 @@ A 段画面 rgb `[0,49,110]`(冷蓝)、B 段 `[215,0,3]`(橙红)。
 
 - **在 Python 里用 OpenCV 做镜头切分**: 最强理由是"直方图差异法更专业"。
   否决: 本机没有 cv2, 而 HSV 距离法在本工程实测切出 39 段、暗场 15 段(38%),
-  与 `anime.notes.md` 手写的段落结构对得上 —— 精度够用, 不值得为此加一个重依赖。
+  与 `anime.notes.md` 手写的段落结构对得上  精度够用, 不值得为此加一个重依赖。
 
 - **把 `is_bright` 直接拿去改字号/描边**: 否决: 那是 `Karaoke` 的 `bright` 开关
   (已有机制, 走 `TH` 主题), 背景层不该越权改文字样式。这里只暴露判定, 由设计决定怎么用。
 
 ## Consequences
 
-- 新增两个文件: `scripts/scene_timeline.py`、`scripts/assfx/bg.py`。
+- 新增两个文件: `scripts/source/scene_timeline.py`、`scripts/assfx/layer/music/bg.py`。
 - 实跑: 漆黑子弹 260.6s 的 MV → 261 帧采样 / 39 个镜头段 / 暗场 15 段 / 亮场 8 段, 11.9 KB。
-- 交叉验证: 脚本算出的段落主色与 `anime.notes.md` 手写的段落色族**独立地对上** ——
+- 交叉验证: 脚本算出的段落主色与 `anime.notes.md` 手写的段落色族**独立地对上** 
   A 段 `cyan`、B 段 `sunset`, 两处 rgb 与 hue 都对。
 - v5 重做后: 背景层 290 → 315 条, **色相同向率 93%**。
 - 已知边界: `--step 1.0` 对快速剪辑的 MV 会漏掉短镜头(<1s)。
   这类片子把步长降到 0.5, 代价是扫描时间翻倍。
 - 量"同向率"时有个必须避开的坑: ASS 颜色是 `&HBBGGRR&`, 要按 BGR 解析再转 HSV;
-  且正则该写成 `\\1c&H([0-9A-F]{6})&` —— **不要写 `&H00` 前缀**,
+  且正则该写成 `\\1c&H([0-9A-F]{6})&`  **不要写 `&H00` 前缀**,
   实测颜色是 `&HD1854F&` 这种 6 位形式, 写死 `00` 会一条都匹配不到(得出 0/0 的假结果)。

@@ -1,5 +1,6 @@
 {
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf"
+        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/music/fonts/kfx-subset.ttf"
     ]
 }

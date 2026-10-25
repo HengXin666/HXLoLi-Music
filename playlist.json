@@ -23,15 +23,29 @@
         ]
     },
     {
-        "id": "c44f6dfd9363",
-        "title": "ツナグキズナ (相连的羁绊)",
-        "artist": "Team.ねこかん[猫]",
-        "audioUrl": "/static/music/ヨスガノソラ/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).mp3",
-        "assUrl": "/static/music/ヨスガノソラ/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).ass",
+        "id": "cea8f6c4f236",
+        "title": "ろりこんでよかった~ (是萝莉控真是太好了)",
+        "artist": "ちぃむdmp☆",
+        "audioUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.flac",
+        "assUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.ass",
         "assFonts": [
-            "TakaoPGothic"
+            "Cormorant Garamond Light",
+            "Lolita",
+            "Mochiy Pop One"
         ],
-        "coverUrl": "/static/music/ヨスガノソラ/Team.ねこかん[猫] - ツナグキズナ (相连的羁绊).jpg"
+        "coverUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.jpg"
+    },
+    {
+        "id": "fe7c6cdb20de",
+        "title": "eufonius - 比翼の羽根 (OP)",
+        "artist": "Unknown",
+        "audioUrl": "/static/music/ヨスガノソラ/eufonius - 比翼の羽根 (OP).mp3",
+        "assUrl": "/static/music/ヨスガノソラ/eufonius - 比翼の羽根 (OP).ass",
+        "assFonts": [
+            "Cormorant Garamond Light",
+            "LXGW WenKai Medium",
+            "Shippori Mincho B1"
+        ]
     },
     {
         "id": "ed5861594af4",
@@ -40,10 +54,22 @@
         "audioUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.mp3",
         "assUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.ass",
         "assFonts": [
-            "Sarasa Gothic J Semibold",
-            "更纱黑体 SC Semibold"
+            "Noto Sans CJK JP",
+            "Noto Sans CJK SC"
         ],
         "coverUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.jpg"
+    },
+    {
+        "id": "585d6f980dae",
+        "title": "果てなき風の軌跡さえ_风祝",
+        "artist": "Unknown",
+        "audioUrl": "/static/music/东方/果てなき風の軌跡さえ_风祝.mp3",
+        "assUrl": "/static/music/东方/果てなき風の軌跡さえ_风祝.ass",
+        "assFonts": [
+            "Noto Sans CJK JP",
+            "Noto Sans CJK SC"
+        ],
+        "coverUrl": "/static/music/东方/果てなき風の軌跡さえ_风祝.jpg"
     },
     {
         "id": "82230e451624",
@@ -51,23 +77,6 @@
         "artist": "今井麻美",
         "audioUrl": "/static/music/可塑性的记忆/朝焼けのスターマイン (朝霞星火) - 今井麻美.mp3",
         "coverUrl": "/static/music/可塑性的记忆/朝焼けのスターマイン (朝霞星火) - 今井麻美.jpg"
-    },
-    {
-        "id": "344d7a79bc89",
-        "title": "いとうかなこ - ファティマ ",
-        "artist": "Unknown",
-        "audioUrl": "/static/music/命运石之门/いとうかなこ - ファティマ .mp3",
-        "assUrl": "/static/music/命运石之门/いとうかなこ - ファティマ .ass",
-        "assFonts": [
-            "@FOT-Greco Std B",
-            "@方正楷体_GBK",
-            "FOT-MatisseV Pro B",
-            "FOT-TsukuGo Pro B",
-            "FOT-TsukuMin Pro E",
-            "方正中粗雅宋_GBK",
-            "方正楷体_GBK",
-            "方正韵动中黑_GBK"
-        ]
     },
     {
         "id": "843f7977fe25",
@@ -124,10 +133,23 @@
         "audioUrl": "/static/music/无职转生/大原ゆい子 - オンリー.mp3",
         "assUrl": "/static/music/无职转生/大原ゆい子 - オンリー.ass",
         "assFonts": [
-            "Sarasa Gothic J Semibold",
-            "更纱黑体 SC Semibold"
+            "Cormorant Garamond Light",
+            "LXGW WenKai Medium",
+            "Shippori Mincho B1"
         ],
         "coverUrl": "/static/music/无职转生/大原ゆい子 - オンリー.jpg"
+    },
+    {
+        "id": "216f6d500c45",
+        "title": "トコハナ (常花)",
+        "artist": "やなぎなぎ",
+        "audioUrl": "/static/music/漆黑子弹/やなぎなぎ - トコハナ (常花).mp3",
+        "assUrl": "/static/music/漆黑子弹/やなぎなぎ - トコハナ (常花).ass",
+        "assFonts": [
+            "Cormorant Garamond Light",
+            "LXGW WenKai Medium",
+            "Shippori Mincho B1"
+        ]
     },
     {
         "id": "cb0528c0674f",
@@ -140,5 +162,29 @@
             "Meiryo"
         ],
         "coverUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.jpg"
+    },
+    {
+        "id": "26b41a863d99",
+        "title": "EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2)",
+        "artist": "Unknown",
+        "audioUrl": "/static/music/罪恶王冠/EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2).mp3",
+        "assUrl": "/static/music/罪恶王冠/EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2).ass",
+        "assFonts": [
+            "Cormorant Garamond Light",
+            "Lolita"
+        ]
+    },
+    {
+        "id": "5a7fc0882777",
+        "title": "adrenaline!!!",
+        "artist": "TrySail",
+        "audioUrl": "/static/music/黄漫老师/adrenaline!!! - TrySail.flac",
+        "assUrl": "/static/music/黄漫老师/adrenaline!!! - TrySail.ass",
+        "assFonts": [
+            "Cormorant Garamond",
+            "Shippori Mincho B1",
+            "霞鹜文楷 Medium"
+        ],
+        "coverUrl": "/static/music/黄漫老师/adrenaline!!! - TrySail.jpg"
     }
 ]

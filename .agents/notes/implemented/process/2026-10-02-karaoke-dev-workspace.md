@@ -2,19 +2,22 @@
 
 Status: implemented
 
-- 影响: `.gitignore`（新增 `/dev/` 与旧位置兜底）、`steps/00-setup/index.md`（新增「工作区」
-  与「发布」两节）；把 7 个工程从仓库根/`demo/` 迁进 `dev/<番名>/<歌曲名>/`；
-  修好 5 个 `make_ass.py` 的 skill 路径解析与 1 个字体软链
+Decision-ID: karaoke-dev-workspace
+
 - 决策依据: 用户原话「给当前skill界定一个工作区吧, HXLoLi-Musilc/dev/歌曲名, 然后把这个工作室的
   内容全部屏蔽git. 然后等做好了之后，再把它移动到 static/ 对应的位置里面，并且配上音乐文件，
   然后走一波 make.sh 生成，确保可用」；形态与迁移范围经确认选
   「`dev/<番名>/<歌曲名>/`」+「现有 5 个根级工程全部搬进来」
 
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py`
+
 ## Problem
 
 制作现场一直散在仓库根: `demo/`（4 个子目录）、`漆黑子弹/`、`proj-touhou/`、`lolicon-proj/`、
 `guilty-crown-op2-pv/`，共 **7.6GB**。它们全都**未被 git 忽略**（`git status` 里是 `??`），
-只靠"记得别 `git add .`"来避免误提交 —— 一次手滑就会把 5.8GB 的 `proj-touhou/`
+只靠"记得别 `git add .`"来避免误提交  一次手滑就会把 5.8GB 的 `proj-touhou/`
 （含一个 5.5GB 的旧 `.venv-karaoke`）推进仓库。
 
 同时命名无章法: `proj-tokohana`、`guilty-crown-op2-pv`、`tsunagukizuna` 三种风格并存，
@@ -22,7 +25,7 @@ Status: implemented
 
 发布链路（`make.sh` → `playlist.json` → 前端）本身是能用的，但没有写下来的约定:
 ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.stem + .ass` 找），
-`title` 取 mp3 的 `TIT2`、`artist` 取 `TPE1` —— 这些只能靠读 `py/music/` 的源码才知道。
+`title` 取 mp3 的 `TIT2`、`artist` 取 `TPE1`  这些只能靠读 `py/music/` 的源码才知道。
 
 ## Decision
 
@@ -54,7 +57,7 @@ ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.ste
   否决：工程要引用 skill 的 `scripts/` 与 `fonts/`，放仓库外就必然要写绝对路径或另设
   环境变量；而 ass 的发布目标 `static/` 在仓库内，放外面会让"做完就搬过去"变成跨仓库操作。
 - **只搬还没做完的工程，已完成的不动**：最强理由是「已发布的产物留在原地最省事」。
-  否决：那会同时存在两套目录约定，下一个人仍然要判断"这个工程算做完了吗" ——
+  否决：那会同时存在两套目录约定，下一个人仍然要判断"这个工程算做完了吗" 
   而判断标准本身就是本次要消掉的东西。一起搬之后，位置本身就说明了归属。
 - **给工作区加一个 `README.md` 说明**：最强理由是「不写进 skill 的话，下次还得问」。
   否决：真正会被读到的地方是 `steps/00-setup/index.md`（走流程时必读），
@@ -67,13 +70,13 @@ ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.ste
   本次修了 5 个 `make_ass.py` + 1 个字体软链；`ASSFX` 的约定已写进 skill，避免复发。
   踩到并已修的一个具体坑：把生成器里的 `SKILL` 改名成 `_SKILL_SCRIPTS` 时忘了
   `FONTS = os.environ.get("ASSFX_FONTS", os.path.join(SKILL, "fonts"))` 还在用 `SKILL`，
-  三个工程立刻 `NameError` —— 所以新写法**同时定义** `_SKILL_SCRIPTS` 与 `SKILL`。
+  三个工程立刻 `NameError`  所以新写法**同时定义** `_SKILL_SCRIPTS` 与 `SKILL`。
 - 无损性已实测：5 个生成器在 `dev/` 下全部能跑；`トコハナ` 重生成的 ass 与迁移前
   **md5 完全相同**（`8a66e35cff41b17396e7e04277553c9b`）。
 - 收益：发布的三个隐性约定（ass 与音频同名、`TIT2`/`TPE1`、目录级 `fonts/`）第一次写下来，
   下次不用再读 `py/music/` 的源码去发现它们。
 - **遗留（未处理，需人工决定）**：`dev/` 7.6GB 里有 **5.5GB** 是
-  `dev/东方/果てなき風の軌跡さえ/.venv-karaoke/` —— 工程自建的 venv，正是
+  `dev/东方/果てなき風の軌跡さえ/.venv-karaoke/`  工程自建的 venv，正是
   `hx-karaoke` 共享环境要取代的东西。它现在只被同目录的 `NOTES.md` 当历史命令引用
   （那些命令已过时，应改用 `hx-karaoke <脚本>`）。因为删除 5.5GB 属破坏性且不在本次指令范围内，
   **没有动它**；确认无用后删掉即可把 `dev/` 从 7.6GB 降到约 2.1GB。
@@ -86,4 +89,4 @@ ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.ste
   + 目录级 `fonts/` → `bash make.sh` → `playlist.json` 13 首含新曲、
   `title=トコハナ (常花)` / `artist=やなぎなぎ`；起服务实测
   `audioUrl` 200/5259618B、`assUrl` 200/3323020B、`static/info/216f6d500c45.json` 200。
-- `node .agents/skills/hx-agent-notes/scripts/verify-all.ts` 全绿。
+- `node .agents/skills/hx-agent-notes/scripts/cli/verify-all.ts` 全绿。

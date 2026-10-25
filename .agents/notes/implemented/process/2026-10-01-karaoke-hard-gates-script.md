@@ -2,8 +2,12 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/check_gates.py`（新增）、
-  `SKILL.md`（新增「强制门禁」一节与规则 13）、`steps/00-setup/index.md` 第 10 步。
+Decision-ID: karaoke-hard-gates-script
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
 
 ## Problem
 
@@ -17,11 +21,11 @@ Status: implemented
 
 ## Decision
 
-新增 `scripts/check_gates.py`，把必做步骤落成**文件存在性 + 内容强度**两类判据，退出码非 0 即不许渲染：
+新增 `scripts/gate/check_gates.py`，把必做步骤落成**文件存在性 + 内容强度**两类判据，退出码非 0 即不许渲染：
 
 - `lyrics.source.json` 存在，来源级别只能是 `network` 或 `manual`（画面截图识别不合法），
   且 `manual` 必须带 `why`（否则区分不出「查过没有」与「懒得查」）。
-- `anime.background.json` 存在，且 summary 非空、角色数 ≥ `--min-chars`（默认 6）—— 低于此说明抓错了条目。
+- `anime.background.json` 存在，且 summary 非空、角色数 ≥ `--min-chars`（默认 6） 低于此说明抓错了条目。
 - `lyrics.txt` 的振假名覆盖率 ≥ `--min-ruby`（默认 80%）。
 - `timing.json` 存在，且**音拍数等于 `lyrics.txt` 的音拍数**（用 skill 自己的歌词解析器算，避免两套口径）。
 - `offset.json` 存在，且 `verdict` 不得是「离散度过大」（语音校准测出的时间轴差量，见歌词来源那篇 note）。
@@ -33,7 +37,7 @@ Status: implemented
 ## Alternatives considered
 
 - **什么都不做（继续靠正文祈使句）**: 最强理由是「这些步骤的价值显而易见，agent 会照做」。
-  否决：本次改动前的行为就是证据 —— 三处「必做」没有一处留下过可查的痕迹。
+  否决：本次改动前的行为就是证据  三处「必做」没有一处留下过可查的痕迹。
 - **把门禁写进 validate_ass.py**: 最强理由是「少一个脚本，出片路径上就一个检查点」。
   否决：validate_ass 的输入是 ASS，它跑的时候歌词来源、设定考据、人工校时都已经发生过了，
   此时报错只能让人回头重做；门禁必须在**每一步之前**能被调用，所以与它分开。
@@ -45,7 +49,7 @@ Status: implemented
 ## Consequences
 
 - 三个 example 工程按新规补齐证据后，`--stage render` 全部 PASSED（各 7 项）。
-  它们在补齐前分别是 2 项 FAIL（其后加入 `offset.json` 判据时又各自 FAIL 一次）—— 门禁确实能区分「做过」与「没做」。
+  它们在补齐前分别是 2 项 FAIL（其后加入 `offset.json` 判据时又各自 FAIL 一次） 门禁确实能区分「做过」与「没做」。
 - 已存在的旧工程是历史产物，缺证据文件时会被判 FAIL；补证据走 `find_lyrics.py --adopt` 与
   `fetch_anime_bg.py --register`，两者都强制写 why，不提供静默放行。
 - 门禁不认识 `timing_grid.json` 这条可选路径的中间产物，只认最终 `timing.json`。

@@ -2,9 +2,15 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/device.py`（`pick_device` 默认值），
-  以及 `align_ctc.py` / `grid_align.py` / `ctc_read.py` / `separate_vocals.py` 的设备入口；
-  新增 `scripts/device_check.py`；`SKILL.md` 与 `steps/00-setup/index.md` 的 GPU 说明段。
+Decision-ID: karaoke-gpu-default-auto
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/align/separate_vocals.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/ctc/ctc_read.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/grid/grid_align.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/setup/device.py`
 
 ## Problem
 
@@ -13,7 +19,7 @@ Status: implemented
 
 这个理由在本次改动前从未被测量过。实测（RTX 4080 Laptop，12s 人声片段，同一份权重）：
 logits 最大绝对差 0.048，**逐帧 argmax 一致率 100.0000%**，贪心解码出的 34 个发音尖峰**完全同序同字**，
-帧位移最大 0.000s。也就是说「设备会改变对齐结果」这个前提在本工程的判据上不成立 ——
+帧位移最大 0.000s。也就是说「设备会改变对齐结果」这个前提在本工程的判据上不成立 
 对齐用的是后验的 argmax 边界，不是浮点值本身。
 
 代价却是实测的：整曲 3~5 分钟要切成几十个块逐块前向，CPU 上这一步是整条流水线里最长的等待，
@@ -22,8 +28,8 @@ logits 最大绝对差 0.048，**逐帧 argmax 一致率 100.0000%**，贪心解
 ## Decision
 
 默认值从 `cpu` 改为 `auto`：探测到 CUDA 就用 GPU，否则回 CPU；`ASSFX_DEVICE=cpu` 与 `--device cpu`
-仍可关掉。可复现性不再是默认行为，而是一个**可验证的开关**：新增 `scripts/device_check.py`，
-它把同一段音频在两种设备上各跑一遍，输出逐帧一致率、尖峰帧位移与解算耗时，判据写在输出里 ——
+仍可关掉。可复现性不再是默认行为，而是一个**可验证的开关**：新增 `scripts/setup/device_check.py`，
+它把同一段音频在两种设备上各跑一遍，输出逐帧一致率、尖峰帧位移与解算耗时，判据写在输出里 
 位移 ≤1 帧(20ms) 就用 GPU 出终稿，超过就用 `ASSFX_DEVICE=cpu` 复跑一次。
 
 四个入口脚本原来各自 `pick_device()`，现在都能被 `--device` 单独覆盖，`grid_align.emissions()`
@@ -43,6 +49,6 @@ logits 最大绝对差 0.048，**逐帧 argmax 一致率 100.0000%**，贪心解
 ## Consequences
 
 - 有 CUDA 的机器上对齐/分离默认走 GPU；`separate_vocals.py` 仍捕获 OOM 退回 CPU，并打印实际设备与峰值显存。
-- 短片段上 CUDA 因上下文初始化可能反而更慢（实测 12s 片段 cuda 8.1s vs cpu 3.1s）——
+- 短片段上 CUDA 因上下文初始化可能反而更慢（实测 12s 片段 cuda 8.1s vs cpu 3.1s）
   这条已写进 `steps/00-setup/index.md`，避免有人用片段耗时否定整曲收益。
 - 想复现历史工程：`ASSFX_DEVICE=cpu` 跑一次即可；`device_check.py` 能给出那次复现是否必要的证据。

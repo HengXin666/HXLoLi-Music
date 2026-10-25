@@ -10,4 +10,7 @@ dependencies = [
     "py7zr>=1.1.0",
     "requests>=2.32.5",
     "uvicorn[standard]>=0.34.0",
+    # py/ass/check_contrast.py  WCAG 对比度测量, 见 doc/KFX-RULES.md
+    "numpy>=2.0",
+    "pillow>=11.0",
 ]

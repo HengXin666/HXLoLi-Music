@@ -2,12 +2,16 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/examples/`（5 个工程 → 只留 `mushoku_ed1`）、
-  `templates/`（`lyrics_example.txt` 删除 → 只留 `make_ass_template.py`）、
-  `SKILL.md` 的「示例与模板」节
+Decision-ID: karaoke-layout-consolidation
+
 - 决策依据: 用户原话「示例仅保留 templates/make_ass_template.py，删除其他示例，仅留下 examples/mushoku_ed1」
-- 相关: [karaoke-runtime-artifacts-out-of-skill](./2026-10-02-karaoke-runtime-artifacts-out-of-skill.md)
-  （工程往哪搬、缓存怎么改）；[karaoke-steps-restructure](./2026-10-02-karaoke-steps-restructure.md)
+- 相关: [karaoke-runtime-artifacts-out-of-skill](2026-10-02-karaoke-runtime-artifacts-out-of-skill.md)
+  （工程往哪搬、缓存怎么改）；[karaoke-steps-restructure](2026-10-02-karaoke-steps-restructure.md)
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py`
+- `.agents/skills/hx-anime-karaoke-ass/templates/make_ass_template.py`
 
 ## Problem
 
@@ -17,13 +21,13 @@ Status: implemented
 两个具体问题：
 
 1. **体量最大的那个恰好是最没有示例价值的。** `blackbullet_ed` 的 726MB 里，
-   172 个文件是 `review/` 下的抽帧 PNG/JPG、`stems/` 的 wav、`out/` 的成片 ——
+   172 个文件是 `review/` 下的抽帧 PNG/JPG、`stems/` 的 wav、`out/` 的成片 
    它们记录的是"当时那个人看到了什么"，不是"这个 skill 怎么用"。
    真正有示例价值的是 `make_ass.py` + `lyrics.txt` + `timing.json` + `anime.notes.md`，
    合计不到 100KB。
 2. **`templates/lyrics_example.txt` 与 `examples/mushoku_ed1/lyrics.txt` 逐字节相同。**
    它是被 `cp` 出来当"模板"的，而真正的模板价值（标注语法怎么写的说明）已经在
-   `steps/02-lyrics/impl/format.md` 里 —— 于是这份副本只带来一个问题：
+   `steps/02-lyrics/impl/format.md` 里  于是这份副本只带来一个问题：
    两者会各自漂移，读者不知道哪份是权威（`SKILL.md` 只引用了它，没有任何脚本或流程引用）。
 
 ## Decision
@@ -41,7 +45,7 @@ Status: implemented
 - **什么都不做，五个示例都留着**：最强理由是「示例多，模型能见到更多写法差异」
   （`yosuga_ed` 有 180BPM 齐唱 + `grid_align --parity`，`mushoku_ed1` 没有）。
   否决：那点差异已经在 `steps/07-grid/index.md`（网格重对齐）与
-  `steps/11-design/impl/motif-catalog.md` §4b（两种风格对照表）里被**写成判据**了 ——
+  `steps/11-design/impl/motif-catalog.md` §4b（两种风格对照表）里被**写成判据**了 
   判据比示例更容易被读到，也不会随示例一起被删。而保留它们的代价是 726MB 里
   99% 是噪声，且它们全在 git 里（165 个文件）。
 - **只删 `blackbullet_ed`，其余四个都留**：最强理由是「小的四个加起来才 450KB」。

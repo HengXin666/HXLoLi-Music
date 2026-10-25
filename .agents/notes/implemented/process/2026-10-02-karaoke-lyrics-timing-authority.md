@@ -2,11 +2,14 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/kf_timing.py`（新增）、
-  `scripts/check_timing_health.py`（报告 -> 门禁，新增 `--max-collapse`/`--max-inner-silence`）、
-  `scripts/check_gates.py`（新增 `review/health.txt` 判定行检查）、
-  `steps/06-kf-timing/index.md` 与 `steps/08-review-timing/index.md`（新增这两步）、`steps/06-kf-timing/impl/collapse.md`（重写修法）、
-  `SKILL.md`（流程表、硬性规则 5、门禁表）。
+Decision-ID: karaoke-lyrics-timing-authority
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/grid/check_timing_health.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/kf/kf_timing.py`
 
 ## Problem
 
@@ -48,7 +51,7 @@ CTW 强制对齐（`align_ctc.py`，wav2vec2 平假名 + Viterbi）在**长音�
 - **用全部行取中位求偏移，不剔除塌缩行**。剔除后 +1.9475s（真值 +1.901s，误差 46ms）；
   用全部行 +1.9190s（误差 18ms）。塌缩发生在**行尾**，行首那一拍仍然准，剔除是白丢样本。
 - **绝不把每行各自的 CTC 行首当锚点**（除极少数结构性离群行）。实测逐行锚定 MAE 0.2918s，
-  单一全局偏移 0.0307s —— **差 9.5 倍**。CTC 行首的抖动是全曲性的（每行都在抖，中位偏离 0.191s、
+  单一全局偏移 0.0307s  **差 9.5 倍**。CTC 行首的抖动是全曲性的（每行都在抖，中位偏离 0.191s、
   最大 0.758s），挑"偏离大的行"让它们用自己的行首，等于专挑最不准的测量值当锚点。
 - **对齐坐标系必须用显示文本（`surf`），不能用注音**。踩过的坑：一字多拍（「人」=ひ+と）时
   曾用假名占位，结果坐标系从汉字换成假名，与 LDDC 的原文对不上，**整行从第二个 unit 起全部错位**
@@ -67,11 +70,11 @@ CTW 强制对齐（`align_ctc.py`，wav2vec2 平假名 + Viterbi）在**长音�
 ## Alternatives considered
 
 - **什么都不做 / 继续只用纯 CTC + 人工校时**：最强理由是「抽看频谱本来就能发现长音问题，
-  加一条外部数据源是引入依赖」。否决：实测这个"能发现"没有兑现 —— 报告里已经写明了塌缩，
+  加一条外部数据源是引入依赖」。否决：实测这个"能发现"没有兑现  报告里已经写明了塌缩，
   它照样进了成片。人工校时的瓶颈不是判据缺失，而是判据不被强制执行。
 - **把 LDDC 逐字当唯一来源，完全不用 CTC**：最强理由是「既然相对关系权威，整体也可以直接信」。
   否决（实测）：LDDC 的时间轴属于**另一份音源**，与手上的视频差一个常量（本例 1.901s），
-  且这个常量**无法从音频独立估计** —— 我试过谱通量起音投票法，被周期性段落吸到 +4.0s 的伪峰
+  且这个常量**无法从音频独立估计**  我试过谱通量起音投票法，被周期性段落吸到 +4.0s 的伪峰
   （真值 +1.901s）。必须由本地对齐提供平移。
 - **用多个歌词源投票取一致**：最强理由是「用户在任务里建议了多音频比对」。否决（实测）：
   **QM 与 KG 对同一首歌返回的逐字时间完全相同**（句内间隔差恒为 0），即它们共享同一数据源，
@@ -96,5 +99,5 @@ CTW 强制对齐（`align_ctc.py`，wav2vec2 平假名 + Viterbi）在**长音�
   纯日语歌曲直接 stub（脚本已处理）。缺 `kf.json` 时 `align` 明说"不做任何事"，不伪造。
 - 已知边界：LDDC 给的是**字级**时间，音拍多于汉字时按句内插值摊开（拗音「じょ」为一拍两字符，
   脚本按字符对齐后收回到音拍首字符）。所以它的价值在"句内节奏"，不是"逐音拍绝对精度"。
-- `check_gates.py --stage render` 从此会因缺 `review/health.txt` 而 FAIL ——
+- `check_gates.py --stage render` 从此会因缺 `review/health.txt` 而 FAIL 
   存量工程需要补跑一次体检（这是有意的：那份报告本来就该存在）。

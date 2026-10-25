@@ -2,8 +2,13 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/check_gates.py`（新增 `check_elements`、`--max-ambient`）、
-  `scripts/assfx/props.py`（新增）、`SKILL.md`、`steps/13-validate/impl/checklist.md`
+Decision-ID: karaoke-elements-table-gate
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset/props.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
 
 ## Problem
 
@@ -21,7 +26,7 @@ Status: implemented
 | 太刀横在火光里 | 110s 附近 | 通用 slash | 妖刀「殺人刀・雪影」 |
 | 猫耳发饰 | 152s | 没画 | 布施翠的猫耳（"迫害を受ける象徴"） |
 
-原门禁只查 `anime.notes.md`「在不在、够不够 500 字」，**拦不住"母题与这部番无关"** ——
+原门禁只查 `anime.notes.md`「在不在、够不够 500 字」，**拦不住"母题与这部番无关"** 
 它数的是"查了多少字"，不是"这句的图形能不能指到番剧元素"。
 
 ## Decision
@@ -35,25 +40,25 @@ Status: implemented
    侵食率 4 / 布施翠的猫耳 4 / 義眼 3 / 雪影 3 / シェンフィールド 3），
    而"55–61s 那几道红色发光粗线"只凑到 0 来源，于是被明确标成"只学形状、不编语义"。
 2. **`check_elements`**：元素表存在且带计数的条目 ≥4；设计表每句的主母题必须指向元素表条目，
-   否则必须显式标「氛围句」；**氛围句占比上限 `--max-ambient`（默认 0.35）** ——
+   否则必须显式标「氛围句」；**氛围句占比上限 `--max-ambient`（默认 0.35）** 
    否则"全是氛围句"又会变成新的兜底。
-   **表格式是被正则钉死的**：`\|\s*\*\*[^|]+\*\*\s*\|\s*(\d+)\s*\|` ——
+   **表格式是被正则钉死的**：`\|\s*\*\*[^|]+\*\*\s*\|\s*(\d+)\s*\|` 
    元素名必须用 `**粗体**` 包住、来源数必须**紧跟在它后面那一列**。
    在名字与来源数之间插「级别」这类列（`| 红眼 | A | 4 |`）会让计数变成 0 → 门禁判 FAIL。
    写法与这个坑都写在 `steps/10-anime-bg/impl/elements-table.md`（第一版文档里的示例表格
    恰好是这种不匹配的形状，已改）。
-3. **`scripts/assfx/props.py`**：番剧专属道具用**网络矢量路径**（MDI / Bootstrap Icons，OFL/Apache），
+3. **`scripts/assfx/asset/props.py`**：番剧专属道具用**网络矢量路径**（MDI / Bootstrap Icons，OFL/Apache），
    经 `svg2ass` 采样成 1000~6000 字符的真实路径。41 个图标全部实测可下载，缓存由 `svg2ass` 写到 skill 之外的缓存目录（见 2026-10-02-karaoke-runtime-artifacts-out-of-skill.md）。
-   手绘拼贴做不出"红眼""巨石碑""シェンフィールド球"这类可辨认物件 —— 这与
+   手绘拼贴做不出"红眼""巨石碑""シェンフィールド球"这类可辨认物件  这与
    `steps/11-design/impl/precise-shapes.md` 的既有结论一致（自行车：手绘两个圆圈 vs 网络路径 3148 字符）。
 
 ## Alternatives considered
 
 - **什么都不做 / 靠人工审"母题像不像这部番"**：最强理由是「母题与作品的相关性是语义判断，
-  机械判不出来」。否决：这一轮的失败**不是**语义判断出错 —— 红眼/巨石碑/猫耳这些元素
+  机械判不出来」。否决：这一轮的失败**不是**语义判断出错  红眼/巨石碑/猫耳这些元素
   在官方用语集里是**明文的专有名词**，"有没有查、查了几个来源"完全可以机械数出来。
   语义质量仍不做 FAIL（原设计不变），但"有没有出处"必须拦。
-- **把元素表写成 prompt 让人读，不加门禁**：否决。这正是第一版的失败模式 ——
+- **把元素表写成 prompt 让人读，不加门禁**：否决。这正是第一版的失败模式 
   我读了 `anime.notes.md`、写了"角色 → 视觉母题"表，然后照样去图形库挑通用零件。
   没有可失败检查的文档，等于没有。
 - **元素表只列名字，不记来源计数**：最强理由是「反正都用上了，记数很啰嗦」。否决（实测）：
@@ -70,9 +75,9 @@ Status: implemented
 - 本工程实测：`check_elements` 首次进 `--stage design`，报 `10 条元素带来源计数（其中 10 条为多源）`
   / `33 句，氛围句 0 句（0%，上限 35%）`；总门禁从 11 项变 **13 项**，仍全绿。
 - 图形精度可量化：`props` 的莲（`flower.svg`）路径长度 **3115 字符**，红眼 2683，猫 3083，
-  シェンフィールド球 3939 —— 对照 `shapes.py` 的 `flower(s)` 是十几个点的多边形。
+  シェンフィールド球 3939  对照 `shapes.py` 的 `flower(s)` 是十几个点的多边形。
 - 高潮句重做后 fx 事件数**从 102 降到 57**（"贵"= 少而精，不是多），
-  但可视像素从 ~1500 升到 3600~5400 —— 单件更大、存活更久。
+  但可视像素从 ~1500 升到 3600~5400  单件更大、存活更久。
 - 已知边界：`props.py` 依赖网络首次下载（之后走缓存）。断网且无缓存时 `prefetch()`
   会把失败的图标名逐个打出来，不静默降级成空图形。
 - `anime.elements.md` 与 `anime.notes.md` 是**两份文件而不是一份**：notes 回答"作品在讲什么"（人读），

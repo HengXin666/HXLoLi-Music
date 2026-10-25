@@ -2,8 +2,13 @@
 
 Status: implemented
 
-- 影响: `scripts/calibrate_offset.py`（新增 `step_jump`、`dispersion_robust`、`--step-threshold`/`--outlier`）、
-  `scripts/check_gates.py`（`check_offset` 读 `dispersion_robust`）
+Decision-ID: karaoke-offset-verdict
+
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/align/calibrate_offset.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/gate/check_gates.py`
 
 ## Problem
 
@@ -22,7 +27,7 @@ Status: implemented
 - 行首是前一句长音拖过来时，检出点落在上一句尾 → Δ 约 −0.4s。
 
 门禁在 `verdict.startswith("离散度过大")` 时判 FAIL，于是**这类工程永久卡死**，
-而"卡死"的后果是有人去手改 offset.json 把判据糊过去 —— 比误放行更糟。
+而"卡死"的后果是有人去手改 offset.json 把判据糊过去  比误放行更糟。
 
 ## Decision
 
@@ -48,11 +53,11 @@ Status: implemented
 
 - **什么都不做 / 直接放宽 max-dispersion 到 1.0**：最强理由是「0.8 是拍出来的，本来就没标定」。
   否决：放宽到 1.0 会同时放行「连续漂移 1.92」这类真问题（上表第 3 行），
-  而它恰恰是最需要拦住的一类 —— 那意味着整首歌后半段会整体偏 1s 以上。
+  而它恰恰是最需要拦住的一类  那意味着整首歌后半段会整体偏 1s 以上。
 - **手改 offset.json 的 verdict 字段绕过门禁**：否决。这正是门禁要防的行为：
   它把"判据不适用"这件事藏进了一个人写的字符串，下一个人只会看到 PASS。
 - **改用互相关估计整体平移**：最强理由是「它一次用上整段音频，比逐行起音稳」。
-  否决（实测）：steps/08-review-timing/impl/lag-verdict.md 已记录过 —— 谱通量起音投票法在周期性段落上会被
+  否决（实测）：steps/08-review-timing/impl/lag-verdict.md 已记录过  谱通量起音投票法在周期性段落上会被
   吸到 +4.0s 的伪峰（真值 +1.901s）。逐行起音 + 中位数是本工程唯一验证过的通道。
 - **把 Δ 序列的两端当"结构差异"直接切掉重估中位**：否决。切点位置是**推断**出来的，
   切错了会把整段的有效样本丢掉；而中位数本身就对两侧各半的偏移免疫（实测中位 +0.129
@@ -61,9 +66,9 @@ Status: implemented
 ## Consequences
 
 - 本工程实测：`verdict = "同一剪辑，可用（离散 0.992s 超阈值，但 Δ 无分段阶跃 0.506s：
-  离散来自起唱点检测的方法噪声）"`，门禁从 FAIL 变 PASS，而**判据没有被削弱** ——
+  离散来自起唱点检测的方法噪声）"`，门禁从 FAIL 变 PASS，而**判据没有被削弱** 
   真分段/真换源三种合成样本仍全部被拦。
 - 证据里多了三个可复核字段：`dispersion_robust` / `step_jump` / `step_threshold`，
   下一个人能看出"是凭什么放行的"，而不是只看到一个 PASS。
 - 已知边界：`step_jump` 需要足够行数（`2*half+1 = 17` 行起），
-  短歌或行数少的工程会返回 0.0 而落到稳健离散度那条通道上 —— 这是有意为之（宁可退回保守判据）。
+  短歌或行数少的工程会返回 0.0 而落到稳健离散度那条通道上  这是有意为之（宁可退回保守判据）。

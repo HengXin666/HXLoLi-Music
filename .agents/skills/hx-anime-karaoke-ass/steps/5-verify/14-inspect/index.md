@@ -6,9 +6,7 @@
 
 ## 渲染器: 这一节决定目检有没有意义
 
-本仓库的 ASS 由 **HXLoLi 定制版 libass**(SubtitlesOctopus WASM)渲染, 支持 VSFilterMod 扩展标签;
-**系统 ffmpeg 的 libass 不支持** —— 遇到 `\1img` 会**静默退化成纯色块, 不报错**.
-用 ffmpeg 截图做目检, 看到的就不是观众看到的东西.
+本仓库的 ASS 由 **HXLoLi 定制版 libass**(SubtitlesOctopus WASM)渲染, 支持 VSFilterMod 扩展标签; **系统 ffmpeg 的 libass 不支持**  遇到 `\1img` 会**静默退化成纯色块, 不报错**. 用 ffmpeg 截图做目检, 看到的就不是观众看到的东西
 
 ```bash
 # 主路径: 真渲染器
@@ -17,7 +15,7 @@ hx-karaoke render_octopus.py proj/out.ass --times 26.4,33,51.1 \
     --out proj/review/shots/ --fontsdir "$(hx-karaoke --fonts)"
 ```
 
-带视频底/带 band 框的辅助截图(仅看排版与 band 是否贴合, **不能用来判定 MOD 标签):
+带视频底/带 band 框的辅助截图(仅看排版与 band 是否贴合, **不能用来判定 MOD 标签)
 
 ```bash
 hx-karaoke snapshots.py --video proj/base.mp4 --ass proj/out.ass --fontsdir "$(hx-karaoke --fonts)" \
@@ -44,33 +42,32 @@ hx-karaoke snapshots.py --video proj/base.mp4 --ass proj/out.ass --fontsdir "$(h
 - [ ] **图片层**没有平铺重复(平铺 = 绘制矩形 ≠ 图片尺寸)
 - [ ] **图片边缘**没有被切平(头发上边是一条直线 = 抠图没抠透)
 
+## 与原版对照: still 并排
+
+复现/仿制某个成品时, 单看自己的产物没有"差多少"的读数. 加一步 still 对照:
+两侧同刻各渲一帧、并排, 再按**分区像素比 + 包围盒**出客观读数.
+
+```bash
+hx-karaoke still_compare.py --ref review/still/ref --new review/still/new --bbox
+hx-karaoke still_compare.py --ref review/still/ref --new review/still/new \
+    --bands "disc:935:1040:560:1360,text:975:1020:560:1360,ruby:898:972:560:1360" \
+    --out review/still/cmp --crop 540,880,1380,1050
+```
+
+判据与三条读数的含义见 `impl/still-compare.md`. **`--bbox` 先跑**  它一眼分出
+"几何基准不同"与"形状画得不像", 这两类问题的修法完全不同.
+
 ## 抽帧命令里的两个坑(实测)
 
-**1. 按秒逐帧推进取帧会撑爆字形缓存.**
-第一版让渲染器按 1/8 秒从 0 推到 194s 才截图(1556 次渲染), 之后所有文字变成**豆腐块** ——
-看起来像字体缺失, 实际是 libass 的字形缓存被挤掉了. `render_octopus.py` 现在只走两跳
-(目标前 0.05s → 目标), 足以让 `\t` 取到正确插值.
+**1. 按秒逐帧推进取帧会撑爆字形缓存.** 第一版让渲染器按 1/8 秒从 0 推到 194s 才截图(1556 次渲染), 之后所有文字变成**豆腐块**  看起来像字体缺失, 实际是 libass 的字形缓存被挤掉了. `render_octopus.py` 现在只走两跳(目标前 0.05s → 目标), 足以让 `\t` 取到正确插值
 
-**2. 缺字形与缓存淘汰的症状一模一样.**
-真缺字形时控制台有 `libass: Glyph 0x... not found in font for (<族名>, ...)`;
-缓存淘汰时**没有这条日志**, 只是整片豆腐块. 按日志有无来区分, 别靠猜.
+**2. 缺字形与缓存淘汰的症状一模一样.** 真缺字形时控制台有 `libass: Glyph 0x... not found in font for (<族名>, ...)`; 缓存淘汰时**没有这条日志**, 只是整片豆腐块. 按日志有无来区分, 别靠猜
 
 ## 一条实测教训
 
 **只按「字」铺量会在长音中间出现空窗**: `burst`/逐字层的寿命只有 0.7~1.4s,
-而一个字常占 2~4 个音拍(长音), 于是长音中段什么都没有 ——
-实测 23 个抽样时刻里判"太淡"的 6 个中有 4 个正好落在长音中间(143.0 / 150.0 / 157.0 / 231.0s).
-修法是加一层「按音拍起飞」的持续元素(每个音拍起点放一颗、寿命 1~1.8s), 或给整句铺一层常驻柔光.
+而一个字常占 2~4 个音拍(长音), 于是长音中段什么都没有  实测 23 个抽样时刻里判"太淡"的 6 个中有 4 个正好落在长音中间(143.0 / 150.0 / 157.0 / 231.0s). 修法是加一层「按音拍起飞」的持续元素(每个音拍起点放一颗、寿命 1~1.8s), 或给整句铺一层常驻柔光
 
 ## 产物与过关条件
 
-`proj/review/*.jpg` 拼图; 上面每一条都有结论(通过 / 已修 / 明确接受).
-发现问题回到第 11–12 步改, 改完**重跑第 13 步门禁**.
-
-## 这一步要用的脚本
-
-- `<skill>/scripts/snapshots.py` - 按时刻抽帧拼图 (`--bands` 画出 band 框, `--crop-bottom` 只截字幕带)
-
-## 具体做法
-
-- `steps/5-verify/13-validate/impl/checklist.md` —— 完整目检项与尺寸/透明度量级参照.
+`proj/review/*.jpg` 拼图; 上面每一条都有结论(通过 / 已修 / 明确接受). 发现问题回到第 11–12 步改, 改完**重跑第 13 步门禁**

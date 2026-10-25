@@ -2,13 +2,16 @@
 
 Status: implemented
 
-- 影响: `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/svg2ass.py`（缓存目录改为 `ASSFX_SVG_CACHE` /
-  `~/.cache/hx-anime-karaoke-ass/svg`）、`scripts/assfx/bake_shapes.py`（新增 `--out`/`--video` 必填化与
-  skill 写入拒绝）、`scripts/check_lag.py`（`--project` 替代硬编码工程路径）、
-  `HXLoLi-Music/.gitignore`（新增 6 行兜底规则）、
-  `assets/svg_cache/`（50 份 SVG 从 git 移除）
+Decision-ID: karaoke-runtime-artifacts-out-of-skill
+
 - 决策依据: 用户原话「禁止任何项目都项目素材被存入 skill，比如 assets/svg_cache 等」
-- 相关: [karaoke-steps-restructure](./2026-10-02-karaoke-steps-restructure.md)（同一次重构的另一半）
+- 相关: [karaoke-steps-restructure](2026-10-02-karaoke-steps-restructure.md)（同一次重构的另一半）
+
+## Code
+
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset/bake_shapes.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/assfx/base/svg2ass.py`
+- `.agents/skills/hx-anime-karaoke-ass/scripts/qa/check_lag.py`
 
 ## Problem
 
@@ -19,10 +22,10 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
 | `assets/svg_cache/` 50 份 SVG | `svg2ass.fetch()` 的缓存路径写死成 `<skill>/assets/svg_cache` | 做漆黑子弹时下载的图标永久留在 skill 里，换首歌删都分不清哪些该留 |
 | `examples/blackbullet_ed/` 共 726MB | 把工程目录直接建在 `examples/` 下 | 含 `base.mp4` 169MB、`stems/` 96MB、成片 356MB；其中 165 个文件已进 git |
 | `examples/*/assets/shapes.json` | `bake_shapes.py` 的 `OUT` 是硬编码绝对路径 | 该文件是"某一帧 MV 的抠图 + 某组图标"的产物，只对这一份 MV 成立 |
-| `scripts/check_lag.py` 里的工程路径 | 脚本里写死 `P = .../static/music/ヨスガノソラ/demo/tsunagukizuna` | 脚本变成"只能对那一首歌跑"，与同目录其它脚本的 `--project` 约定不一致 |
+| `scripts/qa/check_lag.py` 里的工程路径 | 脚本里写死 `P = .../static/music/ヨスガノソラ/demo/tsunagukizuna` | 脚本变成"只能对那一首歌跑"，与同目录其它脚本的 `--project` 约定不一致 |
 
 判据一句话：**skill 是代码与契约，它不该携带任何一次运行的痕迹。**
-判据若是"跑完 `git status` 看 skill 目录脏不脏" —— 旧版是脏的（50 个 SVG 未追踪、165 个文件已追踪）。
+判据若是"跑完 `git status` 看 skill 目录脏不脏"  旧版是脏的（50 个 SVG 未追踪、165 个文件已追踪）。
 
 ## Decision
 
@@ -41,7 +44,7 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
    `one_line` 子工程），`examples/yosuga_{op,ed}` → `static/music/ヨスガノソラ/demo/`。
    `static/music/` 下已有 `ヨスガノソラ/demo/tsunagukizuna` 这个先例（同样未进 git）。
 5. **`.gitignore` 兜底**：对 `assets/`、`**/svg_cache/`、`**/stems/`、`**/review/`、
-   `examples/*/out/`、`examples/*/assets/` 各加一条。这是第三道闸 ——
+   `examples/*/out/`、`examples/*/assets/` 各加一条。这是第三道闸 
    前两道（缓存路径 + `--out` 拒绝）挡的是当前代码，git 挡的是"有人手改回旧路径"或"旧版本写回来"。
 
 ## Alternatives considered
@@ -58,9 +61,9 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
   且缓存本来就是为了避免重复下载。移到用户级缓存目录同时满足"不进 skill"与"可离线复现"。
 - **工程留在 `examples/` 但加 `.gitignore` 忽略大文件**：最强理由是「示例就该放在 skill 里，
   模型照着做最方便」。否决：726MB 的 `base.mp4`/stems/成片跟示例价值无关，
-  而"照着做"需要的是 `make_ass.py` + `lyrics.txt` + `timing.json` ——
+  而"照着做"需要的是 `make_ass.py` + `lyrics.txt` + `timing.json` 
   这些保留一份 `examples/mushoku_ed1`（1.7MB，无二进制）就够；其余历史工程归工程区。
-  同时这符合本仓既有的 [mv-source-not-in-git](./2026-09-29-mv-source-not-in-git.md) 判据
+  同时这符合本仓既有的 [mv-source-not-in-git](2026-09-29-mv-source-not-in-git.md) 判据
   （可重取的素材不进仓库）。
 - **`bake_shapes.py` 用"检测是否在 skill 内"的软警告代替退出**：否决。
   它已经实测写错过一次（`OUT` 硬编码到 `examples/blackbullet_ed/assets/`）；警告不会拦住下一次。
@@ -73,8 +76,8 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
   `cache dir = /home/hx/.cache/hx-anime-karaoke-ass/svg`，连取两次均 2634 字符（第二次走缓存），
   且 skill 目录内 `find . -name "*.svg"` 为空。
 - `bake_shapes.py --out scripts/assfx/tmp/shapes.json` → 打印
-  `--out 落在 skill 目录里（…）。skill 是只读的代码与契约，产物属于工程 —— 把它指到 proj/assets/ 下面。` 并退出。
+  `--out 落在 skill 目录里（…）。skill 是只读的代码与契约，产物属于工程  把它指到 proj/assets/ 下面。` 并退出。
 - 已知边界：`static/music/` 里的工程产物**不进 git**（与 `tsunagukizuna` 一致），
-  所以换机器后历史工程不会跟着克隆过来 —— 它们本来就是本地制作现场，不是可复现资产。
+  所以换机器后历史工程不会跟着克隆过来  它们本来就是本地制作现场，不是可复现资产。
   保留的 `examples/mushoku_ed1` 才是"给模型看的样子"。
 - `.gitignore` 的 6 条规则与被删除的 50 个 SVG 同一次提交：`git status` 在提交后干净。
