@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "ccc2ef6f6d09c1c995bc1688611d2b02ad21be8e",
+  "base_commit": "83316ec4baae8e9ad23bea69fedc479694f0bab5",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/process/2026-10-02-karaoke-dev-workspace.md"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-02-karaoke-dev-workspace.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    }
+  ],
+  "ok": false
+}
