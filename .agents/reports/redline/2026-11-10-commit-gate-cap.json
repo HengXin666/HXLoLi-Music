@@ -1,0 +1,57 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "ee914ecbbaa10221a3a996299e84e4a2c8126b15",
+  "base_commit": "28f336ad1d75e35e59949eab5fe3b3d01d1b557b",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/check_fx_profile.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/tests/test_fx_profile.py",
+    ".agents/skills/hx-anime-karaoke-ass/shared/judge-formats.md"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/accept 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/judge 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/selfreview 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/shared/judge-formats.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    }
+  ],
+  "ok": false
+}

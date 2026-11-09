@@ -21,6 +21,8 @@ STEPPED_MAX = 0.15  # 逐帧步进: 时长 <= 0.15s
 SKEL_LEN = 60       # 骨架签名取前 60 字符
 COVER_FLOOR = 0.80  # 有 FX 时间占比: 至少 80%, 但不高于参考本身
 PEAK_CAP = 3.0      # 峰值/中位: 下限 min(3, 参考*ratio)
+# 上限项 (2026-11-09 新增, 未冻结): 只报 WARN, 不进结论. 下限挡不住"比参考重好几倍", 先跑出离参考多远再定阈值.
+CAP_RATIO = 1.5     # 暂定: 每句中位 / 存活中位 不超过参考的 1.5 倍
 
 LINE_KEY = re.compile(r'p\d+')
 DRAW = re.compile(r'\\p[1-9]\}(.*?)(?:\{|$)')
@@ -151,6 +153,19 @@ ITEMS = [  # (编号, 名称, 指标键们)
 ]
 
 
+CAP_ITEMS = [(11, '上限(未冻结) 每句中位/存活中位', ['line_median', 'alive_median'])]
+
+
+def caps(p, ref, r=CAP_RATIO):
+    res = []
+    for no, label, ks in CAP_ITEMS:
+        cap = {k: ref[k] * r for k in ks}
+        state = 'OK' if all(p[k] <= cap[k] for k in ks) else 'WARN'
+        res.append(dict(no=no, item=label, state=state, value={k: p[k] for k in ks}, cap=cap,
+                        x_ref={k: (p[k] / ref[k]) if ref[k] else None for k in ks}))
+    return res
+
+
 def judge(p, th):
     res = []
     for no, label, ks in ITEMS:
@@ -200,9 +215,10 @@ def main(argv=None):
     res = judge(p, th)
     bad = [r for r in res if r['state'] == 'BAD']
     verdict = 'BAD' if bad else 'OK'
+    cres = caps(p, ref)
     if a.json:
         out = {k: v for k, v in p.items() if k not in ('alive_curve', 'per_line')}
-        print(json.dumps(dict(verdict=verdict, bad=len(bad), ratio=a.ratio, items=res,
+        print(json.dumps(dict(verdict=verdict, bad=len(bad), ratio=a.ratio, items=res, caps=cres,
                               profile=out, per_line=p['per_line']), ensure_ascii=False, indent=1))
     else:
         print(f'check_fx_profile  ratio={a.ratio}  句数={p["lines"]}  0-FX 句={p["line_zero"]}')
@@ -210,6 +226,11 @@ def main(argv=None):
             v = ' / '.join(fmt(x) for x in r['value'].values())
             fl = ' / '.join(fmt(x) for x in r['floor'].values())
             print(f'  [{r["state"]:4}] {r["no"]:2}. {r["item"]:<18} {v:>18}   下限 {fl}')
+        for r in cres:
+            v = ' / '.join(fmt(x) for x in r['value'].values())
+            cp = ' / '.join(fmt(x) for x in r['cap'].values())
+            xr = ' / '.join(f'{x:.2f}x' for x in r['x_ref'].values() if x is not None)
+            print(f'  [{r["state"]:4}] {r["no"]:2}. {r["item"]:<18} {v:>18}   上限 {cp}  (参考的 {xr}; 不进结论)')
         print(f'{verdict}  ({len(bad)} 项 BAD)')
     return 1 if bad else 0
 

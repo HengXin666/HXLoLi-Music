@@ -32,6 +32,8 @@ Decision-ID: karaoke-fx-gate-studio
 
 ## Consequences
 
+- 2026-11-09: `check_fx_profile.py` 加第 11 项**上限** (每句中位 / 同时存活中位 不超过参考 x `CAP_RATIO` 1.5), **只报 WARN, 不进结论, 退出码不变**; 前 10 项的阈值与定义没动 (口径冻结仍成立). 起因: オンリー 门禁 10/10 OK 时每句中位 77 / 存活 21, 是参考 40 / 7 的 1.9 / 3 倍, 下限挡不住"过重". 阈值是拿参考 x1.25 / x1.5 拍的, 只在 オンリー 一首上验证过 (收缩后 50 / 13 报 WARN, 1.25x / 1.86x), 等 比翼の羽根 或另一首跑过再决定是否转 BAD; 记在 `shared/known-gaps.md` 第 7 条. 自测加 `test_cap_warn_only`. 已知: `test_out_bad_9` 指向 dev 工作文件, 该文件已收紧到全 OK, 断言失败, 与本改动无关, 记在 `shared/known-gaps.md` 第 9 条.
+
 - 2026-11-09 实测: accept 自测 32/32, selfreview 25/25 (studio 实测见拆出的记录).
 - 示例工程 `examples/mushoku_ed1/` 的拆分 (scene.py + fx_*.py) 不在本次提交内, 留待单独提交.
 - 2026-11-09 本提交用 `git commit --no-verify` 绕过本地 pre-commit, 由用户授权, 不是校验通过. 红线诊断: 0 项错误, 58 项待审核 = note-only-diff 42 + resource-review 16 (后者是 advisory, 本来不拦). 完整 JSON 存在 `.agents/reports/redline/2026-11-09-commit-a.json`.
