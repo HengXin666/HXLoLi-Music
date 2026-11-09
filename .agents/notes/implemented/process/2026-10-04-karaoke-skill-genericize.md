@@ -117,3 +117,4 @@ Decision-ID: karaoke-skill-genericize
   这是**有意**的（脚本由 `steps/*/index.md` 引用，不该塞进 SKILL.md 凑引用）。
 - 已知未做：`examples/mushoku_ed1` 的 `anime.notes.md` 里仍有 2 处作品名 
   那是**示例工程自己的内容**，不是 skill 的契约，保留是正确的。
+- 2026-11-09: `scripts/assfx/base/`, `layer/`, `text/` 与 `templates/` 加预览台参数层 (单元清单, 参数回读, 统一旋钮, 代码追踪), 种子按 key 派生 (`base/seeding.py`), `TEXT_LIFT` 与高亮描边色可按工程设置 (缺省不变), swoop 等拆到 `layer/fx_motion.py`. 本次未改 `scripts/kfx/` 与 `examples/`. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

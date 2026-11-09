@@ -47,8 +47,13 @@ hx-karaoke scripts/setup/setup_env.py   # 缺什么补什么 (幂等)
 | `scripts/grid/` | 节拍网格、吸附、重复段对比、时间轴体检 | `scripts/grid/beat_grid.py` |
 | `scripts/gate/` | 硬门禁与歌词覆盖审计 | `scripts/gate/check_gates.py` |
 | `scripts/qa/` | 注音定位、越界校验、抽帧目检、频谱复核 | `scripts/qa/validate_ass.py` |
+| `scripts/judge/` | 判断档与剧本产物 (镜头/歌词视觉化/定标/风格/剧本/发散) 的判据, 格式见 `shared/judge-formats.md` | `scripts/judge/check_judge.py` |
+| `scripts/accept/` | 验收台后端: "好" 的冻结, G2 改代码核对 (deps.code), issues. 规则见 `steps/5-verify/12-station/impl/` | `scripts/accept/accept.py` |
+| `scripts/selfreview/` | 自审: 增量抽帧, 意图盲审与专属性盲审, 重写预算. 规则见 `steps/5-verify/16-blind-review/impl/self-review.md` | `scripts/selfreview/selfreview.py` |
 | `scripts/kfx/` | 音乐事件表、声部配色、KFX 自检打分 | `scripts/kfx/music_events.py` |
 | `scripts/render/` | 真渲染器抽帧与出片 | `scripts/render/render_octopus.py` |
+| `scripts/studio/` | **验收台** (浏览器): 监视器 + 歌词面板选字 + 右键标注 (不行/好/换一个/批注 -> 工程 `review.jsonl`) + 检查器 + 时间线 (FX 0-8 语义轨, 标注轨) + 与参考对比, 见 `steps/5-verify/12-station/index.md` | `scripts/studio/server/app.py` |
+| `scripts/assdoc/` | ASS 最小读写 (`assdoc.py`) 与单元清单/参数层 (`spec.py`), `accept/` `selfreview/` 共用 | `scripts/assdoc/spec.py` |
 | `scripts/assfx/` | 生成器用的库(绘图/排版/层/素材), 见 `steps/4-kfx/49-generate/impl/library.md` | `scripts/assfx/draw/shapes.py` |
 | `scripts/karetpl/` | **执行别人成品里的模板程序**(有 Comment 的 `code`/`template`/`karaoke` 行时用它), 见 `steps/4-kfx/50-reverse/impl/karetpl.md` | `scripts/karetpl/verify.py` |
 | `scripts/reverse/` | **从无生成器的成品反推规格**(只有 Dialogue 时用), 见 `steps/4-kfx/50-reverse/impl/reverse-spec.md` | `scripts/reverse/reverse_opcn.py` |
@@ -73,9 +78,20 @@ hx-karaoke scripts/setup/setup_env.py   # 缺什么补什么 (幂等)
 | `2-lyrics` | **歌词校准**: 来源定级 → 读音 → 偏移 → 人声分离 → 音拍对齐 → 逐字时间 → 节拍网格 → 人工校时 → 排版校准 | `02-lyrics` `03-offset` `04-vocals` `05-align` `06-kf-timing` `07-grid` `08-review-timing` `09-ruby` |
 | `3-anime-bg` | **番剧背景调研**: 原作内涵考据 + 番剧元素表(带来源计数) | `10-anime-bg` |
 | `4-kfx` | **字幕特效设计制作**: 全链路的重心, 十个子步骤; 见 `steps/4-kfx/index.md` | `40-music-events` `41-channels` `42-text-main` `43-text-sub` `44-beat` `45-bg` `46-image` `47-color` `48-thread` `49-generate` |
-| `5-verify` | **门禁检验**: 硬门禁 + 自动校验 + 真渲染器抽帧目检 + **子代理盲审** + 封装出片 | `13-validate` `14-inspect` `15-render` `16-blind-review` |
+| `5-verify` | **验收台** + **门禁检验**: 浏览器标注 / 冻结 / 改代码核对 + 硬门禁 + 自动校验 + 真渲染器抽帧目检 + **子代理盲审** + 封装出片 | `12-station` `13-validate` `14-inspect` `15-render` `16-blind-review` |
 
 `4-kfx` 是唯一被细分的组  前面三组产出的都是**输入**, 后面一组只做**拦截**, **观众能看到的东西全部产在 `4-kfx` 里**
+
+## 改成品用验收台, 不要整首重跑碰运气
+
+随机数按单元 key (句子文字哈希) 取种子, 只换一句的随机本来就成立. 用户在验收台上看成品、标问题, agent 按单元改生成器:
+
+```bash
+python3 scripts/studio/server/app.py --project <工程> --port 5199   # 浏览器验收台, 标注写进工程 review.jsonl
+hx-karaoke accept/accept.py init .                                 # v3: "好" 的冻结 + 改代码核对 (G2)
+```
+
+不行就改这一句对应的 fx 函数 (`accept.py where` 指到函数与源文件), 好就冻结, 改完 `accept.py verify` 核对没有波及别的单元. 详见 `steps/5-verify/12-station/index.md`
 
 ## 一条关于渲染器的硬事实
 

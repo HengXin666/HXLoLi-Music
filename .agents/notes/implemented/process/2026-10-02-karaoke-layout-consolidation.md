@@ -72,3 +72,4 @@ Decision-ID: karaoke-layout-consolidation
   `mushoku_ed1` 一份可命中；ヨスガノソラ 的两份要靠 `static/music/` 才找得到。
   该步的 `index.md` 已把搜索范围写成"skill 的 `examples/` + 工程区 `static/music/<番名>/`"，
   不会因为搬家而漏查。
+- 2026-11-09: `templates/make_ass_template.py` 改为接入预览台清单 (`register_theme`/`@recipe`/`G.segment`), 卡点/背景/图片层按段取参数并按 key 重播种子; 目录布局约定本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

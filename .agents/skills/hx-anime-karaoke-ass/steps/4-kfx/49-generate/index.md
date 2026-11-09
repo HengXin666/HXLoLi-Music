@@ -45,6 +45,20 @@ G.render(PHRASES, FXMAP)              # 打印每句 in/out/band/clamp
 G.card("title", 1.0, 6.0, items, fx)  # 卡片 band 自动 = 文字墨迹 + 5%
 ```
 
+## 接入清单 (给 12 验收台的单元定位与参数层)
+
+`Generator.render()` 会在 `out.ass` 旁写 `out.manifest.json`: 每句一个单元, 带参数, 默认值与 schema. 验收台 (`accept.py`, `scripts/studio`) 据此按单元定位与核对, 不再整首重跑. 生成器侧再做几处:
+
+- 主题写成有名字的色组: `register_theme("SUN", TH(...), why="...")`. skill 自带一批起点 (`scripts/assfx/presets/themes.json`)
+- 配方加 `@recipe(why=..., knobs=[knob(...)])`, 配方里的内容量用 `f.opt("名", 默认)` 读
+- 卡点/背景/图片按段取参数: `p = G.segment("beat", t0, t1, BAND_ALL, level=lv, family=fam)`, 种子用 `seed_parts(..., salt=p["salt"])`, 旋钮用 `f.set_knobs(p["knobs"])`
+- `G.inputs(HERE, "timing.json", "lyrics.txt", "calib.json", "fixes.json")`: 上游变了能标过期
+- PHRASES 每项写 `label="画面时间点: 内容"`, `accept.py units` 与验收台检查器显示它
+
+模板已按这几处写好. 不接入也能出片, 只是验收台没法按单元定位与做隔离核对. 字段与开放范围见 `../../5-verify/12-station/impl/manifest.md`
+
+**生成器必须确定**: 同样的输入与覆盖, 两次输出逐字节相同. 不许用 `random` 的全局状态, 不许读时间, 句与句之间不许藏可变的全局状态. `accept/selftest_accept.py` 的 "追踪开/关输出逐字节相同" 验这一条; 不确定时 `accept.py verify` 的隔离核对也过不了
+
 ## 读出生成器的打印
 
 每句会打印 `in / out / dout / band / fx / clamp`. **clamp 很多说明特效设计尺寸超出 band  应主动缩小, 而不是依赖夹取. ** band 只是上限不是目标尺寸: 实测某工程 clamp 仅 10 次(看着很守规矩), 但图形尺寸只有同款的 1/10, FX 层单独渲染时整帧只有 35~1144 个亮像素, **特效等于不存在**
@@ -57,9 +71,9 @@ G.card("title", 1.0, 6.0, items, fx)  # 卡片 band 自动 = 文字墨迹 + 5%
 
 ## 产物与过关条件
 
-`proj/out.ass`; 每句的 band 已登记、事件 Name 标注 `ly:<band>` / `fx:<band>` / `card:<name>`; `clamp` 计数逐句过一眼
+`proj/out.ass` 与 `proj/out.manifest.json`; 每句的 band 已登记、事件 Name 标注 `ly:<band>` / `fx:<band>` / `card:<name>`; `clamp` 计数逐句过一眼
 
 ## 模板与参考工程
 
 - `<skill>/templates/make_ass_template.py`  最小可运行生成器, 本步的起点. 它的 docstring 写了要改的三处
-- `<skill>/examples/mushoku_ed1/`  唯一保留的完整工程(30 句逐句设计 + 71 处人工校时 fixes + 标题/片尾卡 + 合格的 `anime.notes.md`). **卡住时读它的 `make_ass.py`**, 不要重新发明写法. 它按 `examples/<曲目>/` 上两级定位本 skill 的 `scripts/`, 直接跑即可; **在工程区(dev/)里的生成器不要抄这个相对层数**  工程会在 dev/ 与 static/ 之间搬家, 层数会变; 统一用 `ASSFX` (hx-karaoke 会导出) 取 scripts、`$(hx-karaoke --fonts)` 取字体, 见 `../../1-source/00-env/index.md` 的「工作区」一节. **除这一份示例之外, skill 内不再有可参照的工程**; 别的目录(含 `dev/` 下的历史工程) **一律不许去读**  见 `shared/hard-rules.md` 第 10 条
+- `<skill>/examples/mushoku_ed1/`  唯一保留的完整工程(30 句逐句设计 + 71 处人工校时 fixes + 标题/片尾卡 + 合格的 `anime.notes.md`). **卡住时读它的 `make_ass.py`** (逐句设计表与主流程; 公共场景在 `scene.py`, 共用特效在 `fx_common.py`, 各句特效按歌曲段落放在 `fx_verse1.py` / `fx_verse2.py` / `fx_last.py`, 卡片在 `cards.py`, 按 4d 拆分), 不要重新发明写法. 它按 `examples/<曲目>/` 上两级定位本 skill 的 `scripts/`, 直接跑即可; **在工程区(dev/)里的生成器不要抄这个相对层数**  工程会在 dev/ 与 static/ 之间搬家, 层数会变; 统一用 `ASSFX` (hx-karaoke 会导出) 取 scripts、`$(hx-karaoke --fonts)` 取字体, 见 `../../1-source/00-env/index.md` 的「工作区」一节. **除这一份示例之外, skill 内不再有可参照的工程**; 别的目录(含 `dev/` 下的历史工程) **一律不许去读**  见 `shared/hard-rules.md` 第 10 条

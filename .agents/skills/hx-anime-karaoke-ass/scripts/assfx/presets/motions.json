@@ -1,0 +1,15 @@
+{
+ "format": "assfx-motions", "version": 1,
+ "note": "出入场 + 高亮的组合. why 必填: 说不出这个组合表达什么, 就不该成为预设.",
+ "items": {
+  "温柔":   {"ent": "fade",  "ext": "rise",    "hl": "bloom", "why": "温柔, 怀念: 淡入, 唱到时柔光绽开, 轻轻上浮离开"},
+  "上扬":   {"ent": "rise",  "ext": "rise",    "hl": "bloom", "why": "希望, 起飞, 向上的句意"},
+  "下沉":   {"ent": "fade",  "ext": "sink",    "hl": "ink",   "why": "失落, 沉思: 墨迹晕开, 字往下沉"},
+  "疾风":   {"ent": "slide", "ext": "wind",    "hl": "wipe",  "why": "叙事, 前进, 移动镜头: 从左滑入, 被风带走"},
+  "破碎":   {"ent": "zoom",  "ext": "scatter", "hl": "shake", "why": "冲击, 崩坏, 战斗: 放大砸入, 震动, 碎裂散开"},
+  "故障":   {"ent": "glitch","ext": "scatter", "hl": "wipe",  "why": "记忆错乱, 异常, 电子感画面"},
+  "翻页":   {"ent": "flipx", "ext": "flipx",   "hl": "wipe",  "why": "转场, 日常翻篇, 场景切换"},
+  "雀跃":   {"ent": "rise",  "ext": "rise",    "hl": "jump",  "why": "欢快, 可爱: 唱到的字跳一下"},
+  "坠落":   {"ent": "drop",  "ext": "sink",    "hl": "wipe",  "why": "雨, 落下, 从天而降的意象"}
+ }
+}

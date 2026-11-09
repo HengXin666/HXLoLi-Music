@@ -141,7 +141,7 @@ class Karaoke:
                 life(doc, name, layer, "RB", r["ch"], r["x"], r["y"], max(h["ti"], ti), max(max(h["ti"], ti), ti + o["din"]),
                      to, to + o["dout"], lk, ent, h["xv"], ent_scale=0.5)
             hi, gl = self.colors(h)
-            rhl = f"\\bord1.5\\shad0\\1c{col(hi)}\\3c{col(gl)}\\3a&H40&\\blur1"
+            rhl = f"\\bord1.5\\shad0\\1c{col(hi)}\\3c{col(self.th.get('hl_out', gl))}\\3a&H40&\\blur1"
             life(doc, name, 3, "RB", r["ch"], r["x"], r["y"], r["s"], r["s"], to, to + o["dout"], rhl, xv=h["xv"], entrance=False,
                  hold_extra="\\fscx130\\fscy130\\t(0,220,0.6,\\fscx100\\fscy100)")
             doc.ev(4, r["s"], r["s"] + 0.35, f"{{\\an5\\pos({r['x']:.1f},{r['y']:.1f})\\bord0\\shad0\\1c{col(gl)}\\blur5\\alpha&H50&"
@@ -172,7 +172,7 @@ class Karaoke:
         o, doc, name = self.o, self.doc, self.name
         hs, he = c["s"], c["e"]; dur = max(0.05, he - hs)
         hi, gl = self.colors(c)
-        look = f"\\bord2.2\\shad0\\1c{col(hi)}\\3c{col(gl)}\\3a&H48&\\blur1.5"
+        look = f"\\bord2.2\\shad0\\1c{col(hi)}\\3c{col(self.th.get('hl_out', gl))}\\3a&H48&\\blur1.5"
         x, y, w = c["x"], c["y"], c["w"]
         pop = o["pop"]
         kind = o["hl_kind"](c) if o.get("hl_kind") else o["hl"]

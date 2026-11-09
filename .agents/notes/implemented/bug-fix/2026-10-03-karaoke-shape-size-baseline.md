@@ -110,3 +110,4 @@ Decision-ID: karaoke-shape-size-baseline
 字附近  这是设计意图。判据只能停在"**字形墨迹零改动**"这一条(它稳定、可复现);
 再往下("行间空白被装饰穿过"算不算问题)就是审美判断, 机械判据给不出及格线,
 用门禁去代替那个判断只会让门禁变成噪音。
+- 2026-11-09: `scripts/assfx/layer/fx.py` 的 `shape()` 接入统一旋钮 size/alpha (size 乘在 fsc 上, 默认 1/0 时输出逐字节不变), swoop/flutter/orbit 拆到 `layer/fx_motion.py`; 新增 `layer/manifest.py`, `overrides.py`, `trace.py`. 尺寸基线本身本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

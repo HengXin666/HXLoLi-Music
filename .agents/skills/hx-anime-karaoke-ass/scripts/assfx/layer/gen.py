@@ -20,10 +20,63 @@
   * 退场时长：按到下一句首拍的剩余时间自适应（≥0.2s）；衔接紧时取消逐字错落
   * 入场 t_in：上一句退场完成 ~90% 之后，最早首拍前 lead(默认 0.8s)，最迟首拍前 0.05s
 """
+import hashlib
+import os
 import random
 from assfx.base.core import ms, al
+from assfx.base.seeding import _derive as derive
 from assfx.layer.fx import FX
+from assfx.layer import manifest as MF
+from assfx.layer import overrides as OV
+from assfx.layer.trace import TR
 from assfx.text.anim import Karaoke
+
+
+def phrase_keys(phrases):
+    """位置无关的句子标识: 优先 P['id']，否则 sha1(句子文字)[:10] + '#' + 同文字出现次序。
+    插入/删除/重排其它句都不会改变本句的 key，从而不会重抽它的随机特效。"""
+    seen, keys = {}, []
+    for P in phrases:
+        if P.get("id"):
+            keys.append(str(P["id"]))
+            continue
+        txt = P.get("key") or P.get("text") or P.get("zh") or "|".join(map(str, P.get("lines", [])))
+        base = hashlib.sha1(str(txt).encode("utf-8")).hexdigest()[:10]
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        keys.append("%s#%d" % (base, n))
+    return keys
+
+
+def ph_text(ph):
+    return "".join(c["ch"] for c in ph.chars)
+
+
+def phrase_fp(ph):
+    """本句的输入指纹: 每个字的音拍时间与位置 + band. timing/calib/字体变了它就变."""
+    return MF.sha_obj([[c["ch"], round(c["s"], 3), round(c.get("e", 0), 3), round(c["x"], 1)] for c in ph.chars]
+                      + [round(v, 1) for v in ph.band[:4]] + [c["ch"] for c in ph.cn])
+
+
+PRESETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets")   # scripts/assfx/presets
+
+
+def load_skill_presets():
+    """skill 自带的主题/动作预设 (scripts/assfx/presets/*.json). 工程登记的同名项优先 (后登记覆盖前)."""
+    if getattr(load_skill_presets, "done", False):
+        return
+    load_skill_presets.done = True
+    for f in ("themes.json", "motions.json"):
+        p = os.path.join(PRESETS, f)
+        if os.path.exists(p):
+            mine = dict(MF.REG.themes), dict(MF.REG.motions)
+            MF.load_presets(p)
+            MF.REG.themes.update(mine[0]); MF.REG.motions.update(mine[1])
+
+
+def seed_parts(*parts, salt=0):
+    """段的种子部件: salt 为 0 时与旧写法完全相同, 不为 0 时多一节 (只重抽这一段)."""
+    return parts + ((salt,) if salt else ())
 
 
 # ------------------------------------------------------------------ 查字/几何
@@ -64,10 +117,47 @@ def sway(n, period, a, t0=0, tag="frz"):
 
 # ------------------------------------------------------------------ 生成器
 class Generator:
-    def __init__(self, doc, layout, lines, TM, lead=0.8, verbose=True):
+    def __init__(self, doc, layout, lines, TM, lead=0.8, verbose=True, salts=None, ly_seed=None, overrides=None):
+        """ly_seed: 字层退场向量的种子基准 (缺省同 fx 的 seed). overrides: {单元key: 参数},
+        缺省读 ASSFX_OVERRIDES (预览台的参数层). 两者都不给时输出与旧版逐字节相同."""
         self.doc, self.L, self.lines, self.TM = doc, layout, lines, TM
-        self.lead = lead; self.verbose = verbose
+        self.lead = lead; self.verbose = verbose; self.salts = salts or {}
+        self.ly_seed = ly_seed
+        self.ov = OV.load() if overrides is None else overrides
         self.phs, self.ks = [], []
+        load_skill_presets()
+        TR.install()                         # 代码依赖追踪 (验收台 G2), 不改输出
+        if TR.on:
+            doc.on_ev = TR.on_event
+
+    # -------------------------------------------------------------- 清单 (预览台读)
+    def inputs(self, here, *files):
+        """登记上游输入 (timing/lyrics/calib/fixes...). 它们变了, 预览台把受影响的锁标成过期."""
+        for f in files:
+            MF.REG.input_file(f, os.path.join(here, f))
+
+    def unit(self, key, kind, name, t, band, defaults, schema, **extra):
+        """登记一个单元并返回它的有效参数 (默认值 + 覆盖值). 自定义卡片/图层也用它接入预览台."""
+        params = self.ov.get(key, {})
+        OV.need(key, params, schema)
+        eff = OV.merge_flat(defaults, params)
+        MF.REG.add(dict(key=key, kind=kind, name=name, t=[round(t[0], 3), round(t[1], 3)],
+                        band=[round(v, 1) for v in band[:4]] if band else None,
+                        params=eff, defaults=defaults, **extra))
+        return eff
+
+    def scope(self, key, data=None):
+        """工程自己画的层 (卡点/背景/图片) 用 with G.scope(key): 包住, 清单才知道这个单元用了哪些工程函数."""
+        return TR.scope(key, data)
+
+    def segment(self, kind, t0, t1, band=None, name=None, **defaults):
+        """卡点/背景/图片按段接入: key = <kind>@<段起点ms>. 返回有效参数, 其中 knobs 交给 FX.set_knobs."""
+        d = dict(dict(enabled=True, salt=0), **defaults)
+        d.update({f["key"]: f["default"] for f in MF.FX_KNOBS})
+        key = "%s@%d" % (kind, ms(t0))
+        eff = self.unit(key, kind, name or kind, (t0, t1), band, d, MF.SEGMENT_SCHEMA)
+        eff["knobs"] = MF.unit_knobs(key, eff)
+        return eff
 
     def build(self, PHRASES):
         self.phs = []
@@ -92,9 +182,18 @@ class Generator:
             out.append((o, t_out))
         return out
 
-    def render(self, PHRASES, FXMAP, seed=100):
+    def render(self, PHRASES, FXMAP, seed=100, salts=None):
         if not self.phs:
             self.build(PHRASES)
+        salts = self.salts if salts is None else salts
+        keys = phrase_keys(PHRASES)
+        MF.register_fxmap(FXMAP)
+        TR.data_const(PHRASES)               # 单元数据: 改一句只算这一句的 deps.data
+        # 参数层: 每句按 key 取覆盖值, 合进 PHRASES 的拷贝; 原 PHRASES 不改 (清单要报默认值)
+        defaults = [OV.phrase_defaults(P, self.lead) for P in PHRASES]
+        for key, P in zip(keys, PHRASES):
+            OV.need(key, self.ov.get(key, {}), MF.PHRASE_SCHEMA, P.get("fx"))
+        orig, PHRASES = PHRASES, [OV.merge_phrase(P, self.ov.get(key)) for key, P in zip(keys, PHRASES)]
         plan = self.plan(PHRASES); phs = self.phs
         for i, (P, ph) in enumerate(zip(PHRASES, phs)):
             o, t_out = plan[i]
@@ -108,16 +207,28 @@ class Generator:
             t_in = min(t_in, ph.s - 0.05)
             o["din"] = max(0.12, min(o["din"], ph.s - t_in))
             name = P.get("name", f"p{i:02d}")
-            k = Karaoke(self.doc, ph, name, P["th"], random.Random(seed + i), **o)
-            k.render(t_in, t_out)
-            k.t_end = max(c["te"] for c in ph.chars) + 0.2
-            k.P = P; k.i = i
-            self.doc.band(name, *ph.band, t_in, k.t_end)
-            f = FX(self.doc, name, ph.band, seed=1000 + i)
-            fn = FXMAP.get(P.get("fx")) if P.get("fx") else None
-            if fn:
-                fn(f, ph, k)
-            self.ks.append(k)
+            key = keys[i]
+            with TR.scope(key, orig[i]):
+                salt = self.ov.get(key, {}).get("salt", salts.get(key, 0))
+                ly_seed = seed if self.ly_seed is None else self.ly_seed
+                k = Karaoke(self.doc, ph, name, P["th"], random.Random(derive(ly_seed, key, "ly", salt)), **o)
+                k.render(t_in, t_out)
+                k.t_end = max(c["te"] for c in ph.chars) + 0.2
+                k.P = P; k.i = i; k.key = key
+                self.doc.band(name, *ph.band, t_in, k.t_end)
+                f = FX(self.doc, name, ph.band, seed=derive(seed, key, "fx", salt), knobs=P.get("knobs"))
+                fn = FXMAP.get(P.get("fx")) if P.get("fx") else None
+                if fn:
+                    fn(f, ph, k)
+                self.ks.append(k)
+            eff = OV.effective(defaults[i], self.ov.get(key, {}))
+            nxt = [keys[i + 1]] if i + 1 < len(keys) else []
+            MF.REG.add(dict(key=key, kind="phrase", name=name, label=orig[i].get("label") or ph_text(ph), lines=P.get("lines"),
+                            t=[round(t_in, 3), round(k.t_end, 3)], band=[round(v, 1) for v in ph.band[:4]],
+                            fp=phrase_fp(ph), chars=[[c["ch"], round(c["s"], 3), round(c.get("e", 0), 3), round(c["x"], 1),
+                                                     round(c["w"], 1)] for c in ph.chars], params=eff, defaults=defaults[i], deps=dict(window=nxt),
+                            applied=dict(t_in=round(t_in, 3), t_out=round(t_out, 3), din=round(o["din"], 3),
+                                         dout=round(o["dout"], 3)), clamp=f.n_clamped, knobs_used=sorted(f.used)))
             if self.verbose:
                 print(f"{name} {ph.s:7.2f}-{ph.e:7.2f} in {t_in:7.2f} out {t_out:7.2f} dout {o['dout']:.2f} "
                       f"band {tuple(round(v) for v in ph.band)} fx {P.get('fx')} clamp {f.n_clamped}")
@@ -167,7 +278,16 @@ class Generator:
                     doc.ev(layer, ta, t1, f"{{\\an5\\move({x},{y+14},{x},{y},0,900){look}\\alpha&HFF&\\blur6\\t(0,900,0.6,\\blur{0.8 if layer==2 else 9})"
                                           f"\\t(0,700,\\1a&H{'FF' if layer==1 else '00'}&\\3a&H{'60' if layer==1 else '40'}&)\\t({ms(t1-ta)-700},{ms(t1-ta)},\\alpha&HFF&\\blur8)}}{text}",
                            st, "card:" + name)
-        f = FX(doc, name, band, seed)
+        p = self.card_unit(name, t0, t1, band)
+        f = FX(doc, name, band, derive(seed, p["salt"]) if p["salt"] else seed, knobs=p["knobs"])
         if fx_fn:
-            fx_fn(f, band)
+            with TR.scope("card:" + name, [[it[0], it[1], it[2], it[4], it[5], it[6], it[7]] for it in items]):
+                fx_fn(f, band)
         return band
+
+    def card_unit(self, name, t0, t1, band):
+        """卡片接入清单: 只开放 salt 与统一旋钮. 文案/位置不开放 (改字回生成器, 位置受铁律 6b 管)."""
+        d = dict(salt=0, **{f["key"]: f["default"] for f in MF.FX_KNOBS})
+        p = self.unit("card:" + name, "card", name, (t0, t1), band, d, MF.CARD_SCHEMA)
+        p["knobs"] = MF.unit_knobs("card:" + name, p)
+        return p

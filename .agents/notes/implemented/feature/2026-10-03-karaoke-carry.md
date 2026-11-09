@@ -85,3 +85,4 @@ Decision-ID: karaoke-carry
 - 已知边界: `from_events` 依赖 `f.doc.events` 能按句切片; 现有 `FX` 没有 `_mark`,
   所以脚本里对没有该属性的情况**退回快照**(不报错, 但承接退化为"只传位置")。
   要做到逐句完整承接, 生成器需要在每句开始前记录 `len(doc.events)`。
+- 2026-11-09: `scripts/assfx/layer/` 加预览台参数层 (FX 统一旋钮与 `opt()`/`reseed()`, `gen.py` 登记单元并写清单, 新增 `manifest.py`, `overrides.py`, `trace.py`), swoop/flutter/orbit 拆到 `fx_motion.py`; carry 行为本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

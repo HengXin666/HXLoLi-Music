@@ -14,6 +14,9 @@
   2) SEGMENTS: 段落表(时间 / 卡点等级 / 色族). 段边界用 chordwiki 的转调点, 不许凭感觉
   3) PHRASES: 每个显示句的 lines / 主题配色 / 动画选项 / 特效函数
   4) 写 fx_xxx(f, ph, k): 只通过 f.shape / f.text / f.burst / f.drift / f.pulse / f.glow / f.floor_spin 发射
+  5) 接入预览台清单 (12-station 的参数层靠它): 主题用 register_theme 登记成有名字的色组,
+     配方用 @recipe(why=..., knobs=[...]) 标注, 配方里的可调量用 f.opt("名", 默认) 读,
+     卡点/背景/图片按段用 G.segment(...) 取参数. 不接入也能跑, 只是预览台只能做输出层补丁.
 
 五层各有各的时钟(见 steps/4-kfx/index.md), **不要写成一个循环里画五遍**:
 
@@ -27,7 +30,7 @@
 定制版 libass 找不到而回落, 症状是满屏豆腐块; 系统 ffmpeg 的字体回退会掩盖这个问题.
 查真实族名: `hx-karaoke render_octopus.py <ass> --probe`.
 
-完整示例: examples/mushoku_ed1/make_ass.py(单层手写规划 + 卡片);
+完整示例: examples/mushoku_ed1/ (make_ass.py 设计表与主流程, scene.py 公共场景, fx_common.py 共用特效, fx_verse1/fx_verse2/fx_last.py 按段落的各句特效, cards.py 卡片);
 """
 import json, math, os, random, sys
 
@@ -39,7 +42,8 @@ sys.path.insert(0, SKILL_SCRIPTS)
 from assfx.base.core import Doc, col, al, ms
 from assfx.base.lyrics import load
 from assfx.text.layout import Layout, Metric
-from assfx.layer.gen import Generator, find, seq, span, mid, flicker, sway   # 出入场规划/卡片/查字工具
+from assfx.layer.gen import Generator, find, seq, span, mid, flicker, sway, seed_parts   # 出入场规划/卡片/查字工具
+from assfx.layer.manifest import recipe, knob, register_theme, register_family   # 预览台清单 (见 49-generate "接入清单")
 from assfx.layer.fx import FX
 from assfx.draw import shapes as S
 from assfx.layer.music.beat import (MusicEvents, beat_scatter, beat_pulse, beat_drop, beat_sink, BEAT_COLORS)
@@ -101,7 +105,17 @@ def TH(hi, glow, dark, base="#F6F1EC", cn="#F8F3EE"):
     return dict(hi=hi, glow=glow, dark=dark, base=base, cn=cn)
 
 
+# 有名字的色组: 预览台里改色只能在这些组之间切, 交付说明能写出 "由 WARM 改为 BLOOD".
+# skill 自带一批起点色组 (scripts/assfx/presets/themes.json); 这里登记本工程自己的, why 写对应画面.
+TH_WARM = register_theme("WARM", TH("#FFF3E6", "#FFA07A", "#3A1A12"), why="温柔句, 暖光画面")
+TH_BLOOD = register_theme("BLOOD", TH("#FFFFFF", "#FF2E4A", "#1E0004"), why="激烈句, 战斗画面")
+for _n, _c in BEAT_COLORS.items():
+    register_family(_n, _c, why="卡点色族")
+
+
 # ------------------------------------------------------------------ 主文本层示例
+@recipe(why="温柔句: 字后暖光 + 关键字心形脉冲 + 每字飘小爱心",
+        knobs=[knob("hearts", 2, 0, 5, 1, "每个字飘出的小爱心数")])
 def fx_love(f, ph, k):
     """温柔句: 字后暖光 + 关键字心形脉冲 + 每字飘小爱心"""
     xs = [c["x"] for c in ph.chars]
@@ -109,23 +123,25 @@ def fx_love(f, ph, k):
     for c in find(ph, "愛"):
         f.pulse(0, c["s"], c["x"], JP_Y, S.heart(60), "#FF8CA0", dur=1.0, s0=40, s1=135, a0=80, blur=5)
     for c in ph.chars:
-        f.burst(c["s"], c["x"], JP_Y - 24, 2, ["#FFB6C4", "#FFFFFF"], draw_fn=lambda r: S.heart(r * 2), up=0.9, size=(3, 5))
+        f.burst(c["s"], c["x"], JP_Y - 24, f.opt("hearts", 2), ["#FFB6C4", "#FFFFFF"], draw_fn=lambda r: S.heart(r * 2), up=0.9, size=(3, 5))
 
 
+@recipe(why="激烈句: 关键字裂纹 + 碎片", knobs=[knob("shards", 10, 4, 20, 1, "裂开时的碎片数")])
 def fx_break(f, ph, k):
     """激烈句: 关键字裂纹 + 碎片"""
     R = f.rng
     for c in find(ph, "壊"):
         f.shape(6, c["s"], c["s"] + 0.9, c["x"], JP_Y, draw=S.crack(R, 130, 4.5), c1="#FFFFFF", c3="#FF2E4A", bord=1.5,
                 a_peak=0, blur=0.6, fade_in=0.02, fade_out=0.5, extra=f"\\frz{R.uniform(-25, 25):.0f}")
-        f.burst(c["s"], c["x"], JP_Y + 0, 10, ["#FFFFFF", "#FF4A5A"], draw_fn=lambda r: S.shard(R, r * 2.6), up=-0.5, spin=True)
+        f.burst(c["s"], c["x"], JP_Y + 0, f.opt("shards", 10), ["#FFFFFF", "#FF4A5A"], draw_fn=lambda r: S.shard(R, r * 2.6), up=-0.5, spin=True)
 
 
 # ------------------------------------------------------------------ 每个显示句
 PHRASES = [
     # 注释写清: 对应画面时间点与内容
-    dict(lines=[0], th=TH("#FFF3E6", "#FFA07A", "#3A1A12"), o=dict(ent="rise", ext="rise", hl="bloom"), fx="love"),
-    dict(lines=[1], th=TH("#FFFFFF", "#FF2E4A", "#1E0004"), o=dict(ent="zoom", ext="scatter", hl="shake"), fx="break"),
+    # label 显示在预览台的单元列表里; 写画面时间点与内容
+    dict(label="00 画面 xx-xx: <内容>", lines=[0], th=TH_WARM, o=dict(ent="rise", ext="rise", hl="bloom"), fx="love"),
+    dict(label="01 画面 xx-xx: <内容>", lines=[1], th=TH_BLOOD, o=dict(ent="zoom", ext="scatter", hl="shake"), fx="break"),
 ]
 FXMAP = {k[3:]: v for k, v in globals().items() if k.startswith("fx_")}
 
@@ -140,11 +156,12 @@ BAND_ALL = None   # 首次 render 后从 G.ks 反解; 不想反解就直接写 (
 # ================================================================
 # Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
 # 
-def beat_layer(f, t0, t1):
+def beat_layer(f, t0, t1, p):
     """
     .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
-跟音乐事件网格走. 规格(起手 18~40%, 同刻多色, 存活密度)见 steps/4-kfx/44-beat."""
-    lv, col = seg_of((t0 + t1) / 2)
+跟音乐事件网格走. 规格(起手 18~40%, 同刻多色, 存活密度)见 steps/4-kfx/44-beat.
+    p 是 G.segment() 给的本段参数 (level/family 可在预览台按段改)."""
+    lv, col = p["level"], p["family"]
     n = beat_pulse(f, ME, t0, t1, level=lv, colors=col, layer=0, every=4 if lv < 2 else 2)
     n += beat_scatter(f, ME, t0, t1, level=lv, colors=col,
                       per_beat=(5, 9) if lv >= 2 else (2, 4))
@@ -152,9 +169,9 @@ def beat_layer(f, t0, t1):
     return n
 
 
-def bg_layer(f, t0, t1):
+def bg_layer(f, t0, t1, p):
     """由镜头/情感驱动, 跨句不停. band 铁律不变(见 steps/4-kfx/45-bg)."""
-    lv, col = seg_of((t0 + t1) / 2)
+    lv, col = p["level"], p["family"]
     cols = BEAT_COLORS.get(col, ["#FFFFFF"])
     b, R, n = f.b, f.rng, 0
     t = t0
@@ -169,7 +186,7 @@ def bg_layer(f, t0, t1):
     return n
 
 
-def image_layer(f, t0, t1):
+def image_layer(f, t0, t1, p):
     """图片层: 全曲 ≤8 处, 左右元素在卡点出现. 图必须先抠干净(见 steps/4-kfx/46-image)."""
     hit = [("assets/cut/a.png", [170.3]), ("assets/cut/b.png", [193.0, 224.8])]
     n = 0
@@ -217,7 +234,8 @@ def main(out):
     phs = G.build(PHRASES)
     for P, ph in zip(PHRASES, phs):
         P["o"] = dict(P.get("o", {}), hl_color=make_hl_color(ph, PAL, voices=VJ))
-    G.render(PHRASES, FXMAP)               # 打印每句 in/out/band/clamp
+    G.inputs(HERE, "lyrics.txt", "timing.json", "calib.json", "fixes.json")   # 变了预览台会标过期
+    G.render(PHRASES, FXMAP)               # 打印每句 in/out/band/clamp; 同时登记清单
 
     if ME is not None:
         # band 并集: 从已渲染的句反解(每句的 ph.band 在 G.phs 里)
@@ -228,10 +246,15 @@ def main(out):
                       FX(doc, "bg", BAND_ALL, seed=32),
                       FX(doc, "img", BAND_ALL, seed=33))
         nb = ng = ni = 0
-        for (t0, t1, _lv, _c) in SEGMENTS:
-            nb += beat_layer(fb, t0, t1)
-            ng += bg_layer(fg, t0, t1)
-            ni += image_layer(fi, t0, t1)
+        for (t0, t1, lv, fam) in SEGMENTS:
+            # 每段每层一个单元 (key = beat@<段起点ms>): 预览台可按段改等级/色族/旋钮/重抽, 别段不动
+            for fx_, kind, base, fn in ((fb, "beat", 31, beat_layer), (fg, "bg", 32, bg_layer), (fi, "img", 33, image_layer)):
+                p = G.segment(kind, t0, t1, BAND_ALL, level=lv, family=fam)
+                if not p["enabled"]:
+                    continue
+                fx_.reseed(*seed_parts(base, kind, round(t0 * 1000), salt=p["salt"])).set_knobs(p["knobs"])
+                n = fn(fx_, t0, t1, p)
+                nb, ng, ni = nb + (kind == "beat") * n, ng + (kind == "bg") * n, ni + (kind == "img") * n
         for nm in ("beat", "bg", "img"):
             doc.band(nm, *BAND_ALL, SEGMENTS[0][0], SEGMENTS[-1][1])
         print("layers: beat %d / bg %d / img %d" % (nb, ng, ni))

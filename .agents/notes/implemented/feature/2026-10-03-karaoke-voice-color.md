@@ -84,3 +84,4 @@ Decision-ID: karaoke-voice-color
   现有工程不受影响, 要用时传 `o={"hl_color": make_hl_color(...)}`.
 - 已知边界: `chorus` 只说明"多于一条音高线", 不区分"两个人齐唱"与"一个人+混响";
   置信度低时一律 `none`. 判不出来的地方保持单色, 这比随机上色可靠.
+- 2026-11-09: `scripts/assfx/text/anim.py` 的高亮与 ruby 高亮描边色改为可由主题键 `hl_out` 覆盖, 缺省仍用 glow; 声部配色约定本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

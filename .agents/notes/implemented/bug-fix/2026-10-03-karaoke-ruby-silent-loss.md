@@ -75,3 +75,4 @@ Decision-ID: karaoke-ruby-silent-loss
   若要标点更早/更晚出现, 需要工程侧显式给该 unit 一个时间  库不做这个猜测。
 - 已知边界: `hl_white_fill` 的描边取自 `stops[0]`(色域深端), 所以**色域的排布顺序有了语义**:
   `stops[0]` 必须是那个"能当描边"的深色。这条约束写在 `47-color` 与 `gen/common.py` 的注释里。
+- 2026-11-09: `scripts/assfx/text/anim.py` 的高亮与 ruby 高亮描边色改为可由主题键 `hl_out` 覆盖, 缺省仍用 glow (老工程输出不变); ruby 不静默丢失的约定本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

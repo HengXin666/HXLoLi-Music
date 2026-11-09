@@ -1,0 +1,539 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "6fdbd2612506f44f46c0e528e0d2795e552023f2",
+  "base_commit": "7aa7605255763d04c58f6c3098e6a72d1758d085",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/bug-fix/2026-10-03-karaoke-ruby-silent-loss.md",
+    ".agents/notes/implemented/bug-fix/2026-10-03-karaoke-shape-size-baseline.md",
+    ".agents/notes/implemented/feature/2026-10-03-karaoke-carry.md",
+    ".agents/notes/implemented/feature/2026-10-03-karaoke-voice-color.md",
+    ".agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md",
+    ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md",
+    ".agents/notes/implemented/process/2026-10-02-karaoke-runtime-artifacts-out-of-skill.md",
+    ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+    ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+    ".agents/reports/redline/2026-11-09-commit-a.json",
+    ".agents/skills/hx-anime-karaoke-ass/SKILL.md",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/__init__.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/accept.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/g2.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/goods.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/issues.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/sel.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/accept/selftest_accept.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/base/core.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/base/seeding.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/check_fx_profile.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/fx.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/fx_motion.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/gen.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/manifest.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/overrides.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/trace.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/presets/motions.json",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/presets/themes.json",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/tests/test_fx_profile.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/text/anim.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/__init__.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_arc.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_bar.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_concepts.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_shots.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_style.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/c_visual.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/check_judge.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/common.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/judge/selftest_judge.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/__init__.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/budget.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/packet.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/rv.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/score.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/selfreview.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/selfreview/selftest_selfreview.py",
+    ".agents/skills/hx-anime-karaoke-ass/shared/hard-rules.md",
+    ".agents/skills/hx-anime-karaoke-ass/shared/judge-formats.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/40-music-events/index.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/42-text-main/impl/design-table.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/49-generate/index.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/deps-code.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/issues.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/manifest.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/presets.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/index.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/13-validate/index.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/16-blind-review/impl/self-review.md",
+    ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/index.md",
+    ".agents/skills/hx-anime-karaoke-ass/templates/make_ass_template.py"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/bug-fix/2026-10-03-karaoke-shape-size-baseline.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/music 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/feature/2026-10-03-karaoke-voice-color.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kfx 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-02-karaoke-runtime-artifacts-out-of-skill.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-02-karaoke-runtime-artifacts-out-of-skill.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/qa 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/align 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/deco 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/kit 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/music 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/ctc 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/gate 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/grid 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/karetpl 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kf 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kfx 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kfx/score 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/qa 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/render 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/reverse 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/setup 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/source 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/align 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/asset 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/deco 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/kit 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/layer/music 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/ctc 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/gate 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/grid 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/karetpl 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kf 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kfx 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/kfx/score 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/qa 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/render 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/reverse 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/setup 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "note-only-diff",
+      "path": ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md",
+      "line": 1,
+      "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/source 中的代码未同步修改; 请审核",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/SKILL.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/presets/motions.json",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/presets/themes.json",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/shared/hard-rules.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/shared/judge-formats.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/40-music-events/index.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/42-text-main/impl/design-table.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/49-generate/index.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/deps-code.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/issues.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/manifest.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/impl/presets.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/12-station/index.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/13-validate/index.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/16-blind-review/impl/self-review.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/steps/5-verify/index.md",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    }
+  ],
+  "ok": false
+}

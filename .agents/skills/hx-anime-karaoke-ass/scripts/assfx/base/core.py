@@ -67,6 +67,7 @@ class Doc:
         self.styles = [style("FX", fx_font, 20, an=7)]
         self.events = []      # (layer, start, end, style, name, text)
         self.bands = {}       # name -> (x0, y0, x1, y1, t0, t1)
+        self.on_ev = None     # 代码依赖追踪的钩子 (assfx/layer/trace.py), Generator 装上
 
     def add_style(self, *a, **k):
         self.styles.append(style(*a, **k))
@@ -83,7 +84,9 @@ class Doc:
     # 黑底分层渲染的量化结果：t=45s 时 FX 墨迹 105169 像素、JP 只有 16393，
     # FX 是歌词的 6.4 倍且盖在文字带（y 444-474）里  观感就是"全是重叠，看不了"。
     # 参考项目（HX-Ass-Skill 的成品 KFX）的做法是：**特效一律在字下，字永远在最上**。
-    TEXT_LIFT = 20 if False else 20     # 见下方 ev() 的说明
+    # B 阶段 (2026-11-08, plan.md 1.3): 改成可按工程设置. 缺省仍为 20 (老工程不变).
+    # 设 0 时回到参考的 "三明治" 层序: layer 0 底光 -> 1-4 字 -> 5-8 前景粒子. 参考 オンリー 有 49% 的 FX 在字前.
+    TEXT_LIFT = 20
 
     # Agent Notes: hx-anime-karaoke-ass 的 scripts/ 按职责分组，并把 5 个超 300 行的模块拆开
     # 
@@ -96,7 +99,9 @@ class Doc:
         # 文字事件（ly: 开头）统一抬到特效之上；特效保持调用方给的层号。
         # 这样"字永远压得住特效"是**结构保证**，不依赖每个特效函数自觉。
         if name.startswith("ly:"):
-            layer += 20
+            layer += self.TEXT_LIFT
+        if self.on_ev:
+            self.on_ev(layer, start, end, name)
         self.events.append((layer, start, end, st, name, text))
 
     def write(self, path, extra_info=""):
@@ -113,4 +118,7 @@ class Doc:
             f.write("[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
             for layer, s, e, st, name, text in self.events:
                 f.write(f"Dialogue: {layer},{ts(s)},{ts(e)},{st},{name},0,0,0,,{text}\n")
+        # 生成器登记过单元 (Generator.render / unit / segment) 时, 同目录写 <out>.manifest.json 给预览台
+        from assfx.layer.manifest import REG
+        REG.write(path)
         return len(self.events)

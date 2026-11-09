@@ -1,0 +1,14 @@
+{
+ "format": "assfx-themes", "version": 1,
+ "note": "skill 级起点色组. 工程可用 register_theme 再登记自己的. 每组都写 why: 它对应什么画面.",
+ "items": {
+  "SKY":   {"hi": "#FFFFFF", "glow": "#6CC4FF", "dark": "#0C2A48", "why": "晴空, 白天户外, 青蓝画面"},
+  "SUN":   {"hi": "#FFF6E4", "glow": "#FFA04A", "dark": "#2A1406", "why": "夕阳, 烛光, 暖色室内"},
+  "TEAL":  {"hi": "#F0FFFD", "glow": "#44D8D0", "dark": "#06302E", "why": "水面, 森林阴影, 青绿冷光"},
+  "NIGHT": {"hi": "#F2F0FF", "glow": "#9C8CFF", "dark": "#0C0A24", "why": "夜景, 星空, 梦境与回忆"},
+  "GRASS": {"hi": "#FFFFF0", "glow": "#E6C24A", "dark": "#1E1A06", "why": "草地, 麦田, 金色逆光"},
+  "ROSE":  {"hi": "#FFF4F6", "glow": "#FF8AA8", "dark": "#2A0C16", "why": "恋爱, 害羞, 樱花与粉色画面"},
+  "BLAZE": {"hi": "#FFFFFF", "glow": "#FF2E4A", "dark": "#1E0004", "why": "战斗, 破碎, 激烈情绪"},
+  "MAGIC": {"hi": "#EAF6FF", "glow": "#3FA0FF", "dark": "#04122A", "why": "魔法, 蓝色光效, 守护"}
+ }
+}

@@ -111,3 +111,4 @@ Decision-ID: karaoke-scripts-grouping
 - 已知边界：`check_layout.py` 的 C3（源码只允许 `.ts`）在本 skill 下对 `.py` 不生效
   本 skill 是 Python 工具链，`references/code-quality.md` 的 `SOURCE_SUFFIXES` 本身就认 `.py`。
   这次没有 `.js`/`.mjs`/`.cjs` 需要处理。
+- 2026-11-09: `scripts/assfx/base/` 新增 `seeding.py`, `layer/` 新增 `fx_motion.py`, `manifest.py`, `overrides.py`, `trace.py`, 另新增 `scripts/assfx/presets/` 与 `scripts/assfx/tests/`; 分组结构本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

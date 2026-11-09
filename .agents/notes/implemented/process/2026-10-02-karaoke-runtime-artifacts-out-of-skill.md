@@ -81,3 +81,4 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
   所以换机器后历史工程不会跟着克隆过来  它们本来就是本地制作现场，不是可复现资产。
   保留的 `examples/mushoku_ed1` 才是"给模型看的样子"。
 - `.gitignore` 的 6 条规则与被删除的 50 个 SVG 同一次提交：`git status` 在提交后干净。
+- 2026-11-09: `scripts/assfx/base/core.py` 写 ASS 时在同目录另写 `<out>.manifest.json` (产物仍落工程目录, 不进 skill), 加代码追踪钩子 `on_ev`, `TEXT_LIFT` 改为可按工程设置 (缺省 20 不变); 新增 `base/seeding.py`. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.

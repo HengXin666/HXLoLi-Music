@@ -15,14 +15,46 @@
 """
 import math, random, re
 from assfx.base.core import col, al, ms
+from assfx.base.seeding import _derive as derive
 from assfx.base.geom import event_extent
 from assfx.draw import shapes as S
+from assfx.layer.fx_motion import FXMotion
 
 
-class FX:
-    def __init__(self, doc, name, band, seed=0):
+class FX(FXMotion):
+    def __init__(self, doc, name, band, seed=0, knobs=None):
         self.doc = doc; self.name = name; self.b = band; self.rng = random.Random(seed)
         self.n_clamped = 0
+        self.used = set()      # 本单元真正用到的统一旋钮 (清单写成 knobs_used, 面板只显示这些)
+        self.set_knobs(knobs)
+
+    def set_knobs(self, knobs=None):
+        """统一旋钮 (预览台参数层): density 乘粒子数, size 乘图形尺寸, alpha 加到透明度上.
+        默认值 (1, 1, 0) 时输出逐字节与没有旋钮时相同. 其余键是配方专属旋钮, 用 opt() 读."""
+        self._ukey = getattr(knobs, "unit_key", None)    # G.segment / G.card_unit 给的旋钮带单元 key
+        k = dict(knobs or {})
+        self.density = float(k.pop("density", 1.0)); self.size = float(k.pop("size", 1.0))
+        self.alpha = int(k.pop("alpha", 0)); self.opts = k
+        return self
+
+    def opt(self, key, default):
+        """配方专属旋钮的当前值; 没覆盖时用配方里写的默认值."""
+        return self.opts.get(key, default)
+
+    def _use(self, *names):
+        """记下旋钮被用到. 不改输出: 默认值时字节不变, 只影响清单的 knobs_used."""
+        self.used.update(names)
+        if self._ukey:
+            from assfx.layer.manifest import REG
+            REG.mark(self._ukey, names)
+
+    def _n(self, n):
+        self._use("density")         # 只有 burst / drift 走这里: 不发射粒子的配方, 密度旋钮无效
+        return int(n) if self.density == 1.0 else max(0, int(round(n * self.density)))
+
+    def reseed(self, *parts):
+        self.rng = random.Random(derive(*parts))
+        return self
 
     # ---------------------------------------------------------------- 核心：带夹取的绘图事件
     # Agent Notes: hx-anime-karaoke-ass 的 scripts/ 按职责分组，并把 5 个超 300 行的模块拆开
@@ -36,7 +68,16 @@ class FX:
         # 这是既不手绘、又能得到实心形状的唯一办法：保留真实素材的轮廓，只把笔画加粗。
         """Agent Notes
         .agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md
+        .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
         """
+        self._use("size", "alpha")   # 只有画图形 (shape) 时尺寸与透明度旋钮才生效
+        if self.size != 1.0:
+            fsc = fsc * self.size
+        if self.alpha:
+            a_peak = max(0, min(255, a_peak + self.alpha))
+            if alpha_t:
+                alpha_t = re.sub(r"\\alpha&H([0-9A-Fa-f]{2})&", lambda m: m.group(0) if m.group(1).upper() == "FF"
+                                 else "\\alpha" + al(int(m.group(1), 16) + self.alpha), alpha_t)
         if solid:
             c3 = c1
             bord = max(bord, float(solid))
@@ -130,7 +171,7 @@ class FX:
               layer=8, blur=(0.8, 2.0), a=(0, 60), spin=False, glow=None):
         """从 (x,y) 向四周迸出（位移受 band 夹取）"""
         R = self.rng
-        n = int(n)
+        n = self._n(n)
         for _ in range(n):
             ang = R.uniform(0, 2 * math.pi); v = R.uniform(*speed); L = R.uniform(*life)
             dx, dy = math.cos(ang) * v, math.sin(ang) * v * 0.6 - v * up
@@ -143,7 +184,7 @@ class FX:
     def drift(self, t0, t1, n, colors, draw_fn, vx=(-20, 20), vy=(-40, -10), life=(1.5, 3.0), size=(4, 9), layer=0,
               blur=(0.8, 2.0), a=(40, 120), spin=True, y_range=None, x_range=None, extra_fn=None, glow=None):
         """在 band 内持续飘动的元素（花瓣/雪/余烬/尘）"""
-        n = int(n)
+        n = self._n(n)
         R = self.rng; bx0, by0, bx1, by1 = self.b[:4]
         yr = y_range or (by0 + 10, by1 - 10); xr = x_range or (bx0 + 10, bx1 - 10)
         for _ in range(n):
@@ -190,93 +231,3 @@ class FX:
     def glow(self, layer, t0, t1, x, y, rx, ry, c1, a_peak=150, blur=18, fade_in=0.3, fade_out=0.5, extra=""):
         self.shape(layer, t0, t1, x, y, draw=S.ellipse(rx, ry), c1=c1, a_peak=a_peak, blur=blur, fade_in=fade_in,
                    fade_out=fade_out, extra=extra)
-
-    # ---------------------------------------------------------------- 专业手法三件套
-    # 这三样是「专业 KFX 作品」（Aegisub 481 Examples）里每个形状的标配，
-    # 而本库原先一个都没有  这就是"图形像贴纸、不像活的"的根因。
-
-    def swoop(self, layer, t0, t1, path, draw, c1="#FFFFFF", a_peak=170, blur=1.6,
-              be=2.0, bord=0, c3=None, spin=(0, 360), n_loop=0, loop_period=0.5,
-              scale=(60, 100), fade_in=0.2, fade_out=0.4):
-        """
-        .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
-沿【多段曲线】飞过 + 循环扇动（对应专业作品的 moves4 + loop）。
-
-        path: [(x,y), ...] 至少 2 点；多段时逐段飞（ASS 的 \\move 只能走直线，多段靠切事件）。
-        n_loop>0：叠加翻转，模拟扇翅/翻页的持续动感  专业羽毛特效靠它在 2.7s 内扇 20 次。
-        be: \\be 边缘模糊，专业作品用它做柔光质感，本库原先完全没有。
-        """
-        R = self.rng
-        pts = list(path)
-        if len(pts) < 2:
-            return
-        # Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
-        # 
-        times = [t0 + (t1 - t0) * i / (len(pts) - 1) for i in range(len(pts))]
-        for i in range(len(pts) - 1):
-            (x0, y0), (x1, y1) = pts[i], pts[i + 1]
-            ta, tb = times[i], times[i + 1]
-            if tb - ta < 0.03:
-                continue
-            ex = ("\\be%.1f" % be) if be else ""
-            if n_loop > 0:
-                half = max(0.10, loop_period / 2)
-                k = max(1, int((tb - ta) / half))
-                for j in range(k):
-                    a_ = int(j * half * 1000); b_ = int((j + 1) * half * 1000)
-                    tag = "frx" if j % 2 == 0 else "fry"
-                    ex += "\\t(%d,%d,\\%s%d)" % (a_, b_, tag, spin[1] if j % 2 == 0 else spin[0])
-            if i == 0 and fade_in > 0:
-                ex += "\\t(0,%d,\\\\be0)" % int(fade_in * 1000)
-            self.shape(layer, ta, tb, x0, y0, x1, y1, draw=draw, c1=c1, a_peak=a_peak,
-                       blur=blur, extra=ex, c3=c3, bord=bord,
-                       fade_in=fade_in if i == 0 else 0.05,
-                       fade_out=fade_out if i == len(pts) - 2 else 0.05,
-                       fsc=R.uniform(*scale))
-
-    def flutter(self, layer, t0, t1, x, y, draw, c1="#FFFFFF", a_peak=180, blur=1.4,
-                period=0.26, amp=78, be=2.4, bord=0, c3=None, drift=(0, 0)):
-        """原地持续扇动/翻飞（\\frx 与 \\fry 交替，周期 period 秒）。
-
-        这是"贯穿整句"的来源：形状本身不位移，靠持续翻转产生生命感。
-        专业羽毛/蝶翼类特效的核心  实测样品一条事件里链了 20 层 \\t。
-        """
-        d = t1 - t0
-        if d < 0.05:
-            return
-        k = max(2, int(d / max(0.05, period / 2)))
-        half = d / k
-        ex = ("\\be%.1f" % be) if be else ""
-        for j in range(k):
-            a_ = int(j * half * 1000); b_ = int((j + 1) * half * 1000)
-            tag = "fry" if j % 2 == 0 else "frx"
-            val = amp if j % 2 == 0 else -amp
-            ex += "\\t(%d,%d,\\%s%d)" % (a_, b_, tag, val)
-        if d > 0.6:
-            ex += "\\t(0,%d,\\\\be0)" % int(min(0.3, d * 0.3) * 1000)
-        dx, dy = drift
-        self.shape(layer, t0, t1, x, y, x + dx, y + dy, draw=draw, c1=c1, a_peak=a_peak,
-                   blur=blur, extra=ex, c3=c3, bord=bord, fade_in=0.15, fade_out=0.3)
-
-    def orbit(self, layer, t0, t1, cx, cy, r0, r1, draw, c1="#FFFFFF", a_peak=170,
-              turns=1.0, n=14, blur=1.4, be=2.0, bord=0, c3=None, arc0=0.0, arc1=360.0):
-        """绕中心旋转的轨迹（用 n 段近似圆/弧），用于魔法阵环、光环、粒子绕行。
-
-        比 floor_spin 更通用：可绕任意中心、任意椭圆半径、只走一段弧。
-        """
-        if n < 2:
-            return
-        for i in range(n):
-            u0, u1 = i / n, (i + 1) / n
-            a0 = math.radians(arc0 + (arc1 - arc0) * u0 + 360.0 * turns * u0)
-            a1 = math.radians(arc0 + (arc1 - arc0) * u1 + 360.0 * turns * u1)
-            rr = r0 + (r1 - r0) * u0
-            ta = t0 + (t1 - t0) * u0
-            tb = t0 + (t1 - t0) * u1
-            if tb - ta < 0.02:
-                continue
-            self.shape(layer, ta, tb, cx + math.cos(a0) * rr, cy + math.sin(a0) * rr,
-                       cx + math.cos(a1) * rr, cy + math.sin(a1) * rr,
-                       draw=draw, c1=c1, a_peak=a_peak, blur=blur,
-                       extra=(("\\be%.1f" % be) if be else ""), c3=c3, bord=bord,
-                       fade_in=0.05, fade_out=0.05)

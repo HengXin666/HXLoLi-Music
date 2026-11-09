@@ -45,6 +45,16 @@ hx-karaoke validate_ass.py proj/out.ass --fontsdir fonts --timing proj/timing.js
 hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232    # 校验通过 != 看得见
 ```
 
+`check_fx_profile.py`(FX 量下限, **必须 OK**, 退出码 1 = 不许出片)
+
+```bash
+hx-karaoke check_fx_profile.py proj/out.ass --ref static/music/<番>/<参考>.ass   # 默认 --ratio 0.8; --json 出明细与存活曲线
+```
+
+- 对参考算画像再乘 0.8 得下限, 10 项: FX 条数 / FX 字节 / 每句最少与中位 / 有 FX 时间占比(>=80% 且不高于参考) / 同时存活中位 / 字前 FX 占比 / 逐帧步进(<=0.15s) / 峰值÷中位(每句中位未达标时 SKIP) / 绘图骨架种类 / JP `\frz` 与 `\fax+\frx`
+- validate_ass 管上限(900 同时事件), 这里管下限, 两者并存
+- **口径冻结**: 不许为过关改阈值或定义; 改尺子须单独评审
+
 `validate_ass.py`(必须"通过", 警告逐条过)
 
 - [E] band 越界: fx/ly/card 事件包围盒(含缩放、旋转透视、边框、模糊、clip)超出 band
@@ -68,3 +78,4 @@ hx-karaoke check_fx_visible.py proj/out.ass --fontsdir fonts --times 61,181,232 
 - `check_gates.py --stage render` 退出码 0(输出里是 `PASSED`, 不是"看着都做了")
 - `validate_ass.py` 报"通过", 每条 WARN 有结论
 - `check_fx_visible.py` 所有采样时刻 ≥2000 亮像素
+- `check_fx_profile.py` 对本曲参考退出码 0(10 项无 BAD)

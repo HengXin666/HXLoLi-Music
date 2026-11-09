@@ -161,3 +161,12 @@ band = 该句歌词块(注音顶~中文底、最左~最右)墨迹包围盒外扩
 下载的 SVG 缓存、MV 帧、成片  全属于**工程目录**. skill 里只有代码、契约、模板与一份保留示例
 
 判据: `git status` 之后 skill 目录下不该出现任何一次具体制作的产物. `bake_shapes.py` 会拒绝 `--out` 指向 skill 内部, `svg2ass` 的缓存也不落在 skill 里(见 `steps/4-kfx/42-text-main/impl/precise-shapes.md`)
+
+## 12. 接管后的改动走参数层
+
+`out.ass` 被验收台接管后 (`accept.py init`), 改设计就改这一单元对应的生成器代码或参数 (参数层 `review/station/overrides.json`, 经 `ASSFX_OVERRIDES` 喂回生成器), 改完 `accept.py verify` 做隔离核对. 不许整首重跑去碰运气, 也不许直接改 `out.ass`
+
+理由: 生成器的种子按单元 key 取, 参数层的改动重跑后仍成立, 且有隔离校验兜底. 输出层补丁按 Name 或正则改文本, 重跑后最脆, 改色还会绕开色彩系统
+
+旧预览台的输出层补丁已随 `scripts/station/` 删除 (2026-11-09), 不再有按正则改文本的逃生口: 生成器表达不了就改生成器. 字的音拍错回 `08` 改 `fixes.json`, 不平移字层
+
