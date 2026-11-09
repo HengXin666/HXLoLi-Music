@@ -14,6 +14,10 @@ INFO_DIR = PROJECT_ROOT / "static" / "info"  # 歌曲详细配置 (按需加载)
 OUTPUT_FILE = PROJECT_ROOT / "playlist.json"
 CACHE_FILE = PROJECT_ROOT / ".playlist_cache.json"
 
+# static/music/ 下不是番剧的一级目录 (歌手 / 原创曲目录); 这些目录里的歌 anime 记为 null, 前端归到"其它".
+# 其余一级目录名原样作为番剧名, 不改写.
+NON_ANIME_DIRS = {'ちぃむdmp☆'}
+
 # 支持的音频文件扩展名
 AUDIO_EXTENSIONS = {'.mp3', '.flac', '.ogg', '.m4a', '.wav', '.opus'}
 # ASS 字幕扩展名

@@ -4,6 +4,9 @@
         "title": "Lia - Bravely You",
         "artist": "Unknown",
         "audioUrl": "/static/music/Charlotte/Lia - Bravely You.mp3",
+        "anime": {
+            "title": "Charlotte"
+        },
         "assUrl": "/static/music/Charlotte/Lia - Bravely You.ass",
         "assFonts": [
             "A-OTF Kyoukasho ICA Pro R",
@@ -27,6 +30,7 @@
         "title": "ろりこんでよかった~ (是萝莉控真是太好了)",
         "artist": "ちぃむdmp☆",
         "audioUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.flac",
+        "anime": null,
         "assUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.ass",
         "assFonts": [
             "Cormorant Garamond Light",
@@ -40,6 +44,9 @@
         "title": "eufonius - 比翼の羽根 (OP)",
         "artist": "Unknown",
         "audioUrl": "/static/music/ヨスガノソラ/eufonius - 比翼の羽根 (OP).mp3",
+        "anime": {
+            "title": "ヨスガノソラ"
+        },
         "assUrl": "/static/music/ヨスガノソラ/eufonius - 比翼の羽根 (OP).ass",
         "assFonts": [
             "Cormorant Garamond Light",
@@ -52,6 +59,9 @@
         "title": "果てなき風の軌跡さえ_双版混合",
         "artist": "Unknown",
         "audioUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.mp3",
+        "anime": {
+            "title": "东方"
+        },
         "assUrl": "/static/music/东方/果てなき風の軌跡さえ_双版混合.ass",
         "assFonts": [
             "Noto Sans CJK JP",
@@ -64,6 +74,9 @@
         "title": "果てなき風の軌跡さえ_风祝",
         "artist": "Unknown",
         "audioUrl": "/static/music/东方/果てなき風の軌跡さえ_风祝.mp3",
+        "anime": {
+            "title": "东方"
+        },
         "assUrl": "/static/music/东方/果てなき風の軌跡さえ_风祝.ass",
         "assFonts": [
             "Noto Sans CJK JP",
@@ -76,6 +89,9 @@
         "title": "朝焼けのスターマイン (朝霞星火)",
         "artist": "今井麻美",
         "audioUrl": "/static/music/可塑性的记忆/朝焼けのスターマイン (朝霞星火) - 今井麻美.mp3",
+        "anime": {
+            "title": "可塑性的记忆"
+        },
         "coverUrl": "/static/music/可塑性的记忆/朝焼けのスターマイン (朝霞星火) - 今井麻美.jpg"
     },
     {
@@ -83,6 +99,9 @@
         "title": "INNOCENT BLUE",
         "artist": "古賀葵、大野柚布子、遠藤ゆりか",
         "audioUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.mp3",
+        "anime": {
+            "title": "天使の3P"
+        },
         "assUrl": "/static/music/天使の3P/INNOCENT BLUE - 古賀葵、大野柚布子、遠藤ゆりか.ass",
         "assFonts": [
             "FOT-PopJoy Std B",
@@ -95,6 +114,9 @@
         "title": "モノクローム果樹園 (黑白果树园)",
         "artist": "大野柚布子、遠藤ゆりか",
         "audioUrl": "/static/music/天使の3P/モノクローム果樹園 (黑白果树园) - 大野柚布子、遠藤ゆりか.mp3",
+        "anime": {
+            "title": "天使の3P"
+        },
         "assUrl": "/static/music/天使の3P/モノクローム果樹園 (黑白果树园) - 大野柚布子、遠藤ゆりか.ass",
         "assFonts": [
             "Sarasa Gothic J Semibold",
@@ -107,6 +129,9 @@
         "title": "大切がきこえる (重要的倾听)",
         "artist": "古賀葵、大野柚布子、遠藤ゆりか",
         "audioUrl": "/static/music/天使の3P/大切がきこえる (重要的倾听) - 古賀葵、大野柚布子、遠藤ゆりか.mp3",
+        "anime": {
+            "title": "天使の3P"
+        },
         "assUrl": "/static/music/天使の3P/大切がきこえる (重要的倾听) - 古賀葵、大野柚布子、遠藤ゆりか.ass",
         "assFonts": [
             "FOT-PopJoy Std B",
@@ -119,6 +144,9 @@
         "title": "羽ばたきのバースデイ (振翅的新生)",
         "artist": "大野柚布子、遠藤ゆりか、古賀葵",
         "audioUrl": "/static/music/天使の3P/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.mp3",
+        "anime": {
+            "title": "天使の3P"
+        },
         "assUrl": "/static/music/天使の3P/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.ass",
         "assFonts": [
             "FOT-PopJoy Std B",
@@ -131,6 +159,9 @@
         "title": "オンリー",
         "artist": "大原ゆい子",
         "audioUrl": "/static/music/无职转生/大原ゆい子 - オンリー.mp3",
+        "anime": {
+            "title": "无职转生"
+        },
         "assUrl": "/static/music/无职转生/大原ゆい子 - オンリー.ass",
         "assFonts": [
             "Cormorant Garamond Light",
@@ -144,6 +175,9 @@
         "title": "トコハナ (常花)",
         "artist": "やなぎなぎ",
         "audioUrl": "/static/music/漆黑子弹/やなぎなぎ - トコハナ (常花).mp3",
+        "anime": {
+            "title": "漆黑子弹"
+        },
         "assUrl": "/static/music/漆黑子弹/やなぎなぎ - トコハナ (常花).ass",
         "assFonts": [
             "Cormorant Garamond Light",
@@ -156,6 +190,9 @@
         "title": "ときめきポポロン♪ (心动泡芙♪)",
         "artist": "チマメ隊",
         "audioUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.mp3",
+        "anime": {
+            "title": "点兔"
+        },
         "assUrl": "/static/music/点兔/ときめきポポロン♪ (心动泡芙♪) - チマメ隊.ass",
         "assFonts": [
             "FOT-ニューロダン Pro M",
@@ -168,6 +205,9 @@
         "title": "EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2)",
         "artist": "Unknown",
         "audioUrl": "/static/music/罪恶王冠/EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2).mp3",
+        "anime": {
+            "title": "罪恶王冠"
+        },
         "assUrl": "/static/music/罪恶王冠/EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2).ass",
         "assFonts": [
             "Cormorant Garamond Light",
@@ -179,6 +219,9 @@
         "title": "adrenaline!!!",
         "artist": "TrySail",
         "audioUrl": "/static/music/黄漫老师/adrenaline!!! - TrySail.flac",
+        "anime": {
+            "title": "黄漫老师"
+        },
         "assUrl": "/static/music/黄漫老师/adrenaline!!! - TrySail.ass",
         "assFonts": [
             "Cormorant Garamond",

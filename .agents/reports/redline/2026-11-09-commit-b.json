@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "0a0a48604d789fa6cb5ca3476e00138ad925e1f8",
+  "base_commit": "90fae01d71da60fc35f4ca48f8a5709debd3155b",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/feature/2026-11-02-playlist-anime-group.md",
+    ".agents/reports/redline/2026-11-09-commit-b.json",
+    "playlist.json",
+    "py/music/config.py",
+    "py/music/scanner.py"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "code-only-diff",
+      "path": "py/music/config.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/bug-fix/2026-10-02-kfx-gate-structural-criteria.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/bug-fix/2026-10-02-kfx-gate-structural-criteria.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": "py/music/config.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-09-28-kfx-quality-redline.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-09-28-kfx-quality-redline.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": "py/music/scanner.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/bug-fix/2026-10-02-kfx-gate-structural-criteria.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/bug-fix/2026-10-02-kfx-gate-structural-criteria.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": "py/music/scanner.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-09-28-kfx-quality-redline.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-09-28-kfx-quality-redline.md"
+      ]
+    }
+  ],
+  "ok": false
+}

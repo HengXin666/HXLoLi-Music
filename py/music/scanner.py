@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from .config import (
-    STATIC_MUSIC_DIR, AUDIO_EXTENSIONS, FONT_DOWNLOAD_MAP,
+    STATIC_MUSIC_DIR, AUDIO_EXTENSIONS, FONT_DOWNLOAD_MAP, NON_ANIME_DIRS,
 )
 from .cache import file_md5, get_file_id, path_to_url
 from .metadata import extract_metadata, extract_cover_from_audio, find_matching_cover
@@ -18,6 +18,17 @@ from .ass_parser import (
 )
 from .ass_prescan import prescan_ass_bounds
 from .fonts import ensure_ass_fonts, find_fonts_in_dir
+
+
+def anime_of(audio_path: Path) -> dict | None:
+    """
+    .agents/notes/implemented/feature/2026-11-02-playlist-anime-group.md
+    番剧归属 = static/music/ 下的一级目录名 (原样, 不改写); 直接放在 static/music/ 根下或在 NON_ANIME_DIRS 里的为 None.
+    """
+    parts = audio_path.relative_to(STATIC_MUSIC_DIR).parts
+    if len(parts) < 2 or parts[0] in NON_ANIME_DIRS:
+        return None
+    return {"title": parts[0]}
 
 
 def scan_music_dir() -> list[dict]:
@@ -72,6 +83,7 @@ def scan_music_dir() -> list[dict]:
             "title": meta["title"],
             "artist": meta["artist"],
             "audioUrl": path_to_url(audio_path),
+            "anime": anime_of(audio_path),
         }
 
         if ass_path:
