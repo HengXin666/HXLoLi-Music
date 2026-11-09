@@ -1,0 +1,41 @@
+.app {
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr);
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+}
+.app > * { min-width: 0; min-height: 0; overflow: hidden; }
+.main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 4px var(--tl-h);
+  min-height: 0;
+  overflow: hidden;
+}
+.main > * { min-width: 0; min-height: 0; overflow: hidden; }
+.upper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4px var(--side-w);
+  min-height: 0;
+  overflow: hidden;
+}
+.upper > * { min-width: 0; min-height: 0; overflow: hidden; }
+.monitorCol {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 32px;
+  overflow: hidden;
+}
+.monitorCol > * { min-width: 0; min-height: 0; overflow: hidden; }
+.vsplit, .hsplit { background: var(--bg-0); position: relative; touch-action: none; }
+.vsplit { cursor: col-resize; }
+.hsplit { cursor: row-resize; }
+.vsplit:hover, .hsplit:hover { background: var(--accent); opacity: 0.6; }
+.side { display: grid; grid-template-rows: minmax(0, 1fr); overflow: hidden; min-height: 0; }
+.side[data-ins] { grid-template-rows: minmax(0, 45fr) minmax(0, 55fr); }
+.side > * { min-height: 0; min-width: 0; overflow: hidden; }
+.toast {
+  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 1100; pointer-events: none;
+  padding: 6px 14px; border-radius: 16px; background: rgba(20, 22, 28, 0.95); border: 1px solid var(--line); font-size: 12px;
+  max-width: 80vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}

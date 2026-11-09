@@ -1,0 +1,11 @@
+.box { position: relative; background: #050506; overflow: hidden; }
+.frame { position: absolute; background: #000; overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+.video, .subs, .ov { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.video { object-fit: fill; visibility: hidden; }
+.subs, .ov { pointer-events: none; }
+.wipe { position: absolute; top: 0; bottom: 0; width: 12px; margin-left: -6px; cursor: ew-resize; z-index: 3; }
+.wipe::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 6px rgba(0, 0, 0, 0.8); }
+.wl, .wr { position: absolute; top: 8px; font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.6); white-space: nowrap; }
+.wl { right: 14px; }
+.wr { left: 14px; }
+.badge { position: absolute; left: 8px; top: 8px; font-size: 11px; padding: 1px 7px; border-radius: 3px; background: rgba(0, 0, 0, 0.6); color: #fff; z-index: 2; }

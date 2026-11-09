@@ -1,0 +1,37 @@
+/* 深色主题 token. 零滚动条: 根到每个格子都 overflow hidden, 只有歌词面板与事件列表内部可滚且隐藏原生滚动条. */
+:root {
+  --bg-0: #0d0e11;
+  --bg-1: #15171c;
+  --bg-2: #1c1f26;
+  --bg-3: #262a33;
+  --line: #2c313b;
+  --fg-0: #e9ecf2;
+  --fg-1: #aab1bf;
+  --fg-2: #6f7787;
+  --accent: #6ea8ff;
+  --warn: #f0a24a;
+  --good: #59c38a;
+  --bad: #ef6b6b;
+  --role-high: #f0b85a;
+  --role-carrier: #5e8fd8;
+  --role-rest: #5b6474;
+  --font-ui: 'Inter', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-0);
+  color: var(--fg-0);
+  font: 12px/1.4 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+button, select, input { font: inherit; color: inherit; }
+/* 允许内部滚动的两处: 隐藏原生滚动条, 不占布局宽度 */
+[data-scroll-ok] { scrollbar-width: none; overscroll-behavior: contain; }
+[data-scroll-ok]::-webkit-scrollbar { display: none; width: 0; height: 0; }

@@ -1,0 +1,26 @@
+.top, .status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: var(--bg-1);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.top { border-bottom: 1px solid var(--line); height: 36px; }
+.status { border-top: 1px solid var(--line); height: 24px; color: var(--fg-1); font-size: 11px; }
+.brand { font-weight: 600; letter-spacing: 0.02em; }
+.item { color: var(--fg-0); overflow: hidden; text-overflow: ellipsis; }
+.sep { width: 1px; height: 14px; background: var(--line); flex: none; }
+.grow { flex: 1; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.chip {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg-3);
+  color: var(--fg-1);
+  font-size: 11px;
+}
+.chip[data-state='ready'] { color: var(--good); }
+.chip[data-state='error'] { color: var(--bad); }
+.sel { color: var(--accent); }
