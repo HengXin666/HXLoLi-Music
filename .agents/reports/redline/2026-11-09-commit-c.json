@@ -1,0 +1,232 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "9abe4c2416dfacb5903718fbdb7a21614182fa94",
+  "base_commit": "7b532e1380e671e036670fce0e9307acaad5cd5e",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/process/2026-10-02-karaoke-dev-workspace.md",
+    ".agents/reports/redline/2026-11-09-commit-c.json",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/cards.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_common.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_last.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse1.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse2.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py",
+    ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/scene.py"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/cards.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/cards.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/cards.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_common.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_common.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_common.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_last.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_last.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_last.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse1.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse1.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse1.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse2.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse2.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/fx_verse2.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/make_ass.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/scene.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/scene.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1/scene.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+      ]
+    }
+  ],
+  "ok": false
+}

@@ -81,6 +81,9 @@ ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.ste
   （那些命令已过时，应改用 `hx-karaoke <脚本>`）。因为删除 5.5GB 属破坏性且不在本次指令范围内，
   **没有动它**；确认无用后删掉即可把 `dev/` 从 7.6GB 降到约 2.1GB。
 
+- 2026-11-09: 示例 `examples/mushoku_ed1/make_ass.py` 拆成 `scene.py` (公共场景/字体/样式/Generator), `fx_common.py`, `fx_verse1.py`, `fx_verse2.py`, `fx_last.py` (按段落的各句特效), `cards.py` (卡片), `make_ass.py` 只留设计表与主流程 (hard-rules 4d 单文件 300 行). 原本挂在 `FONTS` 与 `fx_promise` 上的 4 个锚点随拆分漂进了 `scene.py` (其中 steps-restructure 那条被误改成指向 fx-gate-studio) 并造成 7 项锚点错误; 本次把锚点放回 `make_ass.py`: steps-restructure 挂 `PHRASES`, skill-genericize 挂 `FXMAP`, 本记录与 layout-consolidation 挂 `main()`, 各记录的 Code 小节不变. 拆分后示例仍是 9131 条事件, 但输出与拆分前不逐字节相同 (种子改为按 key 派生, 见 `scene.py` 的 `SEED`/`LY_SEED`).
+- 2026-11-09 本次入库用 `git commit --no-verify` 绕过本地 pre-commit, 由用户授权, 不是校验通过. 红线诊断: 0 项错误, 21 项 code-only-diff, 完整 JSON 存在 `.agents/reports/redline/2026-11-09-commit-c.json`. 豁免的 21 条是 7 个文件 (`make_ass.py`, `scene.py`, `cards.py`, `fx_common.py`, `fx_verse1.py`, `fx_verse2.py`, `fx_last.py`) 各对 3 篇记录报一次: `process/2026-10-02-karaoke-layout-consolidation.md`, `process/2026-10-02-karaoke-steps-restructure.md`, `process/2026-10-04-karaoke-skill-genericize.md`. 根因同 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`: 这三篇各管多个目录 (layout-consolidation 连带 `templates/`, steps-restructure 连带 hx-kfx, skill-genericize 19 个目录), 给它们补一行就会对本次没改的目录报 note-only (实测 layout-consolidation +1, skill-genericize +22), steps-restructure 按要求未动.
+
 ## Testing
 
 - `git status --short dev/` → **0 条**（整棵屏蔽生效）；`static/music/漆黑子弹/` 是 `??`（发布产物入库）。
