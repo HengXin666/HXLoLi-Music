@@ -76,3 +76,8 @@ Decision-ID: karaoke-ruby-silent-loss
 - 已知边界: `hl_white_fill` 的描边取自 `stops[0]`(色域深端), 所以**色域的排布顺序有了语义**:
   `stops[0]` 必须是那个"能当描边"的深色。这条约束写在 `47-color` 与 `gen/common.py` 的注释里。
 - 2026-11-09: `scripts/assfx/text/anim.py` 的高亮与 ruby 高亮描边色改为可由主题键 `hl_out` 覆盖, 缺省仍用 glow (老工程输出不变); ruby 不静默丢失的约定本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.
+
+## 追加: 2026-11-10 歌词位置预设
+
+- `assfx/text` 新增 `placement.py` (位置预设 -> 字带坐标), `layout.py` 的行起点改走 `placement.row_x0`, 默认居中保持原式.
+- 本记录的三条判定未改: 行首孤立 unit 向后归属、逐字注音 LINT、`hl_white_fill` 填白描深; 默认预设下 dev 成品 out.ass sha 不变.

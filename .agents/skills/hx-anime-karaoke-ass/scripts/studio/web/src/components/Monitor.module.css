@@ -9,3 +9,13 @@
 .wl { right: 14px; }
 .wr { left: 14px; }
 .badge { position: absolute; left: 8px; top: 8px; font-size: 11px; padding: 1px 7px; border-radius: 3px; background: rgba(0, 0, 0, 0.6); color: #fff; z-index: 2; }
+.box[data-preview] .frame { box-shadow: 0 0 0 2px var(--warn); }
+.prevNote {
+  position: absolute; left: 0; right: 0; z-index: 4; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 10px;
+  background: repeating-linear-gradient(135deg, rgba(240, 162, 74, 0.94) 0 14px, rgba(222, 142, 52, 0.94) 14px 28px);
+  color: #1a1205; font-size: clamp(12px, 1.6vw, 16px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.prevNote b { font-size: 1.15em; letter-spacing: 0.06em; }
+.prevNote[data-at='top'] { top: 0; }
+.prevNote[data-at='bottom'] { bottom: 0; } /* 预览顶部位置时提示条让到底部, 不压歌词 */

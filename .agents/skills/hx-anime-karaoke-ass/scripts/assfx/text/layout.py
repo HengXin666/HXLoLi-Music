@@ -13,6 +13,7 @@
 垂直位置全部来自 calibrate_ruby.py 的实测结果（calib.json），不要凭 fs 猜。
 """
 from fontTools.ttLib import TTFont
+from assfx.text import placement as PLC
 
 
 class Metric:
@@ -48,7 +49,8 @@ class Layout:
     """
 
     def __init__(self, **cfg):
-        self.c = dict(jp_sp=2, rb_sp=1, cn_sp=2, gap_em=0.5, cx=960, pad_x=96, pad_y=54, latin_fs=None, rb_pad=6)
+        self.c = dict(jp_sp=2, rb_sp=1, cn_sp=2, gap_em=0.5, cx=960, pad_x=96, pad_y=54, latin_fs=None, rb_pad=6,
+                      align="center", x_edge=None)
         self.c.update(cfg)
         c = self.c
         self.MJ = Metric(c["jp_font"]); self.MC = Metric(c["cn_font"])
@@ -133,7 +135,7 @@ class Layout:
                 for g in r["grp"]:
                     g["w"] += need / len(r["grp"])
         total = sum(it["w"] for it in items)
-        x = cx - total / 2
+        x = self._x0(cx, total, c["jp_sp"], c["jp_sp"] / 2)
         for it in items:
             it["x"] = x + it["w"] / 2
             x += it["w"]
@@ -150,7 +152,18 @@ class Layout:
                 rb.append(dict(ch=s, x=xx + (a - c["rb_sp"]) / 2, y=self.rb_y, s=m["s"], e=m["e"], host=r["grp"][0]))
                 xx += a
         cn = self.cn_line(zh, cx)
-        return Phrase(self, chars, rb, cn)
+        ph = Phrase(self, chars, rb, cn)
+        # 行宽记账: 预览台按它和 placement.row_x0 算换预设后的平移 (清单 rows 字段), 不另写布局公式
+        ph.rows = dict(jp=[total, c["jp_sp"], c["jp_sp"] / 2],
+                       cn=[self._cn_total, c["cn_sp"], 0] if cn else None)
+        return ph
+
+    def _x0(self, cx, total, sp, lead):
+        """一行的起点 x. center: 以 cx 居中 (原式, 逐字节不变).
+        left/right (placement 水平预设): 整句块贴 x_edge -- 日文行与中文行的墨迹边都对齐到同一条线,
+        所有句共用这条线, 句与句之间边不跳. lead = 首字占位左侧空白 (日文 sp/2, 中文 0)."""
+        c = self.c
+        return PLC.row_x0(c["align"], c["x_edge"], cx, total, sp, lead)
 
     def ruby_advs(self, flat):
         c = self.c
@@ -166,7 +179,8 @@ class Layout:
         if not zh:
             return []
         cw = [self.MC.adv(ch, c["cn_fs"]) + c["cn_sp"] if ch != " " else self.MC.em(c["cn_fs"]) * 0.6 for ch in zh]
-        x = cx - (sum(cw) - c["cn_sp"]) / 2
+        self._cn_total = sum(cw)
+        x = self._x0(cx, sum(cw), c["cn_sp"], 0)
         out = []
         for ch, w in zip(zh, cw):
             if ch != " ":
@@ -183,6 +197,9 @@ class Phrase:
         xs1 = [ch["x"] + ch["w"] / 2 for ch in chars] + [ch["x"] + ch["w"] / 2 for ch in cn]
         top = L.jp_y + (cal["ruby_offset"] + cal["ruby_kana"]["top_p10"] if rb else cal["jp_kanji"]["top_p10"])
         bot = (L.cn_y + cal["cn"]["bottom_p90"]) if cn else L.jp_y + cal["jp_kanji"]["bottom_p90"]
+        if cn and L.cn_y < L.jp_y:     # 中文在上 (placement order=cn_top): 墨迹上沿取中文顶, 下沿取日文底
+            top = L.cn_y + cal["cn"]["top_p10"]
+            bot = L.jp_y + cal["jp_kanji"]["bottom_p90"]
         self.ink = (min(xs0), top, max(xs1), bot)
         self.band = (self.ink[0] - c["pad_x"], self.ink[1] - c["pad_y"], self.ink[2] + c["pad_x"], self.ink[3] + c["pad_y"])
         self.s = chars[0]["s"]; self.e = chars[-1]["e"]

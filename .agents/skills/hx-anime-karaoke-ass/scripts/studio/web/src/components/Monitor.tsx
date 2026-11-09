@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api } from '../lib/api';
+import { api, type PlaceBlock, type PlaceLine } from '../lib/api';
 import { clock } from '../lib/clock';
 import { createOctopus, type OctopusInstance } from '../lib/octopus';
 import { inRanges } from '../lib/sel';
@@ -13,6 +13,8 @@ import s from './Monitor.module.css';
  * 视频 (EDL) + 定制 libass 画布 (像素 = 显示尺寸 x DPR). 与参考对比: A/B 切换 / 划变 / 左右并排 (第二个 libass 实例渲染参考 ASS).
  * 时间线轨的眼/独显与 "只看" 在这里落地: 过滤 out.ass 后 setTrack.
  * 选区叠层: 所选字的字框 + 该句 band 框. 右键: 按包围盒命中当前时刻的事件 (服务端 /api/hit).
+ * 位置预设预览: 第二块画布每帧从成品画布拷像素, 把当前在场句的 "日文块 (含注音)" 与 "中文行" 两块各自擦掉原处、
+ * 贴到服务端给的位移处 (矩形与位移全来自 GET /api/placement, 这里不算布局). 块外/跨块的特效不跟, 画面上常驻大号提示.
  */
 const PW = 1920, PH = 1080;
 type Rect = { x: number; y: number; w: number; h: number };
@@ -63,6 +65,37 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
   return { inst, ready };
 }
 
+function usePlacementPreview(src: React.RefObject<HTMLCanvasElement | null>, dst: React.RefObject<HTMLCanvasElement | null>, lines: PlaceLine[] | null) {
+  useEffect(() => {
+    if (!lines) return;
+    let raf = 0;
+    const draw = () => {
+      const a = src.current, b = dst.current;
+      if (a && b && a.width && a.height) {
+        if (b.width !== a.width || b.height !== a.height) { b.width = a.width; b.height = a.height; }
+        const kx = a.width / PW, ky = a.height / PH;
+        const ctx = b.getContext('2d')!;
+        ctx.clearRect(0, 0, b.width, b.height);
+        ctx.drawImage(a, 0, 0);
+        const t = clock.t();
+        const blocks: PlaceBlock[] = [];
+        for (const l of lines) if (t >= l.t[0] && t <= l.t[1]) { blocks.push(l.jp); if (l.cn) blocks.push(l.cn); }
+        // 先把所有在场块的原处擦掉, 再贴 (两句交叠时不会互相擦)
+        for (const k of blocks) ctx.clearRect(k.src[0] * kx, k.src[1] * ky, (k.src[2] - k.src[0]) * kx, (k.src[3] - k.src[1]) * ky);
+        for (const k of blocks) {
+          const [x0, y0, x1, y1] = k.src;
+          ctx.drawImage(a, x0 * kx, y0 * ky, (x1 - x0) * kx, (y1 - y0) * ky, (x0 + k.dx) * kx, (y0 + k.dy) * ky, (x1 - x0) * kx, (y1 - y0) * ky);
+        }
+        b.dataset.blocks = String(blocks.length);
+        b.dataset.t = t.toFixed(2);
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [lines, src, dst]);
+}
+
 function useVideoSync(vid: React.RefObject<HTMLVideoElement | null>) {
   const edl = useStore((x) => x.edl);
   useEffect(() => clock.subscribe((t) => {
@@ -108,6 +141,11 @@ export default function Monitor() {
   const ranges = useStore((x) => x.ranges);
   const menu = useStore((x) => x.menu);
   const kept = useStore((x) => x.monitorKept);
+  const placeLines = useStore((x) => x.placeLines);
+  const placeCand = useStore((x) => x.placeCand);
+  const placeNote = useStore((x) => x.place?.note);
+  const previewing = !!placeCand && !!placeLines;
+  const cvPrev = useRef<HTMLCanvasElement>(null);
   const set = useStore((x) => x.set);
 
   useEffect(() => {
@@ -128,6 +166,7 @@ export default function Monitor() {
   const ref = useOcto('ref', cvRef, rRef, refActive, refKey);
   useVideoSync(vidOut);
   useVideoSync(vidRef);
+  usePlacementPreview(cvOut, cvPrev, previewing ? placeLines : null);
 
   // ---- 轨显示过滤 + 热重载
   const outText = useRef<string | null>(null);
@@ -203,11 +242,13 @@ export default function Monitor() {
 
   return (
     <div className={s.box} ref={box} data-testid="monitor" data-compare={compare} data-ab={abShow}
-      data-kept={kept} data-ref-ready={ref.ready || undefined}>
+      data-kept={kept} data-ref-ready={ref.ready || undefined} data-preview={previewing || undefined}>
       <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out"
         onContextMenu={(e) => onCtx(e, rOut)}>
         {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" />}
-        <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" style={{ visibility: showOut ? 'visible' : 'hidden', clipPath: outClip }} />
+        <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" style={{ visibility: showOut && !previewing ? 'visible' : 'hidden', clipPath: outClip }} />
+        {previewing && <canvas ref={cvPrev} className={s.subs} data-hidpi="monitor-preview" data-testid="monitor-preview"
+          style={{ visibility: showOut ? 'visible' : 'hidden', clipPath: outClip }} />}
         {refInline && <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref"
           style={{ visibility: compare === 'ab' && abShow === 'out' ? 'hidden' : 'visible', clipPath: refClip }} />}
         <svg className={s.ov} viewBox={`0 0 ${PW} ${PH}`} preserveAspectRatio="none">
@@ -224,6 +265,11 @@ export default function Monitor() {
               fill="none" stroke="#ef6b6b" strokeWidth={1} vectorEffect="non-scaling-stroke" />
           ))}
         </svg>
+        {previewing && (
+          <div className={s.prevNote} data-testid="preview-note" role="note" data-at={placeCand?.v === 'top' ? 'bottom' : 'top'}>
+            <b>⚠ 近似预览</b><span>{(placeNote || '').replace(/^近似预览[,，]\s*/, '').replace(/[,，]\s*/g, ' · ')}</span>
+          </div>
+        )}
         {compare === 'wipe' && (
           <div className={s.wipe} style={{ left: `${wipe * 100}%` }} onPointerDown={onWipe} data-testid="wipe-handle">
             <span className={s.wl}>out</span><span className={s.wr}>参考</span>

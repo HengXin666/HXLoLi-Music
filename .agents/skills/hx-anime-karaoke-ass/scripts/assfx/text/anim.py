@@ -49,6 +49,22 @@ def exit_vec(kind, rng):
     return dict(dx=0, dy=0, tag="\\blur8")      # fade
 
 
+def keep_in_band(c, xv, band, fs, margin=3.0):
+    """日文是字块最下层时 (placement order=cn_top, 中文在上), 下坠退场没有中文行垫底,
+    按 validate 同一个外接框口径 (geom.event_extent, 取 bright 光晕 bord9/blur10) 把 dy 收到 band 下沿内.
+    只改 dy, 不动 rng, 所以 jp_top 不进这里时输出逐字节不变."""
+    if xv["dy"] <= 0:
+        return xv
+    from assfx.base.geom import event_extent
+    probe = "{\\an5\\move(%.1f,%.1f,%.1f,%.1f)\\bord9\\blur10\\t(0,300,%s)}%s" % (
+        c["x"], c["y"], c["x"] + xv["dx"], c["y"] + xv["dy"], xv["tag"], c["ch"])
+    e = event_extent(probe, fs)
+    over = e[3] + margin - band[3] if e else 0
+    if over > 0:
+        xv = dict(xv, dy=max(0.0, xv["dy"] - over))
+    return xv
+
+
 def target_alpha(look):
     a1 = re.search(r"\\1a(&H[0-9A-Fa-f]{2}&)", look); a3 = re.search(r"\\3a(&H[0-9A-Fa-f]{2}&)", look)
     return f"\\1a{a1.group(1) if a1 else '&H00&'}\\3a{a3.group(1) if a3 else '&H00&'}"
@@ -116,8 +132,12 @@ class Karaoke:
         o, th, doc, rng, ph = self.o, self.th, self.doc, self.rng, self.ph
         L = self.looks(); name = self.name
         self.t_in, self.t_out = t_in, t_out
+        low = bool(ph.cn) and ph.L.cn_y < ph.L.jp_y     # cn_top: 日文在最下层
         for c in ph.chars:
             c["xv"] = exit_vec(o["ext"], rng)
+            if low:
+                fs = ph.L.c["jp_fs"] if c["style"] == "JP" else ph.L.c["latin_fs"]
+                c["xv"] = keep_in_band(c, c["xv"], ph.band, fs)
             c["ti"] = t_in + c["i"] * o["stg_in"]; c["to"] = t_out + c["i"] * o["stg_out"]
             c["te"] = c["to"] + o["dout"]
             st = c["style"]

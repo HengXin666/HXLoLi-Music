@@ -1,0 +1,34 @@
+.panel {
+  position: fixed; top: 40px; right: 12px; z-index: 900; width: 300px;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  padding: 8px 10px 10px; font-size: 12px; overflow: hidden;
+}
+.head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; white-space: nowrap; }
+.grow { flex: 1; }
+.now, .pick { display: flex; gap: 6px; align-items: baseline; padding: 4px 6px; border-radius: 4px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; }
+.now { background: var(--bg-1); }
+.now b, .pick b { font-weight: 600; flex: none; }
+.src { margin-left: auto; color: var(--fg-2); font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+.pick { color: var(--fg-2); margin-bottom: 8px; }
+.pick[data-dirty] { color: #1a1205; background: var(--warn); }
+.x { background: none; border: 0; cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; color: var(--fg-1); }
+.body { display: grid; grid-template-columns: 96px 1fr; gap: 10px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; width: 96px; height: 54px; }
+.cell { position: relative; padding: 0; border: 1px solid var(--line); background: var(--bg-1); border-radius: 3px; cursor: pointer; }
+.cell[data-cur] { border-color: var(--fg-2); }
+.cell[aria-checked='true'] { background: var(--accent); border-color: var(--accent); }
+.cell:disabled { cursor: not-allowed; opacity: 0.5; }
+.dot { position: absolute; width: 14px; height: 4px; border-radius: 2px; background: var(--fg-1); }
+.dot[data-v='top'] { top: 3px; } .dot[data-v='middle'] { top: calc(50% - 2px); } .dot[data-v='bottom'] { bottom: 3px; }
+.dot[data-h='left'] { left: 3px; } .dot[data-h='center'] { left: calc(50% - 7px); } .dot[data-h='right'] { right: 3px; }
+.col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.seg { display: flex; gap: 3px; }
+.seg button, .acts button {
+  flex: 1; padding: 3px 4px; border: 1px solid var(--line); background: var(--bg-1); border-radius: 4px; cursor: pointer; white-space: nowrap;
+}
+.seg button[aria-checked='true'] { background: var(--bg-3); border-color: var(--accent); color: var(--accent); }
+.acts { display: flex; gap: 4px; }
+.apply:not(:disabled) { background: var(--accent) !important; color: #0b1020; border-color: var(--accent) !important; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+.msg { margin-top: 8px; color: var(--fg-1); font-size: 11px; min-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel[data-running] .msg { color: var(--warn); }

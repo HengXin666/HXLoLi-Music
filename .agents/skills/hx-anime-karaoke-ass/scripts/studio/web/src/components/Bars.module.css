@@ -23,4 +23,7 @@
 }
 .chip[data-state='ready'] { color: var(--good); }
 .chip[data-state='error'] { color: var(--bad); }
+.chip[data-state='busy'] { color: var(--warn); }
+button.chip { border: 0; cursor: pointer; }
+button.chip[aria-expanded='true'] { color: var(--accent); }
 .sel { color: var(--accent); }

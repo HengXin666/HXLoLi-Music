@@ -6,7 +6,9 @@
   python3 scripts/studio/server/app.py --project dev/无职转生/オンリー [--port 5199] [--host 127.0.0.1]
 
 运行时直接发 web/dist (vite build 产物), 不需要 node. 开发时 vite dev 把 /api /media /octopus /fonts 代理到这里.
-只读: out.ass, 参考 ASS, timing/manifest/arc. 只在收到写请求时写: review.jsonl (POST /api/review), mv.edl.json (PUT /api/edl).
+只读: out.ass, 参考 ASS, timing/manifest/arc. 只在收到写请求时写: review.jsonl (POST /api/review), mv.edl.json (PUT /api/edl),
+placement.json + 重跑生成器换 out.ass/清单 (POST /api/placement: 单飞, 忙时直接 409; 预设与产物都先落临时目录,
+全部成功才原子改名进工程, 失败时工程文件一个都不动).
 check_fx_profile 只 import, 不复制, 不修改.
 """
 import argparse, base64, hashlib, json, os, re, socket, struct, subprocess, sys, threading, time
@@ -23,6 +25,7 @@ from assfx import check_fx_profile as CFP  # noqa: E402  只 import
 from render.octo_browser import find_octopus  # noqa: E402  与出片同一份定制 libass
 sys.path.insert(0, HERE)
 from analysis import Analysis  # noqa: E402
+from assfx.text import placement as PLC  # noqa: E402  位置公式唯一实现 (前端不复算)
 
 MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript", ".mjs": "application/javascript",
         ".css": "text/css", ".json": "application/json", ".wasm": "application/wasm", ".svg": "image/svg+xml",
@@ -89,6 +92,10 @@ class Project:
         self.anime = os.path.basename(os.path.dirname(self.dir))
         self._cache = {}
         self.lock = threading.Lock()
+        self.gen_lock = threading.Lock()   # 单飞: 同一时刻只跑一个生成器
+        self.gen_cmd = [sys.executable]
+        self.gen_timeout = 600
+        self.job = dict(running=False, ok=None, error=None, preset=None, started=None, finished=None, seq=0, thread=None)
         self.A = Analysis(self)
 
     # ---- 路径
@@ -261,10 +268,67 @@ class Project:
         return [json.loads(l) for l in open(f, encoding="utf-8") if l.strip()]
 
     def watched(self):
-        return {k: (os.stat(p).st_mtime_ns if p and os.path.exists(p) else 0) for k, p in (
+        w = {k: (os.stat(p).st_mtime_ns if p and os.path.exists(p) else 0) for k, p in (
             ("out", self.p("out.ass")), ("edl", self.p("mv.edl.json")), ("review", self.review_path()),
-            ("manifest", self.p("out.manifest.json")))}
+            ("manifest", self.p("out.manifest.json")), ("placement", self.p(PLC.FILE)))}
+        w["job"] = self.job["seq"]
+        return w
 
+    # ---- 歌词位置预设 (placement.json). 公式全在 assfx/text/placement.py; 这里只读清单 + 调它.
+    PREVIEW_NOTE = "近似预览, 跨区域特效不跟随, 真实效果以应用后重跑为准"
+
+    def placement_state(self, cand=None):
+        cur = PLC.load(self.dir)
+        res = dict(current=cur, default=PLC.DEFAULT, source="file" if os.path.exists(self.p(PLC.FILE)) else "default", enums=dict(v=PLC.V, h=PLC.H, order=PLC.ORDER, gap=list(PLC.GAP)),
+                   job={k: v for k, v in self.job.items() if k != "thread"}, note=self.PREVIEW_NOTE, frozen=self.frozen_goods())
+        if cand:
+            calib = self.json(self.p("calib.json"))
+            man = self.json(self.p("out.manifest.json")) or {}
+            units = [u for u in man.get("units", []) if u.get("kind") == "phrase"]
+            res["candidate"] = cand
+            res["lines"] = PLC.preview(cur, cand, calib, units) if calib else []
+            res["rows_missing"] = sum(1 for u in units if not u.get("rows"))
+        return res
+
+    def frozen_goods(self):
+        g = self.json(self.p("review", "accept", "goods.json")) or {}
+        return len(g.get("items", [])) if isinstance(g, dict) else 0
+
+    def placement_apply(self, preset):
+        """后台线程. 顺序: 预设写到临时目录 -> 生成器经 ASSFX_PLACEMENT 读它, 出到同一临时目录
+        -> 全部成功才逐个 os.replace (同一文件系统内原子改名) 到 out.ass / 清单 / placement.json.
+        失败时工程里什么都没动: placement.json 保持原样 (原来不存在就仍不存在), out.ass 不被碰."""
+        tmpd = self.p(".placement-run")
+        err = None
+        try:
+            os.makedirs(tmpd, exist_ok=True)
+            tpre, tout = os.path.join(tmpd, PLC.FILE), os.path.join(tmpd, "out.ass")
+            json.dump(preset, open(tpre, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+            env = dict(os.environ, ASSFX=SCRIPTS, ASSFX_FONTS=os.path.join(SKILL, "fonts"), ASSFX_PLACEMENT=tpre,
+                       PYTHONPATH=SCRIPTS + os.pathsep + os.environ.get("PYTHONPATH", ""))
+            r = subprocess.run(self.gen_cmd + [self.p("make_ass.py"), tout], cwd=self.dir, env=env,
+                               capture_output=True, text=True, timeout=self.gen_timeout)
+            tman = os.path.splitext(tout)[0] + ".manifest.json"
+            if r.returncode != 0 or not os.path.exists(tout) or not os.path.exists(tman):
+                err = "生成器失败 (exit %s): %s" % (r.returncode, (r.stderr or r.stdout)[-600:].strip())
+            else:
+                os.replace(tman, self.p("out.manifest.json"))
+                os.replace(tout, self.p("out.ass"))
+                os.replace(tpre, self.p(PLC.FILE))
+        except subprocess.TimeoutExpired:
+            err = "生成器超时 (> %ds), 已终止" % self.gen_timeout
+        except Exception as e:  # noqa: BLE001
+            err = "%s: %s" % (type(e).__name__, e)
+        finally:
+            try:
+                for x in os.listdir(tmpd):
+                    os.remove(os.path.join(tmpd, x))
+            except OSError:
+                pass
+            with self.lock:
+                self.job.update(running=False, ok=err is None, error=err, finished=time.time(),
+                                seq=self.job["seq"] + 1, thread=None)
+            self.gen_lock.release()
 
 PROJECT = None
 
@@ -430,6 +494,14 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(items=P.reviews()))
             if path == "/api/watch":
                 return self.websocket()
+            if path == "/api/placement":
+                cand = None
+                if any(k in q for k in ("v", "h", "order", "gap")):
+                    cand = dict(PLC.load(P.dir), **{k: q[k] for k in ("v", "h", "order", "gap") if k in q})
+                    bad = [k for k, al in (("v", PLC.V), ("h", PLC.H), ("order", PLC.ORDER), ("gap", tuple(PLC.GAP))) if cand[k] not in al]
+                    if bad:
+                        return self.err(400, "未知取值: %s" % ", ".join("%s=%s" % (k, cand[k]) for k in bad))
+                return self.send_json(P.placement_state(cand))
             if path.startswith("/media/"):
                 f = os.path.realpath(os.path.join(P.root, path[len("/media/"):]))
                 ok = (f.startswith(P.dir + os.sep) or f.startswith(os.path.join(P.root, "static", "music") + os.sep))
@@ -458,6 +530,8 @@ class H(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path)
+        if u.path == "/api/placement":
+            return self.post_placement()
         if u.path != "/api/review":
             return self.err(404, "unknown api")
         b = self.body() or {}
@@ -473,6 +547,26 @@ class H(BaseHTTPRequestHandler):
             with open(PROJECT.review_path(), "a", encoding="utf-8") as f:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
         return self.send_json(rec, 201)
+
+    def post_placement(self):
+        P = PROJECT
+        b = self.body() or {}
+        if not isinstance(b, dict):
+            return self.err(400, "需要 {v, h, order, gap}")
+        pre = dict(PLC.DEFAULT, **{k: b[k] for k in PLC.DEFAULT if k in b})
+        bad = [k for k, al in (("v", PLC.V), ("h", PLC.H), ("order", PLC.ORDER), ("gap", tuple(PLC.GAP))) if pre[k] not in al]
+        if bad:
+            return self.err(400, "未知取值: %s" % ", ".join("%s=%s" % (k, pre[k]) for k in bad))
+        if P.frozen_goods():
+            return self.err(409, "有 %d 条冻结的 \"好\": 换位置会让快照过期, 请先走 accept 流程" % P.frozen_goods())
+        if not P.gen_lock.acquire(blocking=False):
+            return self.err(409, "生成器正在运行, 等它结束再应用")
+        with P.lock:
+            P.job.update(running=True, ok=None, error=None, preset=pre, started=time.time(), finished=None)
+            th = threading.Thread(target=P.placement_apply, args=(pre,), daemon=True)
+            P.job["thread"] = th
+        th.start()
+        return self.send_json(dict(started=True, preset=pre), 202)
 
     def do_PUT(self):
         u = urlparse(self.path)
@@ -537,9 +631,11 @@ class Server(ThreadingHTTPServer):
             super().handle_error(request, client_address)
 
 
-def make_server(project, host="127.0.0.1", port=5199, review=None):
+def make_server(project, host="127.0.0.1", port=5199, review=None, gen_cmd=None):
     global PROJECT
     PROJECT = Project(project)
+    if gen_cmd:
+        PROJECT.gen_cmd = list(gen_cmd)
     if review:
         PROJECT._review = os.path.abspath(review)  # 测试用: 批注写到临时文件, 不碰工程
     srv = Server((host, port), H)
@@ -552,8 +648,9 @@ def main(argv=None):
     ap.add_argument("--project", required=True, help="工程目录 dev/<番名>/<歌名>")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=5199)
+    ap.add_argument("--gen-python", default=sys.executable, help="POST /api/placement 重跑生成器用的解释器 (需 fonttools)")
     a = ap.parse_args(argv)
-    srv = make_server(a.project, a.host, a.port)
+    srv = make_server(a.project, a.host, a.port, gen_cmd=a.gen_python.split())
     print("hx-studio  http://%s:%d/  工程 %s" % (a.host, a.port, PROJECT.rel(PROJECT.dir)), flush=True)
     try:
         srv.serve_forever()

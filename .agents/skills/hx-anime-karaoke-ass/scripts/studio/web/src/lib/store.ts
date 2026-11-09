@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Beats, Clip, Edl, ExplainItem, HitEvent, LyricLine, Peaks, Project, ProfileRes, Review } from './api';
+import type { Beats, Clip, Edl, ExplainItem, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review } from './api';
 import { buildIndex, type Index, type Range } from './sel';
 import { defaultVis, type VisMap } from './tracks';
 
@@ -57,6 +57,11 @@ interface S {
   trackH: Record<string, number>;
   collapsed: Record<string, boolean>;
   monitorKept: number;
+  // 位置预设: place = 服务端状态 (当前预设/任务); placeCand = 正在预览的候选 (null = 不预览); placeLines = 服务端给的每句块位移
+  place: PlacementRes | null;
+  placeOpen: boolean;
+  placeCand: Preset | null;
+  placeLines: PlaceLine[] | null;
   toast: string;
   set: (p: Partial<S>) => void;
 }
@@ -102,6 +107,10 @@ export const useStore = create<S>((set) => ({
   trackH: load<Record<string, number>>(LS_H, {}),
   collapsed: load<Record<string, boolean>>(LS_COL, { fx: true }),
   monitorKept: 0,
+  place: null,
+  placeOpen: false,
+  placeCand: null,
+  placeLines: null,
   toast: '',
   set: (p) => set(p),
 }));

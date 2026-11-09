@@ -34,3 +34,9 @@ Decision-ID: karaoke-studio
 - 2026-11-09 实测: studio e2e 68/68, 九视口 (1280x720 / 1920x1080 / 2560x1440 x DPR 1 / 1.5 / 2) 9/9 零滚动条.
 - `scripts/studio/web/node_modules/` 与 `dist/` 由 `scripts/studio/web/.gitignore` 忽略, 运行时由 python 服务直接发 `dist/`, 需先 `npm run build`.
 - 本记录从特效门禁记录 (Decision-ID karaoke-fx-gate-studio) 拆出, 使 studio 可独立提交, 不牵动特效门禁与生成器目录.
+
+## 追加: 2026-11-10 歌词位置预设
+
+- 位置面板接线: server 新增 `GET/POST /api/placement` (单飞, 忙时 409; 预设与产物先写临时目录, 生成成功才 `os.replace` 落到 out.ass / 清单 / placement.json, 失败回滚); web 的 TopBar 开关、`PlacementPanel` 九宫格/语言顺序/行距、`api.ts`/`store.ts` 状态, App 挂载面板.
+- 预览: `Monitor.tsx` 按 `/api/placement` 返回的逐句位移 (来自 `placement.preview`, 前端不另写公式) 平移日文块与中文行, 提示条标明跨区域特效不跟随.
+- 验证: 新增 `e2e_placement` 13/13 (P8-P10 预览与应用后真实画布 IoU>=0.70); `e2e_ui` 68/68, 其中 8 处断言加固并逐项变异验证, 证据见 `scripts/studio/server/VERIFIED.md`. `web/`、`web/src/`、`web/src/hooks/` 本轮未改.

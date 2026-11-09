@@ -3,6 +3,7 @@ import { shortcut } from '../lib/actions';
 import { api, watch } from '../lib/api';
 import { clock } from '../lib/clock';
 import { lineAt, useStore } from '../lib/store';
+import { onPlacementChanged, refreshPlacement } from '../lib/placement';
 import ContextMenu from './ContextMenu';
 import Inspector from './Inspector';
 import LyricsPanel from './LyricsPanel';
@@ -73,6 +74,7 @@ export default function App() {
       api.peaks().then((peaks) => live && set({ peaks })).catch(() => undefined);
       api.clips().then((r) => live && set({ clips: r.clips, beats: r.beats })).catch(() => undefined);
       api.reviews().then((reviews) => live && set({ reviews })).catch(() => undefined);
+      refreshPlacement().catch(() => undefined);
       document.body.dataset.ready = '1';
     })().catch((e) => { document.body.dataset.ready = 'error'; console.error(e); });
     const off = watch(async (what) => {
@@ -83,6 +85,7 @@ export default function App() {
       }
       if (what.includes('review')) set({ reviews: await api.reviews() });
       if (what.includes('edl')) set({ edl: await api.edl() });
+      if (what.includes('job') || what.includes('placement')) await onPlacementChanged();
     });
     return () => { live = false; off(); };
   }, [set]);

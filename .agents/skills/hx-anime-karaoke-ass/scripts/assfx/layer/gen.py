@@ -227,6 +227,7 @@ class Generator:
                             t=[round(t_in, 3), round(k.t_end, 3)], band=[round(v, 1) for v in ph.band[:4]],
                             fp=phrase_fp(ph), chars=[[c["ch"], round(c["s"], 3), round(c.get("e", 0), 3), round(c["x"], 1),
                                                      round(c["w"], 1)] for c in ph.chars], params=eff, defaults=defaults[i], deps=dict(window=nxt),
+                            rows=getattr(ph, "rows", None),
                             applied=dict(t_in=round(t_in, 3), t_out=round(t_out, 3), din=round(o["din"], 3),
                                          dout=round(o["dout"], 3)), clamp=f.n_clamped, knobs_used=sorted(f.used)))
             if self.verbose:

@@ -64,6 +64,10 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   };
   const reviewsCount = async () => (await (await p.request.get(cfg.url + 'api/review')).json()).items.length;
   const lastReview = async () => { const it = (await (await p.request.get(cfg.url + 'api/review')).json()).items; return it[it.length - 1]; };
+  // 等服务端 review 条数到 n (最多 ms), 再稍等看有没有多写, 返回实际条数; 调用方用 === 判, 少写多写都红
+  const waitReviewsCount = async (n, ms = 3000) => { const t0 = Date.now(); let c = await reviewsCount(); while (c < n && Date.now() - t0 < ms) { await sleep(100); c = await reviewsCount(); } await sleep(150); return reviewsCount(); };
+  // 否定断言用: ms 窗口内每 step 取一次 fn(), 任何一次 !== want 立即返回 {ok:false}; 状态必须全程不变, 而不是固定 sleep 后某一刻碰巧不变
+  const holdFor = async (fn, want, ms = 800, step = 50) => { const t0 = Date.now(); let n = 0; while (Date.now() - t0 < ms) { const v = await fn(); n++; if (v !== want) return { ok: false, v, at: Date.now() - t0 }; await sleep(step); } return { ok: true, n }; };
   const openMenuOnChar = async (g) => { const bb = await charBox(g); await p.mouse.click(bb.x + bb.width / 2, bb.y + bb.height * 0.7, { button: 'right' }); await p.waitForSelector('[data-testid=ctx-menu]'); };
   const item = (id) => p.locator(`[role=menuitem][data-id="${id}"]`);
   const rows = async () => Object.fromEntries((await p.getAttribute('[data-testid=timeline]', 'data-rows')).split(' ').map((x) => { const q = x.split(':'); const h = q.pop(), y = q.pop(); return [q.join(':'), { y: +y, h: +h }]; })); // 组行 id 本身带冒号 (g:fx)
@@ -220,10 +224,12 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     assert(await p.getAttribute('[data-testid=lyrics]', 'data-mode') === 'browse', '没进浏览');
     assert(await p.locator('[data-testid=back-to-current]').isVisible(), '无胶囊');
     const tf0 = await p.evaluate(() => document.querySelector('[data-testid=lyrics-inner]').style.transform);
+    const cur0 = await S('s.curLine');
     await seek(await S('s.lines[12].t[0] + 0.05'));
-    await sleep(600);
-    const tf1 = await p.evaluate(() => document.querySelector('[data-testid=lyrics-inner]').style.transform);
-    assert(tf0 === tf1, '浏览模式下仍在跟随');
+    // 正向: seek 确实把当前句换掉了 (跟随模式下这一步会让 transform 变), 否则下面的 "不变" 不说明任何事
+    await p.waitForFunction((c0) => window.__hx.store.getState().curLine !== c0, cur0, { timeout: 2000 });
+    const h = await holdFor(() => p.evaluate(() => document.querySelector('[data-testid=lyrics-inner]').style.transform), tf0, 900);
+    assert(h.ok, `浏览模式下仍在跟随: ${tf0} -> ${h.v} @${h.at}ms`);
   });
   await test('F3', '3.5 点胶囊恢复跟随', async () => {
     const bb = await p.locator('[data-testid=lyrics]').boundingBox();
@@ -490,10 +496,13 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     const tip = await p.textContent('[data-testid=ctx-tip]');
     assert(tip.includes('没有选区'), tip);
     // aria-disabled 的项 locator.click 会一直等它可用; 用真实鼠标点它的中心
+    await p.evaluate(() => { window.__m6clicks = 0; document.querySelector('[role=menuitem][data-id="play"]').addEventListener('click', () => { window.__m6clicks++; }, { capture: true }); });
     const pb = await item('play').boundingBox();
     await p.mouse.click(pb.x + pb.width / 2, pb.y + pb.height / 2);
-    await sleep(150);
-    assert(await p.locator('[data-testid=ctx-menu]').count() === 1, '点置灰项关了菜单');
+    // 正向: 点击确实落在置灰项上 (capture 监听收到), 否则 "菜单还在" 可能只是没点中
+    await p.waitForFunction(() => window.__m6clicks > 0, null, { timeout: 1000 });
+    const h = await holdFor(() => p.locator('[data-testid=ctx-menu]').count(), 1, 600);
+    assert(h.ok, `点置灰项关了菜单 (count=${h.v} @${h.at}ms)`);
   });
   await test('M7', '3.6 播放选区 (Space): 播完选区自动停', async () => {
     await showLine(LI);
@@ -564,7 +573,11 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     assert(rf.includes('合计') && rf.includes('FX'), 'ref');
     await p.waitForFunction(() => +(document.querySelector('[data-testid=ins-events]')?.dataset.total || 0) > 0, null, { timeout: 5000 });
     await p.click('[data-testid=inspector-close]');
+    // 先等旧检查器真的卸载, 否则 count===1 数到的是没关掉的那个
+    await p.waitForFunction(() => !document.querySelector('[data-testid=inspector]'), null, { timeout: 3000 });
+    assert((await S('s.ranges.length')) > 0, '关检查器后选区没了, E 没有对象');
     await p.keyboard.press('e');
+    await p.waitForSelector('[data-testid=inspector]', { timeout: 3000 });
     assert(await p.locator('[data-testid=inspector]').count() === 1, 'E 快捷键');
   });
   await test('M11', '3.6 写批注 (N): 行内输入框, 记入 review', async () => {
@@ -607,26 +620,44 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   });
   await test('M14', '3.6 好 (冻结) G', async () => {
     await showLine(LI);
-    await openMenuOnChar((await g0(LI)) + 6);
-    await item('good').click();
-    await sleep(200);
-    assert((await lastReview()).kind === 'good', '菜单 good');
-    await p.keyboard.press('g');
-    await sleep(200);
-    const r = await lastReview();
-    assert(r.kind === 'good', '快捷键 G');
     const g = await g0(LI);
+    // 快捷键先测: 前一步 (M13) 写的是 bad, 不是 good; 判定用 "条数 +1 且新增那条是 good", 不看可能残留的 lastReview
+    await clickChar(g + 6);
+    await clickChar(g + 8, { modifiers: ['Shift'] });
+    assert((await S('s.ranges.length')) > 0, '没有选区, G 没有对象');
+    const prev = await lastReview();
+    assert(!prev || prev.kind !== 'good', '前一条已是 good, 判不出 G: ' + JSON.stringify(prev));
+    const n0 = await reviewsCount();
+    await p.keyboard.press('g');
+    const n1 = await waitReviewsCount(n0 + 1);
+    const rk = await lastReview();
+    assert(n1 === n0 + 1 && rk.kind === 'good', `快捷键 G: 条数 ${n0}->${n1} ${JSON.stringify(rk)}`);
     await p.waitForFunction((g) => document.querySelector(`[data-g="${g + 6}"]`).dataset.rv === 'good', g, { timeout: 3000 });
+    await openMenuOnChar(g + 6);
+    await item('good').click();
+    const n2 = await waitReviewsCount(n1 + 1);
+    const rm = await lastReview();
+    assert(n2 === n1 + 1 && rm.kind === 'good', `菜单 good: 条数 ${n1}->${n2} ${JSON.stringify(rm)}`);
   });
   await test('M15', '3.6 换一个构想 R', async () => {
     await showLine(LI);
-    await openMenuOnChar((await g0(LI)) + 6);
-    await item('redo').click();
-    await sleep(200);
-    assert((await lastReview()).kind === 'redo', '菜单 redo');
+    const g = await g0(LI);
+    // 快捷键先测: 前一步 (M14 菜单) 写的是 good, 不是 redo; 判定同 M14
+    await clickChar(g + 6);
+    await clickChar(g + 8, { modifiers: ['Shift'] });
+    assert((await S('s.ranges.length')) > 0, '没有选区, R 没有对象');
+    const prev = await lastReview();
+    assert(!prev || prev.kind !== 'redo', '前一条已是 redo, 判不出 R: ' + JSON.stringify(prev));
+    const n0 = await reviewsCount();
     await p.keyboard.press('r');
-    await sleep(200);
-    assert((await lastReview()).kind === 'redo', '快捷键 R');
+    const n1 = await waitReviewsCount(n0 + 1);
+    const rk = await lastReview();
+    assert(n1 === n0 + 1 && rk.kind === 'redo', `快捷键 R: 条数 ${n0}->${n1} ${JSON.stringify(rk)}`);
+    await openMenuOnChar(g + 6);
+    await item('redo').click();
+    const n2 = await waitReviewsCount(n1 + 1);
+    const rm = await lastReview();
+    assert(n2 === n1 + 1 && rm.kind === 'redo', `菜单 redo: 条数 ${n1}->${n2} ${JSON.stringify(rm)}`);
   });
   const openSub = async (g, parent) => { await openMenuOnChar(g); await item(parent).hover(); await p.waitForSelector('[data-testid=ctx-sub-1]'); };
   await test('M16', '3.6 与参考对比 > A/B 切换', async () => {
@@ -857,10 +888,14 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await p.click('[data-track=fx0] [data-act=lock]');
     const t = await S(`(s.lines[${LI}].t[0] + s.lines[${LI}].t[1]) / 2`);
     const { x, y } = await laneXY(t, 'fx0');
+    await p.evaluate(() => { window.__t4ctx = 0; document.addEventListener('contextmenu', () => { window.__t4ctx++; }, { capture: true, once: true }); });
     await p.mouse.click(x, y, { button: 'right' });
-    await sleep(200);
-    assert(await p.locator('[data-testid=ctx-menu]').count() === 0 && (await S('s.ranges.length')) === 0, '锁定轨仍可选');
-    assert((await p.textContent('[data-testid=toast]')).includes('锁定'), 'toast');
+    // 正向: 右键确实发到了页面 (capture 监听收到), 否则 "没菜单没选区" 可能只是没点到
+    await p.waitForFunction(() => window.__t4ctx > 0, null, { timeout: 1000 });
+    const h = await holdFor(() => S(`document.querySelector('[data-testid=ctx-menu]') ? 'menu' : s.ranges.length`), 0, 600);
+    assert(h.ok, `锁定轨仍可选 (${h.v} @${h.at}ms)`);
+    // 正向: 锁定防护本身跑过 (它会弹 toast)
+    await p.waitForFunction(() => (document.querySelector('[data-testid=toast]')?.textContent || '').includes('锁定'), null, { timeout: 1000 });
     const u = await laneXY(t, 'fx1');
     await p.mouse.click(u.x, u.y, { button: 'right' });
     await p.waitForSelector('[data-testid=ctx-menu]');
@@ -933,14 +968,22 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     p.request.post(cfg.url + 'api/review', { data: { sel: [{ line, from, to }], t0, t1, kind, tags, text } }));
   await test('U3', '时间线标注轨: 显示已有标注, 按类型着色 (不行橙/好绿/换一个紫/备注蓝), hover 说明, 点击选中所标的字', async () => {
     const kinds = [['bad', 10, [240, 162, 74]], ['good', 11, [89, 195, 138]], ['redo', 12, [180, 140, 255]], ['note', 13, [110, 168, 255]]];
-    for (const [k, li] of kinds) await postReview(k, li, 0, 2, k === 'bad' ? ['太吵'] : [], k === 'note' ? '测试备注' : '');
-    await p.waitForFunction((n) => window.__hx.store.getState().reviews.length >= n, kinds.length, { timeout: 5000 });
+    // 用 POST 返回的 id 定位自己写入的那 4 条; 之前 M11-M15 早已写过同类, 不能用 "条数 >= 4" 或 "该类最后一条"
+    const n0 = await S('s.reviews.length');
+    const ids = [];
+    for (const [k, li] of kinds) {
+      const res = await postReview(k, li, 0, 2, k === 'bad' ? ['太吵'] : [], k === 'note' ? '测试备注' : '');
+      assert(res.status() === 201, `POST ${k} -> ${res.status()}`);
+      ids.push((await res.json()).id);
+    }
+    await p.waitForFunction(([ids, ks, n]) => { const r = window.__hx.store.getState().reviews; return r.length === n + ids.length && ids.every((id, i) => r.some((x) => x.id === id && x.kind === ks[i])); }, [ids, kinds.map((x) => x[0]), n0], { timeout: 5000 });
     const r = (await rows()).review;
     assert(r && r.h >= 10, '没有标注轨');
     const lane = await p.locator('[data-hidpi=timeline-static]').boundingBox();
     const got = [];
     for (const [k, li, rgb] of kinds) {
-      const rv = await S(`s.reviews.filter((x) => x.kind === '${k}').slice(-1)[0]`);
+      const rv = await S(`s.reviews.find((x) => x.id === '${ids[kinds.findIndex((q) => q[0] === k)]}' && x.kind === '${k}')`);
+      assert(rv, `${k}: store 里找不到自己写入的那条`);
       const { x } = await laneXY((rv.t0 + rv.t1) / 2, 'review');
       const ki = ['bad', 'good', 'redo', 'note'].indexOf(k);
       const lh = Math.max(2, (r.h - 2) / 4);
@@ -994,8 +1037,12 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     assert(await p.getAttribute('[data-testid=monitor]', 'data-compare') === 'off', '没关掉');
   });
   await test('U6', '说明这里: 检查器顶部有 "一句话说明" (条数/按层语义名/fx 出处/角色/参考倍数) + 这里的标注', async () => {
-    await postReview('bad', LI, 6, 8, ['盖字']);
-    await p.waitForFunction(() => window.__hx.store.getState().reviews.some((r) => r.tags.includes('盖字')), null, { timeout: 5000 });
+    // M12/K3 已写过 "盖字": 用 POST 返回的 id + 条数 +1 定位自己写入的那条, POST 失败必须红
+    const n0 = await S('s.reviews.length');
+    const res = await postReview('bad', LI, 6, 8, ['盖字']);
+    assert(res.status() === 201, `POST -> ${res.status()}`);
+    const id = (await res.json()).id;
+    await p.waitForFunction(([id, n]) => { const r = window.__hx.store.getState().reviews; return r.length === n + 1 && r.some((x) => x.id === id && x.tags.includes('盖字')); }, [id, n0], { timeout: 5000 });
     await showLine(LI);
     const g = await g0(LI);
     await clickChar(g + 6);

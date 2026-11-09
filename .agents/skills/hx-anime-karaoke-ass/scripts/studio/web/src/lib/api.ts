@@ -50,6 +50,16 @@ export interface HitEvent { ln: number; style: string; layer: number; name: stri
 export interface Review { id: string; sel: SelRange[]; t0: number; t1: number; kind: 'bad' | 'good' | 'redo' | 'note'; tags: string[]; text: string; frame?: number | null; created: string }
 export interface RawEvent { ln: number; layer: number; t0: number; t1: number; style: string; name: string; text: string; owners: string[]; raw?: string }
 
+/** 歌词位置预设. 坐标与位移全由服务端 (assfx/text/placement.py) 算, 前端只按矩形与位移画, 不复算布局. */
+export interface Preset { v: 'top' | 'middle' | 'bottom'; h: 'left' | 'center' | 'right'; order: 'jp_top' | 'cn_top'; gap: 'tight' | 'normal' | 'loose' }
+export interface PlaceBlock { src: [number, number, number, number]; dx: number; dy: number }
+export interface PlaceLine { name: string; t: [number, number]; jp: PlaceBlock; cn: PlaceBlock | null }
+export interface PlaceJob { running: boolean; ok: boolean | null; error: string | null; preset: Preset | null; seq: number }
+export interface PlacementRes {
+  current: Preset; default: Preset; source: 'file' | 'default'; enums: { v: Preset['v'][]; h: Preset['h'][]; order: Preset['order'][]; gap: Preset['gap'][] };
+  job: PlaceJob; note: string; frozen: number; candidate?: Preset; lines?: PlaceLine[]; rows_missing?: number;
+}
+
 async function j<T>(url: string): Promise<T> {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url} ${r.status}`);
@@ -71,6 +81,13 @@ export const api = {
     const r = await fetch('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     if (!r.ok) throw new Error(`review ${r.status}`);
     return r.json() as Promise<Review>;
+  },
+  placement: (cand?: Preset) => j<PlacementRes>(`/api/placement${cand ? `?${new URLSearchParams(cand as unknown as Record<string, string>)}` : ''}`),
+  applyPlacement: async (p: Preset) => {
+    const r = await fetch('/api/placement', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(p) });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((b as { error?: string }).error || `placement ${r.status}`);
+    return b as { started: boolean; preset: Preset };
   },
   assText: (which: 'out' | 'ref') => fetch(`/api/ass/${which}`, { cache: 'no-cache' }).then((r) => r.text()),
 };
