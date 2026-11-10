@@ -1,0 +1,15 @@
+{
+ "date": "2026-11-11 00:35:24.395235",
+ "reason": "no-verify: 用户 2026-11-11 00:34 授权 (传输不稳, 先保住改动); 红线检查卡在既存的旧笔记审核项, 本提交未新增错误",
+ "files": [
+  ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py",
+  ".agents/skills/hx-anime-karaoke-ass/shared/known-gaps.md",
+  ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/46-image/index.md",
+  ".agents/notes/implemented/feature/2026-11-10-karaoke-motif-text-gap.md"
+ ],
+ "redline_rc": 1,
+ "redline_output": "待审核 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-10-03-karaoke-beat-layer.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md; 请审核\n待审核 .agents/notes/implemented/feature/2026-11-10-karaoke-motif-text-gap.md:1 [note-only-diff] 决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/qa 中的代码未同步修改; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/shared/known-gaps.md:1 [resource-review] 受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用\n待审核 .agents/skills/hx-anime-karaoke-ass/steps/4-kfx/46-image/index.md:1 [resource-review] 受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用\nAgent Notes: 需处理, 0 项错误, 6 项待审核\n类型: code-only-diff=3, note-only-diff=1, resource-review=2\n完整报告: /home/hx/Loli/code/HXLoLis/HXLoLi-Music/.git/reports/agent-notes-diff.json\n",
+ "validate_out_ass": [
+  "结果: 通过"
+ ]
+}
