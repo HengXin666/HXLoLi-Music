@@ -67,9 +67,19 @@ pop_image(f, 3, t, 700, 940, "assets/eye.png", path_dir=PROJ)                  #
 
 `a_peak` 在库里是 **alpha 值**(0=不透明, 255=全透明). 图片默认给 8. (踩过: 传 255 得到一张全透明的图, 渲染出来空白.)
 
+## 图不许压字
+
+图放在行首或行尾外侧时, band 剩余的宽度常常放不下. `FX.shape` 会把图夹回 band 内, 但不报错, 推回的方向正对着字. 所以这里有一条硬约束: 图的可见像素 (alpha > 8, 含外发光) 到同时显示的同 band 歌词字形, 间隙至少 `MOTIF_GAP` (8px).
+
+- 尺子在 `assfx/draw/motif_gap.py`, 生成器和门禁共用同一套函数. 字取字体 glyf 墨迹框加静态 `\bord`, 用静止位置, 入场或高亮的瞬时放大不算.
+- 生成器: 下发前用 `text_ink_boxes(本 band 已出的字)`, `image_points` 和 `min_gap` 量. 放不下就缩小尺寸, 不要硬放进去等夹取.
+- 门禁: `validate_ass.py --fontsdir <fonts>` 报 `[E] 母题压字`. 不带 `--fontsdir`, 或字体找不到时, 字框按 0.72em 估宽, 会额外报 W, 说明间隙可能不准.
+- 量不了的情形: 用 `\move` 定位的图只报 W.
+
 ## 过关条件
 
 - `hx-karaoke cutout.py --check-only` 全部 PASS
 - `render_octopus.py --probe` 报告 `\1img` 引用的图**全部存在**
+- `validate_ass.py --fontsdir` 没有 `[E] 母题压字`
 - 目检: 图**没有平铺重复**(平铺说明矩形尺寸 ≠ 图片尺寸)
 - 全曲用图数量 ≤10 张、出现次数 ≤8 处(超了就退回 `45-bg` 用图形表达)

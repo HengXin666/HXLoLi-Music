@@ -17,6 +17,7 @@
 | 卡点层(跟音乐网格, 不跟字) | `layer/music/beat.py` | `MusicEvents` / `beat_scatter` / `beat_pulse` / `beat_drop` / `beat_sink` |
 | 背景层(跟镜头, 跨句不停) | `layer/music/bg.py` | `SceneTimeline` / `bg_drift` / `bg_frames` |
 | 图片层(`\1img`) | `draw/image.py` | `put_image` / `pop_image` / `side_slots` / `check_images` |
+| 图片到字的间隙 (母题压字) | `draw/motif_gap.py` | `text_ink_boxes` / `image_points` / `min_gap` / `estimated_fonts` / `check_ass`; `MOTIF_GAP` = 8px, 生成器与 `qa/validate_ass.py` 共用 |
 | 句间承接(跨句状态) | `layer/carry.py` | `Carry` / `entry` / `tint` / `boost` / `from_events` |
 | 色彩系统(段落色域 / 句内游走) | `text/color.py` | `Scheme` / `Palette` / `make_hl_color` / `fold` / `find_break` |
 | 逐句出入场窗口 / band 登记 / 卡片 | `layer/gen.py` | `Generator` / `card()`; 小工具 `find/seq/span/mid/flicker/sway` |

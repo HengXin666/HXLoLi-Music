@@ -4,6 +4,7 @@
 # dependencies = [
 #   "numpy",
 #   "fonttools",
+#   "pillow",
 # ]
 # ///
 
@@ -19,6 +20,7 @@ ASS 特效字幕自动校验。
   [E] band 超出画面  band 矩形必须在 PlayRes 内
   [E] 字体缺失      Style 与 \\fn 使用的字体族名必须能在 fontsdir 中找到（否则 libass 回退，效果全变）
   [E] 时间非法      end <= start
+  [E] 母题压字      \\1img 图的可见像素到同时显示的同 band 歌词字形墨迹 < 8px (assfx/draw/motif_gap.py)
   [W] 未标注事件    没有 Name 的事件无法做区域校验
   [W] 歌词重叠      两个歌词 band 在空间上相交且同时显示超过 --max-overlap 秒
   [W] 同步缺失      timing.json 中音拍起点在高亮层(ly: 事件所在的最高文字层)找不到对应事件（±20ms）
@@ -28,6 +30,7 @@ ASS 特效字幕自动校验。
 import argparse, bisect, collections, glob, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from assfx.base.geom import event_extent
+from assfx.draw.motif_gap import check_ass as motif_gap_check
 
 
 TAG_RE = re.compile(r"\{[^}]*\}")
@@ -107,6 +110,8 @@ def font_families(fontsdir):
     return fams
 
 
+# 母题压字是 [E] 不是 W: band 夹取会静默把图推到压字, 只有机器量得出; 压字伤可读性, 报 W 会被告警淹没.
+# .agents/notes/implemented/feature/2026-11-10-karaoke-motif-text-gap.md
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("ass"); ap.add_argument("--fontsdir"); ap.add_argument("--timing")
@@ -240,6 +245,9 @@ def main():
         if miss:
             Wn.append(f"{len(miss)}/{len(char_starts)} 个字在高亮层没有对应起点（±20ms）: "
                       + " ".join(miss[:12]) + (" ..." if len(miss) > 12 else ""))
+
+    # ---- 母题压字 [E] (尺子 assfx/draw/motif_gap.py, 与生成器共用; 为什么是 E 见 main 上方)
+    _e, _w, _ = motif_gap_check(events, styles, a.ass, a.fontsdir); E.extend(_e); Wn.extend(_w)
 
     # ---- 控制字符
     # 踩过的坑(2026-10-03): Python 源码里写 `"\frz%d"` 而**少一个反斜杠**时,
