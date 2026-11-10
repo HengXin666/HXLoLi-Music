@@ -74,7 +74,8 @@ pop_image(f, 3, t, 700, 940, "assets/eye.png", path_dir=PROJ)                  #
 - 尺子在 `assfx/draw/motif_gap.py`, 生成器和门禁共用同一套函数. 字取字体 glyf 墨迹框加静态 `\bord`, 用静止位置, 入场或高亮的瞬时放大不算.
 - 生成器: 下发前用 `text_ink_boxes(本 band 已出的字)`, `image_points` 和 `min_gap` 量. 放不下就缩小尺寸, 不要硬放进去等夹取.
 - 门禁: `validate_ass.py --fontsdir <fonts>` 报 `[E] 母题压字`. 不带 `--fontsdir`, 或字体找不到时, 字框按 0.72em 估宽, 会额外报 W, 说明间隙可能不准.
-- 量不了的情形: 用 `\move` 定位的图只报 W.
+- 图的缩放按**显示期内的最大值**量 (`\t` 里长到多大就按多大), 不按初值. 从小长大的图, 要保证满尺寸时也不压字.
+- 量不了的情形: 用 `\move` 定位的图只报 W; 动画旋转、`\frx/\fry`、非 `\an5` 按静态值量并报 W.
 
 ## 过关条件
 

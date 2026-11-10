@@ -17,6 +17,7 @@
 | 7 | 第 11 项上限阈值未经第二首歌验证 | CAP_RATIO 1.5 (暂定), 只 WARN | — | 等 比翼の羽根 或另一首跑过再定是否转 BAD (见 `steps/5-verify/13-validate/index.md`) |
 | 8 | 可复现性: dev 里的生成器改动未成样板 | `dev/` 整棵不入库 (见 dev-workspace 记录), fx_bed.py / fx_high.py / fx_carry.py / make_ass.py / scene.py 的改动只在工作区 | — | 单独一轮复制到 `examples/` 或 `templates/` 做样板, 不与其他改动混提 |
 | 9 | 门禁自测 `test_out_bad_9` 依赖 dev 工作文件 | 原来测 `dev/无职转生/オンリー/out.ass`, 该文件收紧到 10/10 OK 后断言必然失败 | — | 已在工作区改成: 由入库参考 ASS (`static/music/无职转生/大原ゆい子 - オンリー.ass`) 在测试里用 `sparse()` 现场构造稀疏样本, 不新增也不用维护 fixture 文件 (FX 留 1/8、去逐帧、压第 0 层、单一骨架、JP 去 frz/fax/frx), 期望 [1-7, 9, 10] BAD + 第 8 项 SKIP, 不再依赖 dev; 单测 9/9 (含第 11 项为 10/10) 通过. 未提交: 测试文件列在门禁笔记 Code 里, 单提报 code-only-diff 1 条, 补笔记又会带出 4 条 note-only; 随"一篇笔记管多目录"那轮一起提 |
+| 10 | 贴图 (`\1img`) 用 `\fscx/\fscy` 动画缩放时边缘出阶梯锯齿 | p31 水球 205s (从 30% 长到 100% 的中途) 圆边有明显台阶; 矢量水球没有 | — | 和 prescale 要解决的 fscx 缩放锯齿同一个根 (libass 对纹理缩放是最近邻采样). 2026-11-10 用户定: 换 MV 素材时一并解决. 候选做法: 生长动画改成多张预缩放的帧图逐段切换, 或改用 alpha 淡入代替缩放. 现在不修 |
 
 ### 本轮的取舍 (已裁定, 不算待办)
 

@@ -1,0 +1,355 @@
+{
+ "commit": "motif-gap 缩放取最大 (修生长动画假通过)",
+ "date": "2026-11-10",
+ "note": "验证用 ASS 提交后删除, 这里留 sha 与新旧门禁结果作证据. old = 6fc8843 的 motif_gap.py, new = 本提交.",
+ "growth_and_mutations": [
+  {
+   "file": "dev/无职转生/オンリー/out.p31_orb_grow.ass",
+   "sha256": "c2581cbea1a1328f50d12649496ec7787cf2eae5ba7fd466346180f456f8c12d",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      33.6,
+      9570,
+      "p31",
+      "water_orb-c0bc469ddc.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9570 band p31 water_orb-c0bc469ddc.png: 到「た」间隙 0.0px < 8px (按最大缩放 100%x100% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-c0bc469ddc.png",
+      1.0,
+      1.0
+     ]
+    ]
+   }
+  },
+  {
+   "file": "dev/无职转生/オンリー/out.mut_m1_连写t.ass",
+   "sha256": "dfaa35aaa66e8a7f896270a6fefe3ca1ea75594ced167bb73e4f6e28f7036d26",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      37.4,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9570 band p31 water_orb-291dbaf520.png: 到「た」间隙 0.0px < 8px (按最大缩放 220%x220% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png",
+      2.2,
+      2.2
+     ]
+    ]
+   }
+  },
+  {
+   "file": "dev/无职转生/オンリー/out.mut_m2_t内fsc.ass",
+   "sha256": "37bd9d501d54b039be778f7f341049728918feba50278a773931d0e2e125b39f",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      37.4,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9570 band p31 water_orb-291dbaf520.png: 到「た」间隙 0.0px < 8px (按最大缩放 220%x220% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png",
+      2.2,
+      2.2
+     ]
+    ]
+   }
+  },
+  {
+   "file": "dev/无职转生/オンリー/out.mut_m3_t内复位到大样式.ass",
+   "sha256": "db7546c6f850b03d3bd3445bc28a9902c05652f72cc1b3f05badddf044f050f1",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      37.4,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9425 band p31 hand_palm_01-608da42378.png: 到「た」间隙 0.0px < 8px (按最大缩放 220%x220% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)",
+     "母题压字 L9570 band p31 water_orb-291dbaf520.png: 到「た」间隙 0.0px < 8px (按最大缩放 220%x220% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      0.0,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      2.2,
+      2.2
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png",
+      2.2,
+      2.2
+     ]
+    ]
+   }
+  },
+  {
+   "file": "dev/无职转生/オンリー/out.mut_m4_t带accel.ass",
+   "sha256": "302e170dbd7fc21b470c5838dd9581ed0b666117c4e565473284f5460a355531",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      37.4,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9570 band p31 water_orb-291dbaf520.png: 到「た」间隙 0.0px < 8px (按最大缩放 220%x220% 量)  字框=(1473,893,1523,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png",
+      2.2,
+      2.2
+     ]
+    ]
+   }
+  },
+  {
+   "file": "dev/无职转生/オンリー/out.mut_m5_org旋转.ass",
+   "sha256": "cc052b99809d273b4ac3296cc3fe419d60011812024ebd4cbaeedae6e673207e",
+   "old": {
+    "errors": [],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png"
+     ],
+     [
+      37.4,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png"
+     ]
+    ]
+   },
+   "new": {
+    "errors": [
+     "母题压字 L9570 band p31 water_orb-291dbaf520.png: 到「れ」间隙 0.0px < 8px (按最大缩放 100%x100% 量)  字框=(1415,893,1471,944)  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)"
+    ],
+    "warns": [],
+    "measured": [
+     [
+      10.1,
+      9425,
+      "p31",
+      "hand_palm_01-608da42378.png",
+      1.0,
+      1.0
+     ],
+     [
+      0.0,
+      9570,
+      "p31",
+      "water_orb-291dbaf520.png",
+      1.0,
+      1.0
+     ]
+    ]
+   }
+  }
+ ],
+ "redline_staged": {
+  "version": 2,
+  "mode": "diff",
+  "base": "cd37ed25928f46d935f9895e375242559e9b2560",
+  "base_commit": "6fc884327fd0fe687e1dbb0d760fae0bc910b097",
+  "head": null,
+  "changed": [
+   ".agents/notes/implemented/feature/2026-11-10-karaoke-motif-text-gap.md",
+   ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py",
+   ".agents/skills/hx-anime-karaoke-ass/shared/known-gaps.md",
+   ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/46-image/index.md"
+  ],
+  "deleted": [],
+  "issues": [
+   {
+    "rule": "code-only-diff",
+    "path": ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py",
+    "line": 1,
+    "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-10-03-karaoke-beat-layer.md; 请审核",
+    "severity": "review",
+    "related": [
+     ".agents/notes/implemented/feature/2026-10-03-karaoke-beat-layer.md"
+    ]
+   },
+   {
+    "rule": "code-only-diff",
+    "path": ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py",
+    "line": 1,
+    "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md; 请审核",
+    "severity": "review",
+    "related": [
+     ".agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md"
+    ]
+   },
+   {
+    "rule": "code-only-diff",
+    "path": ".agents/skills/hx-anime-karaoke-ass/scripts/assfx/draw/motif_gap.py",
+    "line": 1,
+    "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md; 请审核",
+    "severity": "review",
+    "related": [
+     ".agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md"
+    ]
+   },
+   {
+    "rule": "note-only-diff",
+    "path": ".agents/notes/implemented/feature/2026-11-10-karaoke-motif-text-gap.md",
+    "line": 1,
+    "message": "决策记录已改动, 目录 .agents/skills/hx-anime-karaoke-ass/scripts/qa 中的代码未同步修改; 请审核",
+    "severity": "review",
+    "related": []
+   },
+   {
+    "rule": "resource-review",
+    "path": ".agents/skills/hx-anime-karaoke-ass/shared/known-gaps.md",
+    "line": 1,
+    "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+    "severity": "review",
+    "related": []
+   },
+   {
+    "rule": "resource-review",
+    "path": ".agents/skills/hx-anime-karaoke-ass/steps/4-kfx/46-image/index.md",
+    "line": 1,
+    "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+    "severity": "review",
+    "related": []
+   }
+  ],
+  "ok": false
+ }
+}
