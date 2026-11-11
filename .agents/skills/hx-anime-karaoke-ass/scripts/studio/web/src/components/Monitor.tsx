@@ -136,6 +136,9 @@ export default function Monitor() {
   const wipe = useStore((x) => x.wipe);
   const vis = useStore((x) => x.vis);
   const onlyUnits = useStore((x) => x.onlyUnits);
+  // MV 轨的眼睛: 关掉则两个画框都不画视频 (只留字幕). 用 opacity 而不是 visibility, 后者每帧由 useVideoSync 按 EDL 改写
+  const mvOn = vis.mv?.eye ?? true;
+  const mvStyle = mvOn ? undefined : { opacity: 0 };
   const lines = useStore((x) => x.lines);
   const ix = useStore((x) => x.ix);
   const ranges = useStore((x) => x.ranges);
@@ -245,7 +248,7 @@ export default function Monitor() {
       data-kept={kept} data-ref-ready={ref.ready || undefined} data-preview={previewing || undefined}>
       <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out"
         onContextMenu={(e) => onCtx(e, rOut)}>
-        {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" />}
+        {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-out" />}
         <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" style={{ visibility: showOut && !previewing ? 'visible' : 'hidden', clipPath: outClip }} />
         {previewing && <canvas ref={cvPrev} className={s.subs} data-hidpi="monitor-preview" data-testid="monitor-preview"
           style={{ visibility: showOut ? 'visible' : 'hidden', clipPath: outClip }} />}
@@ -280,7 +283,7 @@ export default function Monitor() {
       </div>
       {side && (
         <div className={s.frame} style={{ left: rRef.x, top: rRef.y, width: rRef.w, height: rRef.h }} data-testid="frame-ref">
-          {src && <video ref={vidRef} className={s.video} src={src} muted playsInline preload="auto" />}
+          {src && <video ref={vidRef} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-ref" />}
           <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref" />
           <div className={s.badge}>参考</div>
         </div>

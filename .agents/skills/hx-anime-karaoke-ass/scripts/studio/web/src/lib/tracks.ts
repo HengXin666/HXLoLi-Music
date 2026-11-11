@@ -8,7 +8,8 @@ export type TrackId =
 
 export interface TrackDef {
   id: TrackId; name: string; title?: string; group?: 'text' | 'fx'; def: number; min: number;
-  filter?: boolean; // 影响监视器渲染 (眼/S)
+  filter?: boolean; // 影响监视器 ASS 渲染 (眼/S/锁)
+  eye?: boolean; // 有眼睛但不进 ASS 过滤 (mv: 关掉即监视器不画视频). 纯时间线轨 (波形/节拍/密度/标注) 不给眼睛, 免得骗人
   lockable?: boolean;
   fixed?: boolean; // 不可拖高
 }
@@ -38,7 +39,7 @@ export const FILTER_IDS: TrackId[] = [...TEXT_IDS, ...FX_IDS, 'card'];
 export const TRACKS: TrackDef[] = [
   { id: 'overview', name: '全曲', def: 12, min: 12, fixed: true },
   { id: 'ruler', name: '', def: 20, min: 20, fixed: true },
-  { id: 'mv', name: 'MV', def: 20, min: 10 },
+  { id: 'mv', name: 'MV', title: 'MV 视频轨: 眼睛关掉则监视器只画字幕, 不画视频', def: 20, min: 10, eye: true },
   { id: 'wave', name: '波形', def: 40, min: 18 },
   { id: 'beat', name: '节拍', def: 20, min: 8 },
   { id: 'jp', name: 'JP', group: 'text', def: 28, min: 14, filter: true, lockable: true },
@@ -49,6 +50,12 @@ export const TRACKS: TrackDef[] = [
   { id: 'review', name: '标注', title: '标注 (review): 橙 = 不行, 绿 = 好 (冻结), 紫 = 换一个构想, 蓝 = 备注. 点一下选中它标的字', def: 20, min: 10 },
   { id: 'density', name: '密度', def: 60, min: 28 },
 ];
+
+/*
+ * Agent Notes: 轨头眼睛只给对监视器真有作用的轨 (filter 轨与 mv); 纯时间线轨不给眼睛
+ * .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md
+ */
+export const hasEye = (t?: TrackDef): boolean => !!(t?.filter || t?.eye);
 
 export const GROUP_NAME = { text: '字层 JP/RB/CN', fx: 'FX 0-8 (9 层, 字后→字前)' } as const;
 

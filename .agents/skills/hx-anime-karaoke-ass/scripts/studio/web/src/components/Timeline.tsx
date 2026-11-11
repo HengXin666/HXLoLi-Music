@@ -5,7 +5,7 @@ import { loopSelection, selectLine, setSelection } from '../lib/actions';
 import type { Clip, Review } from '../lib/api';
 import { clock } from '../lib/clock';
 import { fmtTime, toast, useStore } from '../lib/store';
-import { GROUP_NAME, REVIEW_KIND, TRACKS, visible, type TrackDef } from '../lib/tracks';
+import { GROUP_NAME, REVIEW_KIND, TRACKS, hasEye, visible, type TrackDef } from '../lib/tracks';
 import s from './Timeline.module.css';
 
 /**
@@ -156,6 +156,10 @@ const LockIcon = ({ on }: { on: boolean }) => (
     <path d={on ? 'M4.5 7V5a2.5 2.5 0 015 0v2' : 'M4.5 7V5a2.5 2.5 0 015 0'} fill="none" stroke="currentColor" strokeWidth="1.3" /></svg>
 );
 
+/*
+ * Agent Notes: 轨头眼睛按钮只渲染给 hasEye() 的轨
+ * .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md
+ */
 export default function Timeline() {
   const wrap = useRef<HTMLDivElement>(null);
   const cvS = useRef<HTMLCanvasElement>(null);
@@ -251,7 +255,7 @@ export default function Timeline() {
     // 波形
     const wv = R.wave;
     if (wv && peaks && peaks.peaks.length) {
-      dim('wave');
+      g.globalAlpha = 1; // wave 没有眼睛 (对画面无作用), 旧 localStorage 里的 eye:false 也不许把它变暗
       const mid = wv.y + wv.h / 2;
       g.fillStyle = '#4f7fb8';
       const pw = 1 / dpr;
@@ -268,7 +272,7 @@ export default function Timeline() {
     // 节拍: 拍线 (每 4 拍一小节加粗) + 起音点 (强度 -> 透明度)
     const bt = R.beat;
     if (bt && beats) {
-      dim('beat');
+      g.globalAlpha = 1; // beat 没有眼睛 (对画面无作用), 旧 localStorage 里的 eye:false 也不许把它变暗
       const secPerPx = (view.v1 - view.v0) / S.w;
       const every = secPerPx * 6 > 0.2 ? 4 : 1;
       beats.grid.forEach((t, i) => {
@@ -334,7 +338,7 @@ export default function Timeline() {
       const i = Math.floor((t - cv.t0) / cv.st);
       return i >= 0 && i < cv.c.length ? cv.c[i] : 0;
     };
-    dim('density');
+    g.globalAlpha = 1; // density 没有眼睛 (对画面无作用), 旧 localStorage 里的 eye:false 也不许把它变暗
     if (o) {
       g.beginPath();
       g.moveTo(0, yOf(0));
@@ -625,7 +629,7 @@ export default function Timeline() {
                 : <span className={s.hname} title={r.def?.title ?? r.name}>{r.name}</span>}
               {r.id !== 'overview' && (
                 <span className={s.btns}>
-                  <button data-act="eye" aria-pressed={eye} className={s.hb} title="显示" onClick={() => toggle(r.id, 'eye', r.members)}><EyeIcon on={eye} /></button>
+                  {(filt || hasEye(r.def)) && <button data-act="eye" aria-pressed={eye} className={s.hb} title={r.id === 'mv' ? '显示视频 (关掉则监视器只画字幕)' : '显示'} onClick={() => toggle(r.id, 'eye', r.members)}><EyeIcon on={eye} /></button>}
                   {filt && <button data-act="solo" aria-pressed={solo} className={s.hb} data-on={solo || undefined} title="独显 (只在监视器渲染独显轨)" onClick={() => toggle(r.id, 'solo', r.members)}>S</button>}
                   {filt && <button data-act="lock" aria-pressed={lock} className={s.hb} data-on={lock || undefined} title="锁 (锁定轨上不能选取/右键)" onClick={() => toggle(r.id, 'lock', r.members)}><LockIcon on={lock} /></button>}
                 </span>

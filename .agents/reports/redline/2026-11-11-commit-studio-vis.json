@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "a6dd01680fe3bc9962e5663c81425f33e0cfc0dd",
+  "base_commit": "2d124e09e1b33c59f244945dd19fb86f82398904",
+  "head": null,
+  "changed": [
+    ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/tracks.ts"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/tracks.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    }
+  ],
+  "ok": false
+}
