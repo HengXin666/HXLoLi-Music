@@ -61,7 +61,7 @@ class FX(FXMotion):
     # 
     def shape(self, layer, t0, t1, x0, y0, x1=None, y1=None, draw="", c1="#FFFFFF", a_peak=0, fade_in=0.2, fade_out=0.4,
               blur=1.0, extra="", c3=None, bord=0, t_move=None, accel=1.0, a3=None, fsc=100, alpha_t=None,
-              solid=None, normalize=True, origin=None, an5=True):
+              solid=None, normalize=True, origin=None, an5=True, effect=""):
         # solid=<px>：把**线稿**填充成实心块  用同色描边把笔画加粗到 solid 像素。
         # 为什么需要它：网络图标（MDI）是**线稿**，\p1 填充后只有一条细线（实测墨迹宽中位 5px），
         # 整帧看上去"什么都没画"。手绘实心块又不可辨认。
@@ -132,7 +132,7 @@ class FX(FXMotion):
                         continue
             break
         text = self._text(d, x0, y0, x1, y1, draw, c1, a_peak, fade_in, fade_out, blur, extra, c3, bord, t_move, accel, a3, fsc, alpha_t, an=(5 if an5 else 7))
-        self.doc.ev(layer, t0, t1, text, "FX", "fx:" + self.name)
+        self.doc.ev(layer, t0, t1, text, "FX", "fx:" + self.name, effect=effect)   # effect="over": 有意盖字 (母题压字门禁显式豁免)
 
     def text(self, layer, t0, t1, x0, y0, txt, st, fs, tags, x1=None, y1=None, t_move=None):
         """文字型特效（鬼影/RGB 分离/飘字）；tags 不含定位，自动夹进 band"""
@@ -199,9 +199,9 @@ class FX(FXMotion):
                        a_peak=R.randint(*a), fade_in=min(0.5, L * 0.3), fade_out=min(0.8, L * 0.4), blur=R.uniform(*blur),
                        extra=ex, c3=glow, bord=1.5 if glow else 0)
 
-    def pulse(self, layer, t, x, y, draw, c1, dur=0.6, s0=60, s1=140, a0=40, blur=2.0, extra="", c3=None, bord=0):
+    def pulse(self, layer, t, x, y, draw, c1, dur=0.6, s0=60, s1=140, a0=40, blur=2.0, extra="", c3=None, bord=0, effect=""):
         """原地放大并淡出（冲击环/光晕）"""
-        self.shape(layer, t, t + dur, x, y, draw=draw, c1=c1, blur=blur, c3=c3, bord=bord,
+        self.shape(layer, t, t + dur, x, y, draw=draw, c1=c1, blur=blur, c3=c3, bord=bord, effect=effect,
                    alpha_t=f"\\alpha{al(a0)}\\t(0,{ms(dur)},0.8,\\alpha&HFF&)",
                    extra=f"\\fscx{s0}\\fscy{s0}\\t(0,{ms(dur)},0.6,\\fscx{s1}\\fscy{s1}){extra}")
 

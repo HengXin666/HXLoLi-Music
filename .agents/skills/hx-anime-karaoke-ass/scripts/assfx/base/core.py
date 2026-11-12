@@ -68,6 +68,9 @@ class Doc:
         self.events = []      # (layer, start, end, style, name, text)
         self.bands = {}       # name -> (x0, y0, x1, y1, t0, t1)
         self.on_ev = None     # 代码依赖追踪的钩子 (assfx/layer/trace.py), Generator 装上
+        # Effect 字段 (2026-11-13, known-gaps #13): 事件元组仍是 6 项 (carry.py 等按 6 项解包), Effect 另存在这里,
+        # 键是元组的 id, 值带上元组本身防 id 复用. 只用于母题压字门禁的显式豁免 "over"; libass 不认这个值, 渲染不变.
+        self.effects = {}
 
     def add_style(self, *a, **k):
         self.styles.append(style(*a, **k))
@@ -90,7 +93,7 @@ class Doc:
 
     # Agent Notes: hx-anime-karaoke-ass 的 scripts/ 按职责分组，并把 5 个超 300 行的模块拆开
     # 
-    def ev(self, layer, start, end, text, st="FX", name=""):
+    def ev(self, layer, start, end, text, st="FX", name="", effect=""):
         """Agent Notes
         .agents/notes/implemented/process/2026-10-05-karaoke-scripts-grouping.md
         """
@@ -102,7 +105,10 @@ class Doc:
             layer += self.TEXT_LIFT
         if self.on_ev:
             self.on_ev(layer, start, end, name)
-        self.events.append((layer, start, end, st, name, text))
+        e_ = (layer, start, end, st, name, text)
+        self.events.append(e_)
+        if effect:
+            self.effects[id(e_)] = (e_, effect)
 
     def write(self, path, extra_info=""):
         self.events.sort(key=lambda e: (e[1], e[0]))
@@ -116,8 +122,11 @@ class Doc:
                 f.write(f"; assfx-band: {n} {b[0]} {b[1]} {b[2]} {b[3]} {b[4]} {b[5]}\n")
             f.write("\n[V4+ Styles]\n" + STYLE_FMT + "\n" + "\n".join(self.styles) + "\n\n")
             f.write("[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n")
-            for layer, s, e, st, name, text in self.events:
-                f.write(f"Dialogue: {layer},{ts(s)},{ts(e)},{st},{name},0,0,0,,{text}\n")
+            for ev_ in self.events:
+                layer, s, e, st, name, text = ev_
+                ef = self.effects.get(id(ev_))
+                ef = ef[1] if ef and ef[0] is ev_ else ""
+                f.write(f"Dialogue: {layer},{ts(s)},{ts(e)},{st},{name},0,0,0,{ef},{text}\n")
         # 生成器登记过单元 (Generator.render / unit / segment) 时, 同目录写 <out>.manifest.json 给预览台
         from assfx.layer.manifest import REG
         REG.write(path)

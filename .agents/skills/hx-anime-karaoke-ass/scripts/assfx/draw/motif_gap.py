@@ -277,13 +277,22 @@ def image_points(alpha, cx, cy, sx=1.0, sy=1.0, frz=0.0, org=None):
 def min_gap(px, py, boxes):
     """点集到框集的最小欧氏距离 (像素); 返回 (gap, 最近的框). 点落进框内 = 0."""
     import numpy as np
-    best = (float("inf"), None)
-    for b in boxes:
-        dx = np.maximum(np.maximum(b[0] - px, px - b[2]), 0); dy = np.maximum(np.maximum(b[1] - py, py - b[3]), 0)
-        g = float(np.sqrt(dx * dx + dy * dy).min()) if len(px) else float("inf")
-        if g < best[0]:
-            best = (g, b)
-    return best
+    # 2026-11-13 #13: 由逐框 python 循环改成一次性 (点 x 框) 矩阵, 结果逐位相同 (同值取第一个框, 与原循环的 "<" 一致);
+    # 矢量件点多、事件多, 原写法在 dev 上 8 分钟跑不完. 大矩阵分块, 避免内存爆.
+    if not len(px) or not boxes:
+        return (float("inf"), None)
+    B = np.array([b[:4] for b in boxes], float)
+    best_g, best_i = float("inf"), None
+    step = max(1, 2000000 // max(1, len(boxes)))
+    for i in range(0, len(px), step):
+        x = px[i:i + step, None]; y = py[i:i + step, None]
+        dx = np.maximum(np.maximum(B[None, :, 0] - x, x - B[None, :, 2]), 0)
+        dy = np.maximum(np.maximum(B[None, :, 1] - y, y - B[None, :, 3]), 0)
+        g = np.sqrt(dx * dx + dy * dy).min(0)
+        j = int(g.argmin())
+        if g[j] < best_g or (g[j] == best_g and best_i is not None and j < best_i):
+            best_g, best_i = float(g[j]), j
+    return (best_g, boxes[best_i]) if best_i is not None and best_g < float("inf") else (float("inf"), None)
 
 
 def estimated_fonts(boxes):
@@ -356,7 +365,7 @@ def text_ink_tracks(evs, t0, t1, fontsdir=None, unplaced=None):
     return out
 
 
-def sweep_gap(px, py, img_s, img_e, img_trk, tracks, dt=SAMPLE_DT):
+def sweep_gap(px, py, img_s, img_e, img_trk, tracks, dt=SAMPLE_DT, stop_at=None):
     """图在整个显示期 [img_s, img_e) 内到同时在屏的字的最小间隙的**下界**.
     px/py: 图停在轨迹终点 (img_trk 的 x1,y1) 时的像素坐标; tracks: text_ink_tracks 的结果.
     返回 dict: lower (下界, 门禁比的就是它) 以及决定下界的那一段的 raw (段内采样实测最小)、t (raw 出现的时刻, 秒)、
@@ -373,7 +382,8 @@ def sweep_gap(px, py, img_s, img_e, img_trk, tracks, dt=SAMPLE_DT):
       3 误差上限: 一个点到一个框的距离, 在相对速度 v 下是 |v|-Lipschitz 的; 取最小值不增大 Lipschitz 常数,
         所以间隙函数在段内是 L-Lipschitz, L = max |v_图 - v_字| (段内在屏的字). 两相邻采样点之间漏掉的下降
         不超过 L * h / 2. 下界 = min(各段的 采样最小 - L_段 * h_段 / 2), 只会比真值小 (偏严).
-    边界: 只建模平移; 缩放用调用方给的最大缩放 (偏严); 旋转按静态值 (调用方报 W)."""
+    边界: 只建模平移; 缩放用调用方给的最大缩放 (偏严); 旋转按静态值 (调用方报 W).
+    stop_at: 下界已经 <= 它就提前返回 (下界只会更小, 不改变"是否 < 门槛"). 默认 None = 扫完, 贴图口径不变."""
     import math
     import numpy as np
     INF = float("inf")
@@ -425,6 +435,8 @@ def sweep_gap(px, py, img_s, img_e, img_trk, tracks, dt=SAMPLE_DT):
         if seg_raw - bound < res["lower"] or res["t"] is None and seg_raw < INF:
             # 报告的 raw / t / bound / box 都取决定下界的那一段, 不跨段拼凑
             res.update(lower=max(0.0, seg_raw - bound), raw=seg_raw, t=seg_t, bound=bound, box=seg_box)
+        if stop_at is not None and res["lower"] <= stop_at:
+            break
     return res
 
 
@@ -493,12 +505,13 @@ def check_ass(events, styles, ass_path, fontsdir=None):
     gap 是整个显示期内的间隙下界 (sweep_gap 的 lower), sx/sy 是量时用的最大缩放, sweep 是 sweep_gap 的完整结果.
     量 Name=fx:<band> 且用 \\pos 或 \\move 定位的 \\1img 事件 (两者都没有的进 warns); 缺图交给 check_images."""
     errs, warns, measured = [], [], []
-    if not any("img(" in ev["Text"] for ev in events):
-        return errs, warns, measured                     # 没有贴图: 不引 numpy/pillow
+    if not any("img(" in ev["Text"] or _R_DRAW.search(ev["Text"]) for ev in events):
+        return errs, warns, measured                     # 没有贴图也没有矢量件: 不引 numpy/pillow
     import numpy as np
     from PIL import Image
     adir = os.path.dirname(os.path.abspath(ass_path))
     by_band = collections.defaultdict(list)
+    by_band_ev = collections.defaultdict(list)          # 矢量件按层分前后景时要用到字事件本身 (Layer / 行号)
     play_res = None
     why_unplaced, inferred = {}, collections.defaultdict(list)   # 原文 -> 推不出的原因; band -> [(行号, x, y)]
     for ev in events:
@@ -516,6 +529,7 @@ def check_ass(events, styles, ass_path, fontsdir=None):
                 else:
                     why_unplaced[tx] = f"L{ev['_ln']}: {r}"
             by_band[ev["Name"][3:]].append((ev["s"], ev["e"], st, tx))
+            by_band_ev[ev["Name"][3:]].append((ev, (ev["s"], ev["e"], st, tx)))
     for ev in events:
         t = ev["Text"]; m = re.search(r"\\1img\(([^)]+)\)", t); nm = re.match(r"fx:(\S+)", ev.get("Name", ""))
         if not m or not nm:
@@ -586,4 +600,445 @@ def check_ass(events, styles, ass_path, fontsdir=None):
                         + (f"  [最近的框是缺字 {b[5][-1]!r} 的 1em 保守框]" + _zw_note([b[5]])
                            if b[5] and ":缺字" in b[5] else "")
                         + "  (图被 band 夹取推过来, 或尺寸超出 band 余量: 缩图或换位, 不要改尺子)")
+    check_vectors(events, styles, ass_path, fontsdir, by_band_ev, errs, warns, measured)
     return errs, warns, measured
+
+
+# ---------------------------------------------------------------- 矢量母题 (\p 绘图), known-gaps #13
+# 2026-11-12 定: 矢量件按路径采样取外框, 不按控制点, 不先光栅化. 和贴图走同一套 sweep_gap / text_ink_tracks,
+# 字侧没有第二套取框逻辑. 失败方向偏严: \bord / \blur 直接从间隙里扣 (vector_pad), 不展开成像素.
+VEC_STEP = 0.5            # 边界取点间距 (px): 点到框距离的采样误差 <= VEC_STEP / 2
+VEC_FLAT = 0.1            # 贝塞尔细分的弦误差上限 (px)
+VEC_FILL_GRID = 4.0       # 可见填充的内部网格 (px): 字框整块落在形状里面时间隙记 0, 只看边界会漏.
+#   为什么 4px 够: 字框与填充部分相交时, 要么有边界点落进字框 (边界点距 0.5px), 要么字框整块在填充里;
+#   整块在里面的字框只要两边都 >= 网格距, 就必含一个网格点. check_vectors 用 min(4, 最小字框边) 当网格距, 不靠假设.
+_R_DRAW = re.compile(r"\\p([1-9])[^}]*\}([^{]*)")
+
+
+def _cubic(p0, p1, p2, p3):
+    """三次贝塞尔按弦误差 <= VEC_FLAT 细分 (控制多边形到弦的最大距离做上界, 递归二分)."""
+    import math
+    out = []
+    def rec(a, b, c, d, depth):
+        ux, uy = d[0] - a[0], d[1] - a[1]; L = math.hypot(ux, uy) or 1e-9
+        dev = max(abs((q[0] - a[0]) * uy - (q[1] - a[1]) * ux) / L for q in (b, c))
+        if dev <= VEC_FLAT or depth > 16:
+            out.append(d); return
+        ab = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); bc = ((b[0] + c[0]) / 2, (b[1] + c[1]) / 2)
+        cd = ((c[0] + d[0]) / 2, (c[1] + d[1]) / 2); abc = ((ab[0] + bc[0]) / 2, (ab[1] + bc[1]) / 2)
+        bcd = ((bc[0] + cd[0]) / 2, (bc[1] + cd[1]) / 2); m = ((abc[0] + bcd[0]) / 2, (abc[1] + bcd[1]) / 2)
+        rec(a, ab, abc, m, depth + 1); rec(m, bcd, cd, d, depth + 1)
+    rec(p0, p1, p2, p3, 0)
+    return out
+
+
+def vector_contours(drawing, scale=1.0):
+    """\\p 绘图串 -> 闭合轮廓列表 [[(x, y), ...], ...] (绘图坐标, 已乘 scale; 贝塞尔已细分).
+    支持 m / n / l / b. s / p / c (B 样条) 按控制多边形处理: 曲线在控制点凸包内, 取控制多边形只会把形状算大或贴近, 偏严;
+    出现时返回的 warns 里记一条. 不认识的命令 -> warns 并跳过该记号."""
+    toks = re.findall(r"[a-z]|-?(?:\d+(?:\.\d*)?|\.\d+)", drawing)
+    cons, cur, warns, cmd, buf = [], [], [], None, []
+    def flush_close():
+        if len(cur) >= 2:
+            cons.append(list(cur))
+    i = 0
+    pos = (0.0, 0.0)
+    while i < len(toks):
+        t = toks[i]
+        if t.isalpha():
+            cmd = t; i += 1
+            if cmd in ("s", "p", "c") and "B 样条按控制多边形量" not in warns:
+                warns.append("B 样条按控制多边形量")
+            if cmd == "c":
+                cmd = None
+            continue
+        n = {"m": 2, "n": 2, "l": 2, "b": 6, "s": 2, "p": 2}.get(cmd)
+        if n is None:
+            if "绘图里有不认识的记号" not in warns:
+                warns.append("绘图里有不认识的记号")
+            i += 1; continue
+        chunk = toks[i:i + n]
+        if len(chunk) < n or any(x.isalpha() for x in chunk):
+            if "绘图里有不完整的坐标" not in warns:
+                warns.append("绘图里有不完整的坐标")
+            i += 1; continue
+        v = [float(x) * scale for x in chunk]
+        i += n
+        if cmd in ("m", "n"):
+            if cmd == "m":
+                flush_close(); cur = []
+            pos = (v[0], v[1]); cur.append(pos)
+        elif cmd in ("l", "s", "p"):
+            pos = (v[0], v[1]); cur.append(pos)
+        elif cmd == "b":
+            pts = _cubic(pos, (v[0], v[1]), (v[2], v[3]), (v[4], v[5])); cur.extend(pts); pos = pts[-1]
+    flush_close()
+    return cons, warns
+
+
+def _vis(tags, which, style_alpha=0):
+    """该分量 (1 填充 / 3 边框 / 4 阴影) 在事件内是否可能可见: 出现过任一 < FF 的 alpha 值就算可见 (静态与 \\t 内一视同仁)."""
+    vals = [int(v, 16) for v in re.findall(r"\\(?:%sa|alpha)&H([0-9A-Fa-f]{2})&" % which, tags)]
+    if not re.search(r"\\(?:%sa|alpha)&H" % which, strip_t_(tags)):
+        vals.append(style_alpha)
+    return any(v < 0xFF for v in vals)
+
+
+def strip_t_(tags):
+    from assfx.base.geom import strip_t
+    return strip_t(tags)
+
+
+def _style_alpha(style, key):
+    v = str(style.get(key, "&H00FFFFFF"))
+    m = re.match(r"&H([0-9A-Fa-f]{2})[0-9A-Fa-f]{6}", v)
+    return int(m.group(1), 16) if m else 0
+
+
+def vector_points(text, cx, cy, style=None, styles=None, grid=None):
+    """矢量母题事件停在 (cx, cy) (\\pos 或 \\move 终点) 时的量测点集. 返回 (px, py, pad, warns, info).
+    量什么: libass 画出来的那块可见墨迹 (填充 / 边框 / 阴影). pad = 门禁要从间隙里再扣掉的外扩 (边框 + 2·blur + be),
+            调用方 gap = max(0, sweep_gap 下界 - pad).
+    怎么算: 轮廓按 VEC_STEP 取边界点; 填充可见时再加 VEC_FILL_GRID 内部网格 (非零环绕), 字框落进形状里间隙才会是 0.
+            对齐与 geom.event_extent 同口径: 绘图原点放在对齐框左上角, 框宽高 = 绘图包围盒 x 缩放.
+            缩放 = image_scale (事件内能达到的最大值); 旋转 = image_rotation (静态 \\frz, 动画报 W).
+            阴影可见且偏移非 0 时, 整份点集平移后并入.
+    边界: \\clip 不裁 (只会算大); \\frx/\\fry 只报 W; 全程不可见 (填充、边框、阴影都不可见) 返回空点集."""
+    import math
+    import numpy as np
+    style = style or {}; warns = []
+    tags = "".join(re.findall(r"\{([^}]*)\}", text))
+    ds = _R_DRAW.findall(text)
+    if not ds:
+        return np.zeros(0), np.zeros(0), 0.0, ["没有绘图串"], {}
+    pdiv = 2 ** (int(ds[-1][0]) - 1)
+    cons = []
+    for _, d in ds:
+        c, w_ = vector_contours(d, 1.0 / pdiv); cons += c; warns += w_
+    cons = [c for c in cons if len(c) >= 2]
+    if not cons:
+        return np.zeros(0), np.zeros(0), 0.0, warns + ["绘图串没有可量的轮廓"], {}
+    sx, sy, sw = image_scale(text, style, styles); warns += sw
+    frz, org, rw = image_rotation(text); warns += rw
+    allp = np.array([p for c in cons for p in c])
+    x0, y0 = allp.min(0); x1, y1 = allp.max(0)
+    w, h = (x1 - x0) * sx, (y1 - y0) * sy
+    an = int((re.findall(r"\\an(\d)", tags) or [style.get("Alignment", 7)])[-1])
+    ox = {1: 0.5, 4: 0.5, 7: 0.5, 2: 0, 5: 0, 8: 0, 3: -0.5, 6: -0.5, 9: -0.5}[an]
+    oy = {7: 0.5, 8: 0.5, 9: 0.5, 4: 0, 5: 0, 6: 0, 1: -0.5, 2: -0.5, 3: -0.5}[an]
+    orx, ory = cx + (ox - 0.5) * w, cy + (oy - 0.5) * h       # 绘图原点 (对齐框左上角)
+    fill = _vis(tags, "1", _style_alpha(style, "PrimaryColour"))
+    def nums(tag):
+        return [float(v) for v in re.findall(r"\\" + tag + r"(?![a-z])\s*" + _NUM, tags)]
+    bord = max(nums("bord") + nums("xbord") + nums("ybord") + [float(style.get("Outline", 0) or 0)]) \
+        if not re.search(r"\\bord", strip_t_(tags)) else max(nums("bord") + nums("xbord") + nums("ybord"))
+    border = bord > 0 and _vis(tags, "3", _style_alpha(style, "OutlineColour"))
+    shx = max(nums("shad") + nums("xshad") + [0.0] if re.search(r"\\x?shad", tags) else [float(style.get("Shadow", 0) or 0)])
+    shy = max(nums("shad") + nums("yshad") + [0.0] if re.search(r"\\y?shad", tags) else [float(style.get("Shadow", 0) or 0)])
+    shadow = (shx or shy) and _vis(tags, "4", _style_alpha(style, "BackColour"))
+    if not (fill or border or shadow):
+        return np.zeros(0), np.zeros(0), 0.0, warns, {"invisible": True}
+    blur = max(nums("blur") + [0.0]); be = max(nums("be") + [0.0])
+    pad = (bord if border else 0.0) + 2 * blur + be
+    # 边界取点
+    bx, by = [], []
+    for c in cons:
+        c2 = c + [c[0]]
+        for (a0, a1), (b0, b1) in zip(c2, c2[1:]):
+            L = math.hypot((b0 - a0) * sx, (b1 - a1) * sy)
+            k = max(1, math.ceil(L / VEC_STEP))
+            u = np.arange(k) / k
+            bx.append(a0 + (b0 - a0) * u); by.append(a1 + (b1 - a1) * u)
+    px = np.concatenate(bx); py = np.concatenate(by)
+    if fill:                                          # 内部网格: 非零环绕
+        gs = grid or VEC_FILL_GRID
+        gx, gy = np.meshgrid(np.arange(x0, x1 + 1e-9, gs / max(sx, 1e-9)), np.arange(y0, y1 + 1e-9, gs / max(sy, 1e-9)))
+        gx = gx.ravel(); gy = gy.ravel(); wn = np.zeros(len(gx), int)
+        for c in cons:
+            c2 = np.array(c + [c[0]])
+            for (a0, a1), (b0, b1) in zip(c2[:-1], c2[1:]):
+                cr = (b0 - a0) * (gy - a1) - (gx - a0) * (b1 - a1)
+                up = (a1 <= gy) & (b1 > gy) & (cr > 0); dn = (a1 > gy) & (b1 <= gy) & (cr < 0)
+                wn += up.astype(int) - dn.astype(int)
+        ins = wn != 0
+        px = np.concatenate([px, gx[ins]]); py = np.concatenate([py, gy[ins]])
+    # 绘图坐标 -> 画面: 缩放 (相对绘图原点), 平移到对齐框, 旋转 (\\org 或 \\pos)
+    X = orx + px * sx; Y = ory + py * sy
+    if frz:
+        t = math.radians(frz)
+        Ox, Oy = org if org else (cx, cy)
+        u, v = X - Ox, Y - Oy
+        X, Y = Ox + u * math.cos(t) + v * math.sin(t), Oy - u * math.sin(t) + v * math.cos(t)
+    if shadow and not (fill or border):
+        X, Y = X + shx, Y + shy
+    elif shadow:
+        X, Y = np.concatenate([X, X + shx]), np.concatenate([Y, Y + shy])
+    return X, Y, pad, warns, {"fill": bool(fill), "border": bool(border), "shadow": bool(shadow),
+                              "bord": bord, "blur": blur, "sx": sx, "sy": sy, "frz": frz, "an": an}
+
+
+
+# ---------------------------------------------------------------- 矢量件门禁 (known-gaps #13, 2026-11-12 用户定)
+# 前景 / 背景按"谁画在上面"分, 不按层号: libass 先比 Layer, 同层按文件里的先后 (后写的在上).
+#   前景 (矢量件画在字上面): 间隙 < MOTIF_GAP 报 E, 与贴图同一把尺子 (sweep_gap).
+#   背景 (字画在矢量件上面): 遮挡不是问题, 字底的对比度才是. 判据 = 覆盖比例 (形状盖住字墨迹框的面积比) + 峰值不透明度.
+#     2026-11-12 定: 阈值先不定, 先量分布报数 (VEC_STATS["behind"]), 本轮背景线只报 W 汇总, 不出 E.
+# 显式豁免: 事件的 Effect 字段写 "over" (libass 不认这个值, 渲染不受影响) = 有意盖字的效果 (粒子、音节高亮光斑).
+#   over 不量间隙, 但兜底照样报 E: 形状尺寸 > OVER_MAX_EXT 且峰值不透明度 > OVER_MAX_OPACITY, 或在屏 > OVER_MAX_DUR 秒.
+# 白名单: .ass 同目录 motif_gap.allow.json, 只收用户过目的条目, 每条带到期轮次; 命中报 W 并每次打印一行, 过期转 E.
+VEC_OVER = "over"
+OVER_MAX_EXT = 24.0
+OVER_MAX_OPACITY = 0.5
+OVER_MAX_DUR = 1.0
+ALLOW_FILE = "motif_gap.allow.json"
+VEC_STATS = {}            # 最近一次 check_vectors 的统计 (报数脚本读): front / behind / over / allow
+
+
+def _peak_opacity(tags, style, info):
+    """可见分量 (填充 / 边框 / 阴影) 在事件内能达到的最大不透明度 (0-1). \\fad 不算 (只会偏严)."""
+    vals = []
+    for which, key, on in (("1", "PrimaryColour", info.get("fill")), ("3", "OutlineColour", info.get("border")),
+                           ("4", "BackColour", info.get("shadow"))):
+        if not on:
+            continue
+        v = [int(x, 16) for x in re.findall(r"\\(?:%sa|alpha)&H([0-9A-Fa-f]{2})&" % which, tags)]
+        if not re.search(r"\\(?:%sa|alpha)&H" % which, strip_t_(tags)):
+            v.append(_style_alpha(style, key))
+        vals += [x for x in v if x < 0xFF] or []
+    return (255 - min(vals)) / 255 if vals else 0.0
+
+
+def _coverage(px, py, pad, fill, boxes, grid=VEC_FILL_GRID):
+    """形状盖住字墨迹框的面积比 (每个框 1px 网格采样; 到点集距离 <= 半径算盖住). 返回 (最大比例, 那个框)."""
+    import numpy as np
+    r = max(pad, grid * 0.71 if fill else 0.0, VEC_STEP)   # 填充内部网格点之间的空当也算盖住 (偏大)
+    best = (0.0, None)
+    for b in boxes:
+        x0, y0, x1, y1 = b[:4]
+        sel = (px >= x0 - r) & (px <= x1 + r) & (py >= y0 - r) & (py <= y1 + r)
+        if not sel.any():
+            continue
+        qx, qy = px[sel], py[sel]
+        gx, gy = np.meshgrid(np.arange(x0 + 0.5, x1, 1.0), np.arange(y0 + 0.5, y1, 1.0))
+        gx = gx.ravel(); gy = gy.ravel()
+        if not len(gx):
+            continue
+        cov = np.zeros(len(gx), bool)
+        for i in range(0, len(qx), 512):
+            d2 = (gx[:, None] - qx[None, i:i + 512]) ** 2 + (gy[:, None] - qy[None, i:i + 512]) ** 2
+            cov |= (d2 <= r * r).any(1)
+        f = float(cov.mean())
+        if f > best[0]:
+            best = (f, b)
+    return best
+
+
+def _boxes_at(tracks, t, img_trk, img_s):
+    """t 时刻在屏字框的画面坐标, 以及图相对终点的位移."""
+    ix, iy = _at(img_trk, (t - img_s) * 1000)
+    out = []
+    for s, e, bx, trk in tracks:
+        if not (s <= t < e):
+            continue
+        tx, ty = _at(trk, (t - s) * 1000)
+        ox, oy = tx - trk[2], ty - trk[3]
+        out += [(q[0] + ox, q[1] + oy, q[2] + ox, q[3] + oy) + tuple(q[4:]) for q in bx]
+    return out, ix - img_trk[2], iy - img_trk[3]
+
+
+def _load_allow(ass_path):
+    import json
+    p = os.path.join(os.path.dirname(os.path.abspath(ass_path)), ALLOW_FILE)
+    if not os.path.exists(p):
+        return None
+    with open(p, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _allow_hit(allow, ev, bn):
+    for it in (allow or {}).get("entries", []):
+        if it.get("band") == bn and int(it.get("layer", -1)) == int(ev.get("Layer", -2)) \
+                and abs(float(it.get("start", -99)) - ev["s"]) <= 0.02:
+            return it
+    return None
+
+
+def check_vectors(events, styles, ass_path, fontsdir, by_band_ev, errs, warns, measured):
+    """矢量件 (Name=fx:<band> 且带 \\p 绘图) 的母题压字. 字侧与贴图完全同一套 (text_ink_tracks / sweep_gap);
+    只有点集来源换成 vector_points. 结果写进 errs / warns / measured, 统计写进 VEC_STATS."""
+    import numpy as np
+    allow = _load_allow(ass_path)
+    st_ = {"front": [], "behind": [], "over": [], "over_e": [], "allow": [], "invisible": 0, "measured": 0,
+           "unplaced": collections.Counter(), "est": set()}
+    sides = [min(q[2] - q[0], q[3] - q[1]) for lst in by_band_ev.values() for _, tup in lst
+             for q in text_ink_boxes([tup], tup[0], tup[1], fontsdir)]
+    grid = max(0.5, min([VEC_FILL_GRID] + [x for x in sides if x > 0]))
+    st_["grid"] = grid
+
+    def tracks_of(bn, evs_, t0, t1):
+        unpl = []
+        tr = text_ink_tracks([x[1] for x in evs_], t0, t1, fontsdir, unpl)
+        return tr, unpl
+
+    for ev in events:
+        t = ev["Text"]; nm = re.match(r"fx:(\S+)", ev.get("Name", ""))
+        if not nm or not _R_DRAW.search(t):
+            continue
+        bn = nm.group(1)
+        txt = [x for x in by_band_ev.get(bn, []) if x[0]["e"] > ev["s"] and x[0]["s"] < ev["e"]]
+        if not txt:
+            continue
+        trk = track(t, (ev["e"] - ev["s"]) * 1000)
+        if not trk:
+            warns.append(f"L{ev['_ln']} 矢量件没有 \\pos / \\move, 母题压字未量")
+            continue
+        stl = styles.get(ev["Style"], {})
+        px, py, pad, vw, info = vector_points(t, trk[2], trk[3], stl, styles, grid)
+        if not len(px):
+            st_["invisible"] += 1
+            continue
+        tags = "".join(re.findall(r"\{([^}]*)\}", t))
+        op = _peak_opacity(tags, stl, info)
+        ext = float(max(px.max() - px.min(), py.max() - py.min()))
+        dur = ev["e"] - ev["s"]
+        if (ev.get("Effect") or "").strip() == VEC_OVER:
+            why = []
+            if ext > OVER_MAX_EXT and op > OVER_MAX_OPACITY:
+                why.append(f"尺寸 {ext:.0f}px > {OVER_MAX_EXT:g} 且不透明度 {op:.0%} > {OVER_MAX_OPACITY:.0%}")
+            if dur > OVER_MAX_DUR:
+                why.append(f"在屏 {dur:.2f}s > {OVER_MAX_DUR:g}s")
+            if why:
+                st_["over_e"].append((ev["_ln"], bn, ev["Layer"], round(ext, 1), round(op, 2), round(dur, 2)))
+                errs.append(f"母题压字 over 越界 L{ev['_ln']} band {bn}: 标了 over (有意盖字) 但{'; '.join(why)},"
+                            " 不是粒子 / 高亮光斑该有的样子  (去掉 over 让它按母题量, 或把它做小做短; 不要改兜底)")
+            else:
+                st_["over"].append(bn)
+            continue
+        # 预筛: 点集沿轨迹的包围盒 + pad 离所有字框 (含字的轨迹) 都 >= MOTIF_GAP + 1 的, 不可能压字
+        mx0, my0 = px.min() + min(0, trk[0] - trk[2]), py.min() + min(0, trk[1] - trk[3])
+        mx1, my1 = px.max() + max(0, trk[0] - trk[2]), py.max() + max(0, trk[1] - trk[3])
+        L, ln = int(ev.get("Layer", 0)), ev["_ln"]
+        front = [x for x in txt if L > int(x[0].get("Layer", 0)) or (L == int(x[0].get("Layer", 0)) and ln > x[0]["_ln"])]
+        behind = [x for x in txt if x not in front]
+        for side, grp in (("front", front), ("behind", behind)):
+            if not grp:
+                continue
+            tr, unpl = tracks_of(bn, grp, ev["s"], ev["e"])
+            if unpl:
+                st_["unplaced"][bn] += 1
+            if not tr:
+                continue
+            near = False
+            for s_, e_, bx, ttrk in tr:
+                dx = (ttrk[0] - ttrk[2]); dy = (ttrk[1] - ttrk[3])
+                for q in bx:
+                    qx0, qy0 = q[0] + min(0, dx), q[1] + min(0, dy); qx1, qy1 = q[2] + max(0, dx), q[3] + max(0, dy)
+                    gx = max(qx0 - mx1, mx0 - qx1, 0); gy = max(qy0 - my1, my0 - qy1, 0)
+                    if (gx * gx + gy * gy) ** 0.5 - pad < MOTIF_GAP + 1:
+                        near = True; break
+                if near:
+                    break
+            if not near:
+                continue
+            for q in (b for x in tr for b in x[2]):
+                if len(q) > 5 and q[5]:
+                    st_["est"].add(q[5])
+            # 点集裁剪 (只为速度): 离所有字框 (按字与图的相对位移扫过的范围外扩) 都 > MOTIF_GAP + pad + 1 的点,
+            # 不可能让间隙 < MOTIF_GAP, 去掉不改变任何 E / 背景线判定 (只改变 >= 门槛时报出的数, 那些数不用).
+            idx, idy = (min(0, trk[0] - trk[2]), max(0, trk[0] - trk[2])), (min(0, trk[1] - trk[3]), max(0, trk[1] - trk[3]))
+            keep = np.zeros(len(px), bool); R_ = MOTIF_GAP + pad + 1
+            for s_, e_, bx, ttrk in tr:
+                tdx = (min(0, ttrk[0] - ttrk[2]), max(0, ttrk[0] - ttrk[2])); tdy = (min(0, ttrk[1] - ttrk[3]), max(0, ttrk[1] - ttrk[3]))
+                for q in bx:
+                    keep |= (px >= q[0] + tdx[0] - idx[1] - R_) & (px <= q[2] + tdx[1] - idx[0] + R_) \
+                        & (py >= q[1] + tdy[0] - idy[1] - R_) & (py <= q[3] + tdy[1] - idy[0] + R_)
+            if not keep.any():
+                continue
+            # 同理裁掉离点集太远的字框 (同一个字在 2/3/4 层的重复框也去重): 同样只改变 >= 门槛时的数
+            kx, ky = px[keep], py[keep]; X0, X1, Y0, Y1 = kx.min(), kx.max(), ky.min(), ky.max()
+            tr2 = []
+            for s_, e_, bx, ttrk in tr:
+                tdx = (min(0, ttrk[0] - ttrk[2]), max(0, ttrk[0] - ttrk[2])); tdy = (min(0, ttrk[1] - ttrk[3]), max(0, ttrk[1] - ttrk[3]))
+                seen, kept = set(), []
+                for q in bx:
+                    k_ = tuple(round(v, 2) for v in q[:4])
+                    if k_ in seen:
+                        continue
+                    seen.add(k_)
+                    if q[0] + tdx[0] - idx[1] - R_ <= X1 and q[2] + tdx[1] - idx[0] + R_ >= X0 \
+                            and q[1] + tdy[0] - idy[1] - R_ <= Y1 and q[3] + tdy[1] - idy[0] + R_ >= Y0:
+                        kept.append(q)
+                if kept:
+                    tr2.append((s_, e_, kept, ttrk))
+            if not tr2:
+                continue
+            tr = tr2
+            sw_ = sweep_gap(kx, ky, ev["s"], ev["e"], trk, tr, stop_at=0.0)
+            st_["measured"] += 1
+            g = max(0.0, sw_["lower"] - pad)
+            if g >= MOTIF_GAP:
+                continue
+            b = sw_["box"]
+            rec = {"ln": ln, "band": bn, "layer": L, "gap": round(g, 2), "geom": round(sw_["lower"], 2), "pad": round(pad, 2),
+                   "t": round(sw_["t"], 3) if sw_["t"] is not None else None, "char": b[4] if b else None,
+                   "ext": round(ext, 1), "op": round(op, 2), "dur": round(dur, 2), "warns": vw}
+            if side == "behind":
+                bxs, ddx, ddy = _boxes_at(tr, sw_["t"], trk, ev["s"])
+                cov, cb = _coverage(px + ddx, py + ddy, pad, info.get("fill"), bxs, grid)
+                rec.update(cov=round(cov, 3), cov_char=cb[4] if cb else None)
+                st_["behind"].append(rec)
+                continue
+            hit = _allow_hit(allow, ev, bn)
+            if hit is not None:
+                exp, cur = int(hit.get("expires_round", 0)), int((allow or {}).get("round", 0))
+                rec.update(allow=hit.get("gap"), expires_round=exp)
+                st_["allow"].append(rec)
+                if cur > exp:
+                    errs.append(f"母题压字 白名单过期 L{ln} band {bn}: {hit.get('gap')} 到期轮次 {exp}, 当前轮次 {cur}, 间隙 {g:.1f}px 仍 < {MOTIF_GAP:g}px  (修掉它; 不要续期)")
+                continue
+            st_["front"].append(rec)
+            errs.append(f"母题压字 矢量 L{ln} band {bn} layer {L}: 到「{rec['char']}」间隙 {g:.1f}px < {MOTIF_GAP:g}px"
+                        f" (矢量件画在字上面; 几何间隙 {sw_['lower']:.1f}px 扣外扩 {pad:.1f}px (边框+2·blur); 最近时刻 {rec['t']}s;"
+                        f" 形状 {ext:.0f}px 不透明度 {op:.0%})  (挪开或缩小; 有意盖字的粒子 / 高亮写 Effect=over; 不要改尺子)")
+            measured.append((g, ln, bn, "<vector>", info.get("sx", 1), info.get("sy", 1), sw_))
+    for bn, n in st_["unplaced"].items():
+        errs.append(f"母题压字 缺显式定位 band {bn}: {n} 条矢量件同时在屏的字没有 \\pos / \\move 且推不出位置, 量不到, 间隙不可信  (给字加 \\pos)")
+    if st_["est"]:
+        warns.append(f"矢量件母题压字: 字体 {'/'.join(sorted(st_['est']))[:200]} 按估宽量 (见贴图那条同类 W)")
+    if st_["over"]:
+        c = collections.Counter(st_["over"])
+        warns.append(f"矢量件母题压字: Effect=over 豁免 {sum(c.values())} 条 ({', '.join(f'{k} {v}' for k, v in sorted(c.items()))})")
+    if st_["behind"]:
+        warns.append(f"矢量件母题压字 背景线 (字画在矢量件上面) 间隙 < {MOTIF_GAP:g}px 共 {len(st_['behind'])} 条: 本轮只报数, 阈值待定"
+                     f" (覆盖比例最大 {max(r['cov'] for r in st_['behind']):.0%})")
+    if allow is not None:
+        rs = sorted({int(it.get('expires_round', 0)) for it in allow.get('entries', [])})
+        warns.append(f"母题压字 白名单命中 {len(st_['allow'])} 条, 到期轮次 {'/'.join(map(str, rs)) or '-'} (当前轮次 {allow.get('round')})")
+    VEC_STATS.clear(); VEC_STATS.update(st_)
+
+
+def allow_banner(ass_path, fontsdir=None):
+    """生成后打印白名单那一行 (2026-11-13 用户定: 每次生成都要打, 让它没法忘). 只量白名单点名的那几条矢量件, 很快.
+    返回 (命中条数, 过期 E 列表); 没有白名单文件返回 None."""
+    allow = _load_allow(ass_path)
+    if allow is None:
+        return None
+    import sys as _sys
+    qa = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "qa")
+    if qa not in _sys.path:
+        _sys.path.insert(0, qa)
+    from validate_ass import load_ass
+    _, styles, events, _ = load_ass(ass_path)
+    pick = [ev for ev in events if (m := re.match(r"fx:(\S+)", ev.get("Name", ""))) and _allow_hit(allow, ev, m.group(1))]
+    bands = {re.match(r"fx:(\S+)", ev["Name"]).group(1) for ev in pick}
+    sub = pick + [ev for ev in events if ev.get("Name", "")[3:] in bands and ev.get("Name", "").startswith("ly:")]
+    errs, warns, _ = check_ass(sub, styles, ass_path, fontsdir)
+    hits = len(VEC_STATS.get("allow", []))
+    rs = sorted({int(it.get("expires_round", 0)) for it in allow.get("entries", [])})
+    cur = allow.get("round")
+    exp = [e for e in errs if "白名单过期" in e]
+    print(f"[motif_gap] 白名单命中 {hits} 条, 到期轮次 {'/'.join(map(str, rs)) or '-'} (当前轮次 {cur}; 条目 {len(allow.get('entries', []))},"
+          f" 点名事件找到 {len(pick)} 条)" + (f"  已过期 {len(exp)} 条 = E" if exp else ""))
+    for e in exp:
+        print("[motif_gap] E " + e)
+    return hits, exp

@@ -154,7 +154,8 @@ def bed(f, ph, k, theme, mode, decay=False):
         else:
             spin = f"\\frz{R.randint(0, 360)}\\t(\\frz{R.randint(-240, 240)})"
         f.shape(layer, ts, te, x, y, x + dx, y + dy, dr(sz), R.choice(cols), a_peak=min(235, a),
-                fade_in=min(0.5, (te - ts) * 0.3), fade_out=min(0.8, (te - ts) * 0.4), blur=R.uniform(0.5, 1.6), extra=spin)
+                fade_in=min(0.5, (te - ts) * 0.3), fade_out=min(0.8, (te - ts) * 0.4), blur=R.uniform(0.5, 1.6), extra=spin,
+                effect=("over" if layer else ""))   # 2026-11-13 #13: 字前 (L6/L8) 的床粒子是有意盖字, 显式豁免; 字后 (L0) 照量
 
 
 def fog(f, ph, k, theme, mode):
@@ -201,13 +202,15 @@ def hits(f, ph, k, theme, mode, decay=False):
             dx, dy = math.cos(ang) * v, math.sin(ang) * v * 0.6 - v * 0.35
             f.shape(7, c["s"], c["s"] + L, x + R.uniform(-c["w"] * 0.3, c["w"] * 0.3), y - 10, x + dx, y - 10 + dy,
                     hdraw(R.uniform(3, 6)), R.choice(hcols), a_peak=R.randint(10, 80), fade_in=0.05, fade_out=L * 0.7,
-                    blur=R.uniform(0.4, 1.0), accel=0.8, extra=f"\\frz{R.randint(0, 360)}\\t(\\frz{R.randint(-200, 200)})")
+                    blur=R.uniform(0.4, 1.0), accel=0.8, extra=f"\\frz{R.randint(0, 360)}\\t(\\frz{R.randint(-200, 200)})",
+                    effect="over")   # 2026-11-13 #13: 逐字命中粒子 (L7) 有意盖字, 显式豁免
         if m["ring"] and not (decay and ci > 0) and ci % (1 if mode == "hush" else RING_EVERY) == 0:
             if mode == "high" and theme in ("mana", "water"):   # 魔术句: 每字一个符文环 (无咏唱魔术的母题)
                 f.pulse(5, c["s"], x, y, S.rune_ring(c["w"] * 0.6, rng=R), hcols[0], dur=0.7, s0=40, s1=120, a0=60, blur=0.8,
-                        extra=f"\\t(\\frz{R.choice((-60, 60))})")
+                        extra=f"\\t(\\frz{R.choice((-60, 60))})", effect="over")   # 音节光环 (L5) 有意盖字
             else:
-                f.pulse(5, c["s"], x, y, S.ring(c["w"] * 0.55, 2.2), hcols[0], dur=0.5, s0=50, s1=125, a0=70, blur=1.0)
+                f.pulse(5, c["s"], x, y, S.ring(c["w"] * 0.55, 2.2), hcols[0], dur=0.5, s0=50, s1=125, a0=70, blur=1.0,
+                        effect="over")   # 音节光环 (L5) 有意盖字
 
 
 def apply(f, ph, k, fxname, mode):
