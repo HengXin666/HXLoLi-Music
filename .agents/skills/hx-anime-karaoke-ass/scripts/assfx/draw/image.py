@@ -108,7 +108,7 @@ def check_images(ass_path):
 # 
 def put_image(f, layer, t0, t1, x, y, rel, size=None, extra="", a_peak=8,
               c1="#FFFFFF", c3="#000000", bord=0, blur=0.0, fade_in=0.12, fade_out=0.25,
-              x1=None, y1=None, path_dir=None):
+              x1=None, y1=None, path_dir=None, t_move=None):
     """
     .agents/notes/implemented/feature/2026-10-03-karaoke-beat-layer.md
     .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
@@ -118,6 +118,7 @@ def put_image(f, layer, t0, t1, x, y, rel, size=None, extra="", a_peak=8,
     rel      `\\1img` 用的相对路径(相对于 ass 所在目录)
     size     (w,h); 不给就从文件读. **必须与图片真实尺寸一致**, 否则平铺成多张
     extra    追加标签(\\fscx/\\fscy/\\t 等)
+    t_move   `\\move` 的时间区间 (t1, t2) 毫秒, 透传给 FX.shape; 不传(None)则全程线性, 输出与旧版逐字节一致
 
     注意: 这里**不做缩放**去改变矩形尺寸  缩放要用 `\\fscx/\\fscy`, 让矩形跟着一起缩,
     而不是改矩形数值(那会改变平铺次数).
@@ -134,7 +135,7 @@ def put_image(f, layer, t0, t1, x, y, rel, size=None, extra="", a_peak=8,
     ex = f"\\1img({rel})\\p1" + extra
     f.shape(layer, t0, t1, x, y, x1 if x1 is not None else x, y1 if y1 is not None else y,
             draw=image_rect(w, h), c1=c1, c3=c3, bord=bord, blur=blur,
-            a_peak=a_peak, fade_in=fade_in, fade_out=fade_out, extra=ex)
+            a_peak=a_peak, fade_in=fade_in, fade_out=fade_out, extra=ex, t_move=t_move)
 
 
 def pop_image(f, layer, t, x, y, rel, size=None, path_dir=None, life=1.2,
