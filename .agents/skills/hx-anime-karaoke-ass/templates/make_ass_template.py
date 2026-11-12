@@ -30,7 +30,9 @@
 定制版 libass 找不到而回落, 症状是满屏豆腐块; 系统 ffmpeg 的字体回退会掩盖这个问题.
 查真实族名: `hx-karaoke render_octopus.py <ass> --probe`.
 
-完整示例: examples/mushoku_ed1/ (make_ass.py 设计表与主流程, scene.py 公共场景, fx_common.py 共用特效, fx_verse1/fx_verse2/fx_last.py 按段落的各句特效, cards.py 卡片);
+完整示例: examples/mushoku_ed1/ (make_ass.py 设计表 PHRASES / 字层预设 P() / 高光集合 HIGH / 氛围床包装 _bedded, scene.py 公共场景,
+fx_carry.py 承载与留白句, fx_high.py 高光句, fx_main.py 逐句主母题 pNN, fx_bed.py 氛围床 + 逐字命中, motif_img.py 图片母题, cards.py 卡片);
+通用模块 templates/fx_bed.py (氛围床) 与 templates/motif_img.py (图片母题, 配 assets/motif.json) 可直接复制进工程;
 """
 import json, math, os, random, sys
 
@@ -144,6 +146,30 @@ PHRASES = [
     dict(label="01 画面 xx-xx: <内容>", lines=[1], th=TH_BLOOD, o=dict(ent="zoom", ext="scatter", hl="shake"), fx="break"),
 ]
 FXMAP = {k[3:]: v for k, v in globals().items() if k.startswith("fx_")}
+
+# ------------------------------------------------------------------ 字层预设 / 高光集合 / 氛围床 (可选)
+# P(): 按句号写一行 PHRASES, 只写和默认不同的出入场/高亮. 例: P(5, "break", TH_BLOOD, ent="glitch", ext="scatter", hl="shake")
+P = lambda i, fx, th, **o: dict(label="L%02d %s" % (i, fx), lines=[i], th=th, o=dict(dict(ent="rise", ext="rise", hl="wipe"), **o), fx=fx)  # noqa: E731
+HIGH = set()    # 高光句的 fx 名 (不带 fx_ 前缀); 其余句按 carrier 强度铺床. 例: {"break"}
+try:
+    import fx_bed    # 复制 templates/fx_bed.py 到工程目录后启用 (它从 scene.py 取 S 等, 见其模块头); 没有就不铺床
+except ImportError:
+    fx_bed = None
+
+
+def _bedded(name, fn):
+    """主函数之后铺氛围床 + 逐字命中. 留白句 (quiet) 自己铺, 不包. 用同一个 f.rng 往后抽, 不改主函数的随机结果."""
+    if fx_bed is None or name == "quiet":
+        return fn
+
+    def run(f, ph, k):
+        fn(f, ph, k)
+        fx_bed.apply(f, ph, k, name, "high" if name in HIGH else "carrier")
+    run.__name__, run.__doc__, run.__wrapped__ = fn.__name__, fn.__doc__, fn   # 预览台清单按原函数名登记
+    return run
+
+
+FXMAP = {n: _bedded(n, fn) for n, fn in FXMAP.items()}
 
 G = Generator(doc, L, lines, TM)          # lead=0.8: 最早提前 0.8s 入场
 
@@ -261,6 +287,8 @@ def main(out):
 
     title_card()
     print("events:", doc.write(out))
+    if "motif_img" in sys.modules:          # 用了图片母题 (templates/motif_img.py) 就汇总缺件回退, 别让缺图静默过关
+        sys.modules["motif_img"].report(out)
 
 
 if __name__ == "__main__":

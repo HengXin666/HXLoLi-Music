@@ -1,89 +1,132 @@
 # -*- coding: utf-8 -*-
-# /// script
-# requires-python = ">=3.11"
-# dependencies = [
-#   "numpy",
-#   "fonttools",
-# ]
-# ///
-"""
-無職転生 ED1「オンリー」（大原ゆい子） 中日双语 + 振假名 卡拉OK 特效字幕
+"""無職転生 ED1「オンリー」(大原ゆい子) 中日双语 + 振假名 卡拉OK 特效字幕. v3 流程版 (2026-11-08).
 
-设计总纲
-  * 歌曲：以第一人称向“唯一的你”告白愛/守りたい/壊したい 的矛盾与决意；MV 以回忆蒙太奇串起
-    出生、旅途、战斗、魔法课、家族、离别。特效跟随每一句对应的画面（见 PHRASES 注释的时间点）。
-  * 硬约束：所有特效（含歌词自身的出入场）只在“歌词块墨迹包围盒 + 5% 画面”(band) 内；
-    FX 发射器生成期夹取，validate_ass.py 复核。
-  * 注音：calibrate_ruby.py 实测墨迹，注音底与汉字顶间距 5px。
+设计来源 (下游只引用上游, 不凭空发挥):
+  judge/shots.json (ED1 官方无字幕版, 只覆盖 0.7-91.2s) -> judge/bar.json (5 个高光) -> judge/style.json (色板, 禁用项)
+  -> judge/arc.json (每句角色, 手法, 锚点). 本文件的 PHRASES 与 arc.json 一一对应: fx 名 = arc 的手法标签.
+  高光句的函数在 fx_high.py (新写). 承载与留白在 fx_carry.py.
 """
 import os, sys
 
-sys.dont_write_bytecode = True   # 同目录模块不留 __pycache__ (示例目录会被整份拷走)
-from scene import HERE, doc, G, TH  # noqa: E402  (scene 负责 sys.path / 字体 / 样式 / Generator)
+sys.dont_write_bytecode = True
+from scene import HERE, doc, G, TH  # noqa: E402
 from cards import title, prologue, interlude, outro  # noqa: E402
-import fx_common, fx_verse1, fx_verse2, fx_last  # noqa: E402
+import fx_carry, fx_high, fx_bed  # noqa: E402
 
-# 拆分 (hard-rules 4d): 公共场景 scene.py; 共用特效 fx_common.py; 各句特效按歌曲段落 fx_verse1.py (一番) /
-# fx_verse2.py (二番) / fx_last.py (末段); 卡片 cards.py. 本文件只留逐句设计表与主流程.
+SEED = 100
 
-SEED = 100     # 特效层种子基准: 换种子 / 改一句只重抽对应 fx, 插入或重排不再波及别的句
 
-# 每个显示句：lines / 主题 / 动画选项 / 特效函数名（场景见注释，时间为 base 视频时间轴）
+def _hsv(h, s, v):
+    import colorsys
+    return "#%02X%02X%02X" % tuple(round(x * 255) for x in colorsys.hsv_to_rgb((h % 360) / 360, s, v))
+
+
+def _lum(hx):
+    f = lambda u: u / 12.92 if u <= 0.03928 else ((u + 0.055) / 1.055) ** 2.4  # noqa: E731
+    r, g, b = (int(hx[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+
+
+def hue_theme(h, s, lum=0.42):
+    """每句一个色相 (judge/hue.json). 2026-11-09 用户复审: 旧色板只把 春山青 等提亮, 37.5s 字带均色仍是 G>R>B 的青绿灰,
+    参考同帧是 R>G>B 的暖橙金. 改为按句的词意/镜头定色相, glow 在给定饱和度下只调明度到相对亮度约 0.42;
+    L1/L2 暗晕 dark 取同色相 s0.85 v0.17 (参考 2E1606 一类), hi 取同色相近白."""
+    if _lum(_hsv(h, s, 1.0)) < lum:          # 蓝/紫在该饱和度下到不了目标亮度: 降饱和直到够亮
+        while s > 0.3 and _lum(_hsv(h, s, 1.0)) < lum:
+            s -= 0.02
+    lo, hi = 0.3, 1.0
+    for _ in range(30):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if _lum(_hsv(h, s, mid)) < lum else (lo, mid)
+    return dict(TH(_hsv(h, 0.05, 1.0), _hsv(h, s, hi), _hsv(h, 0.85, 0.17)), pale=_hsv(h, 0.22, 1.0))
+
+
+import json  # noqa: E402
+HUES = json.load(open(os.path.join(HERE, "judge", "hue.json"), encoding="utf-8"))["lines"]
+STYLE = json.load(open(os.path.join(HERE, "judge", "style.json"), encoding="utf-8"))
+# 2026-11-09 用户裁定 style.json 红蓝冲突: 两条共存, 分层用. 字身 (L2 base \\1c) 走 role_color (这个字属于谁),
+# 光晕/描边 (glow/dark/pale, 高亮层 \\3c) 走 hue.json 逐句对比 (这句要和背景拉开). 之前冲突是两者混在同一个色变量里.
+ROLE = {ln: r["hex"] for r in STYLE.get("role_color", []) for ln in r["lines"]}
+
+
+def C(i):
+    th = hue_theme(HUES[i]["hue"], HUES[i]["sat"])
+    if i in ROLE:
+        th["base"] = ROLE[i]
+    return th
+
+
+Q = dict(ent="fade", ext="wind", hl="wipe")          # 留白句: 字走得慢, 退场随风斜飘 (\\frz), B 阶段改
+P = lambda i, fx, **o: dict(label="L%02d %s" % (i, fx), lines=[i], th=C(i), o=dict(dict(ent="rise", ext="rise", hl="wipe"), **o), fx=fx)  # noqa: E731
+
+# C 阶段: 和声句 burst=False 撤回 (逐字闪光是跟手的来源, 关掉=少了逐字响应).
+# 字层预设 (B 阶段, plan.md 2 漏点 8): 雪/留白句退场 wind (\\frz 斜飘), 裂纹句 glitch 入场 (\\fax 斜切) + scatter 退场
+# + shake 高亮 (\\frz 抖), 和声句 flipx 进出 (\\frx 3D 翻), 守护句 spin 入场. 参考 JP 层 \\frz 858, \\fax+\\frx 240.
 # Agent Notes: 卡拉OK skill 按步骤重构成 steps/NN-<key>/ 的契约 + impl 结构
 # .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md
 PHRASES = [
-    dict(label="19.5-28.5 婴儿的小脚、小手握住手指（诞生）", lines=[0], th=TH("#FFF3E6", "#FFA07A", "#3A1A12"), o=dict(ent="rise", ext="rise", hl="bloom", bright=True), fx="birth"),
-    dict(label="30 夕阳下交握的手", lines=[1], th=TH("#FFF0D6", "#FF9A3C", "#2E1606"), o=dict(ent="rise", ext="sink", hl="jump"), fx="grasp"),
-    dict(label="31.5 篝火 / 33 骑蜥蜴 / 36 雾", lines=[2], th=TH("#FFE6C2", "#FF6A1F", "#260C04"), o=dict(ent="slide", ext="rise", hl="wipe"), fx="campfire"),
-    dict(label="37.5 瑞杰路德·红叶悬崖 / 40.5 红树 / 42 艾莉丝", lines=[3], th=TH("#FFEDE6", "#E8402E", "#2A0806"), o=dict(ent="slide", ext="wind", hl="wipe"), fx="autumn"),
-    dict(label="45 拉钩约定 / 46.5 伙伴 / 48 与希露菲躺在草地", lines=[4], th=TH("#FFF6EE", "#FF5A6A", "#1E1410", base="#F4F6EE"), o=dict(ent="slide", ext="wind", hl="wipe", bright=True), fx="promise"),
-    dict(label="51 鲁迪笑 / 54 魔兽 / 55.5 艾莉丝战斗", lines=[5], th=TH("#FFFFFF", "#FF2E4A", "#1E0004"), o=dict(ent="zoom", ext="scatter", hl="shake"), fx="break_red"),
-    dict(label="58.5 岩石魔像 / 60 战斗 / 61.5 魔杖", lines=[6], th=TH("#FFFFFF", "#B24CFF", "#12081E"), o=dict(ent="glitch", ext="scatter", hl="wipe"), fx="glitch_violet"),
-    dict(label="64.5 蓝色魔力球 / 67.5 黑影", lines=[7], th=TH("#EAF6FF", "#3FA0FF", "#04122A"), o=dict(ent="rise", ext="rise", hl="bloom"), fx="magic_guard"),
-    dict(label="69 火球水球 / 70.5-72 天空魔法弧光", lines=[8], th=TH("#FFFFFF", "#FF8A3A", "#101020"), o=dict(ent="zoom", ext="rise", hl="bloom"), fx="fire_water"),
-    dict(label="75 希露菲在大树下 / 76.5 夕阳", lines=[9], th=TH("#FFF4E4", "#FF9E5E", "#2A1208"), o=dict(ent="fade", ext="rise", hl="bloom", din=0.8, dout=1.0), fx="sylphie_tree"),
-    dict(label="90 保罗持剑 / 91.5 塞妮丝治愈魔法", lines=[10], th=TH("#F2F6FF", "#8FB8FF", "#0A1020"), o=dict(ent="slide", ext="wind", hl="wipe"), fx="sword_heal"),
-    dict(label="93 婴儿 / 94.5 天空与飞鸟", lines=[11], th=TH("#FFFFFF", "#6EC6FF", "#0C2238"), o=dict(ent="rise", ext="wind", hl="wipe", bright=True), fx="birds"),
-    dict(label="94.5-97.5 天空飞鸟 → 99 家与全家", lines=[12], th=TH("#F4F8FF", "#7DB2FF", "#101A2C"), o=dict(ent="fade", ext="sink", hl="wipe", bright=True), fx="tears_theory"),
-    dict(label="103.5 塞妮丝 / 105 烛光下读书 / 106.5 剑术训练", lines=[13], th=TH("#FFF1D8", "#FFB04A", "#1E1206"), o=dict(ent="slide", ext="wind", hl="ink"), fx="candle_book"),
-    dict(label="109.5-112.5 洛琪希 / 114 希露菲·林间光", lines=[14], th=TH("#EEF4FF", "#4A7BFF", "#0A1230"), o=dict(ent="drop", ext="rise", hl="wipe"), fx="roxy_forest"),
-    dict(label="117 麦田夕阳 / 120 艾莉丝与鲁迪", lines=[15], th=TH("#FFFBEA", "#FFB42E", "#241404"), o=dict(ent="zoom", ext="scatter", hl="shake", bright=True), fx="break_wheat"),
-    dict(label="121.5 手 / 124.5 瑞杰路德 / 126 鲁迪", lines=[16], th=TH("#FFFFFF", "#1FD2C0", "#04161A"), o=dict(ent="glitch", ext="scatter", hl="wipe"), fx="glitch_teal"),
-    dict(label="127.5 红色眼环 / 129 蓝色地图 / 133.5 电光", lines=[17], th=TH("#E6EEFF", "#5A6CFF", "#060A1E"), o=dict(ent="fade", ext="sink", hl="ink"), fx="hide_map"),
-    dict(label="134 电光 / 135 夜城 / 136.5 魔法环 / 138 爆炎 / 139.5 青光（硬字幕已 delogo）", lines=[18, 19], th=TH("#E8FCFF", "#34D8FF", "#031018"), o=dict(ent="slide", ext="sink", hl="wipe"), fx="bolt_tears"),
-    dict(label="141 艾莉丝 / 142.5 雪中的鲁迪 / 145.5 日出草原", lines=[20], th=TH("#FFFFFF", "#9ED8FF", "#0E1C2E"), o=dict(ent="rise", ext="rise", hl="jump", bright=True), fx="snow_rise"),
-    dict(label="147 蓝光 / 148.5 花田 / 151.5 夹着花瓣的书", lines=[21, 22], th=TH("#FFF4FA", "#FF5AAE", "#2A0A1C"), o=dict(ent="rise", ext="wind", hl="bloom", bright=True), fx="flowers"),
-    dict(label="153-162 一家人的晚餐", lines=[23], th=TH("#FFF2E0", "#FF9B4A", "#241006"), o=dict(ent="flipx", ext="flipx", hl="wipe"), fx="dinner_flip"),
-    dict(label="163.5 洛琪希水魔法 / 168 洛琪希与鲁迪", lines=[24, 25], th=TH("#F0FCFF", "#2EB8FF", "#021426"), o=dict(ent="zoom", ext="scatter", hl="shake"), fx="break_water"),
-    dict(label="168-175 摸头", lines=[26], th=TH("#FFF2F4", "#FF7A9A", "#2A0A12"), o=dict(ent="fade", ext="rise", hl="bloom"), fx="embrace"),
-    dict(label="177 上课 / 178.5 鲁迪 / 180 起遮幅", lines=[27], th=TH("#F4FFF6", "#9EE6B8", "#0A1A12"), o=dict(ent="slide", ext="wind", hl="wipe"), fx="eraser"),
-    dict(label="180-189 遮幅：夕阳下的手 / 保罗与塞妮丝 / 篝火", lines=[28], th=TH("#FFF6E0", "#FFB43C", "#241404"), o=dict(ent="fade", ext="sink", hl="bloom"), fx="overflow"),
-    dict(label="189-195 雾 / 瑞杰路德 / 艾莉丝 / 拉钩 / 暗林 / 骑士", lines=[29], th=TH("#EEF0F6", "#9A8CFF", "#0C0A18"), o=dict(ent="slide", ext="scatter", hl="shake"), fx="chains"),
-    dict(label="195-201 暗青色森林 / 骑士", lines=[30], th=TH("#FFFFFF", "#2EF2E0", "#03141A"), o=dict(ent="glitch", ext="scatter", hl="wipe"), fx="glitch_cyan"),
-    dict(label="201 洛琪希持杖 / 204 火球 / 205.5 天空弧光 / 208.5 塞妮丝拥抱鲁迪", lines=[31], th=TH("#EEF6FF", "#4AA0FF", "#050E22"), o=dict(ent="rise", ext="rise", hl="bloom", stg_out=0.02), fx="finale"),
-    dict(label="210-213 洛琪希微笑 / 216 鲁迪在石墙后", lines=[32], th=TH("#FFF8E8", "#6F9CFF", "#0A1024"), o=dict(ent="fade", ext="rise", hl="bloom", din=0.8, dout=1.2), fx="only_you"),
+    P(0, "snow_write", ent="fade", ext="wind"), P(1, "snow_write", ent="fade", ext="wind"),
+    P(2, "thaw_bloom", hl="bloom", ext="wind"),                                        # h1
+    P(3, "chorus_float", ent="flipx", ext="flipx"), P(4, "chorus_float", ent="flipx", ext="flipx"),
+    P(5, "crack_hint", ent="glitch", ext="scatter", hl="shake"), P(6, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
+    P(7, "ring_guard", ent="spin", hl="bloom", ext="wind"),
+    P(8, "palm_cradle", ent="rise", hl="bloom"),                          # h2
+    P(9, "whiteout_reach", ent="fade", hl="bloom", din=0.8, dout=1.0),    # h2
+    P(10, "snow_plain", ent="fade", ext="wind"), P(11, "snow_plain", ent="fade", ext="wind"), P(12, "snow_gust", ent="fade", ext="wind"),
+    P(13, "chorus_beat", ent="flipx", ext="flipx"), P(14, "chorus_float", ent="flipx", ext="flipx"),
+    P(15, "crack_hint", ent="glitch", ext="scatter", hl="shake"), P(16, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
+    P(17, "veil_hide", ent="fade", ext="sink"), P(18, "veil_hide", ent="fade", ext="sink"),
+    P(19, "tear_drop", ent="fade", ext="sink"),
+    P(20, "quiet", **Q), P(21, "quiet", **Q), P(22, "quiet", **Q), P(23, "quiet", **Q),
+    P(24, "mana_crack", ent="zoom", hl="shake", ext="scatter"),                           # h3
+    P(25, "quiet", **Q), P(26, "quiet", **Q), P(27, "quiet", **Q), P(28, "quiet", **Q),
+    P(29, "sword_cut", ent="slide", hl="shake", ext="scatter"),                          # h4
+    P(30, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
+    P(31, "water_orb", ent="rise", hl="bloom"),                           # h5
+    P(32, "echo_reach", ent="fade", hl="bloom", din=0.8, dout=1.2),
 ]
-
 
 # Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
 # .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
-FXMAP = {k[3:]: v for m in (fx_common, fx_verse1, fx_verse2, fx_last) for k, v in vars(m).items() if k.startswith("fx_")}
+FXMAP = {k[3:]: v for m in (fx_carry, fx_high) for k, v in vars(m).items() if k.startswith("fx_")}
+
+# B 阶段 (plan.md 1.7 第 1, 2 层): 承载句与高光句在主函数之后铺氛围床 + 逐字命中.
+# 留白句 (quiet) 在 fx_carry.fx_quiet 里自己铺 rest 强度. 高光句强度最高, 保留 "高光往上拔" 的对比.
+HIGH = {"thaw_bloom", "palm_cradle", "whiteout_reach", "mana_crack", "sword_cut", "water_orb"}
 
 
-# ======================================================================== 主流程
+def _bedded(name, fn):
+    if name == "quiet":
+        return fn
+
+    def run(f, ph, k):
+        fn(f, ph, k)
+        fx_bed.apply(f, ph, k, name, "high" if name in HIGH else "carrier")
+    run.__name__ = fn.__name__
+    run.__doc__ = fn.__doc__
+    run.__wrapped__ = fn
+    return run
+
+
+FXMAP = {n: _bedded(n, fn) for n, fn in FXMAP.items()}
+
+def phrases():
+    return PHRASES
+
+
 # Agent Notes: 卡拉OK 制作工作区统一为 dev/<番名>/<歌曲名>/，整棵屏蔽 git
 # .agents/notes/implemented/process/2026-10-02-karaoke-dev-workspace.md
 # Agent Notes: skill 只保留一份可复现示例，模板只留一个
 # .agents/notes/implemented/process/2026-10-02-karaoke-layout-consolidation.md
 def main(out):
-    # 出入场规划 / 逐句渲染 / band 登记 / 清单 (out.manifest.json) 全部由 Generator 负责.
-    # 显示窗口规则见 assfx/layer/gen.py 模块头; 字层种子 LY_SEED 与特效种子 SEED 解耦.
     G.inputs(HERE, "lyrics.txt", "timing.json", "calib.json", "fixes.json")
-    G.render(PHRASES, FXMAP, seed=SEED)
+    G.render(phrases(), FXMAP, seed=SEED)
     title(); prologue(); interlude(); outro()
     n = doc.write(out)
     print("events:", n)
+    import motif_img
+    motif_img.report(out)          # 缺件回退汇总 + 旁证文件 (完整版不留旁证)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out/only_ed1.ass"))
+    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out.ass"))

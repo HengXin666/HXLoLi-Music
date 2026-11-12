@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""验收台第 2 步自测: 在 examples/mushoku_ed1 的拷贝上走一遍追踪, "好" 的冻结, G2 三条核对, issues.
+"""验收台第 2 步自测: 在旧版示例 (git 83316ec 的 examples/mushoku_ed1, 由 git archive 导出到临时目录, 不在工作区留副本) 上走一遍追踪, "好" 的冻结, G2 三条核对, issues.
 
   hx-karaoke accept/selftest_accept.py [--keep]
+前提 (旧版示例从 git 历史导出, 见 export_old): 1) 有 git 可执行文件; 2) 本 skill 在 git 工作树里 (不是 zip / 拷贝出来的目录);
+3) 提交 83316ec 在本地 (浅克隆会缺, 需 git fetch --unshallow). 三条缺一条, export_old 会在 git 那一步报错退出, 不会静默跳过.
 要真字体 (跑生成器), 约 10 次生成器.
 """
 import argparse, ast, contextlib, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile, time
@@ -12,7 +14,28 @@ sys.path.insert(0, os.path.dirname(HERE))
 from accept import accept as A                       # noqa: E402
 from assfx.layer.trace import source_hashes          # noqa: E402
 
-EX = os.path.join(os.path.dirname(os.path.dirname(HERE)), "examples", "mushoku_ed1")
+# 依赖旧版 fx_* 结构 (fx_common / fx_verse* / fx_last, 共用 fx_break). 2026-11-12 示例换成 オンリー 定稿快照后,
+# 旧版只留在 git 历史里: 钉死提交, 自测时导出, 不在 skill 里放第二份同曲生成器.
+OLD_REV = "83316ec4baae8e9ad23bea69fedc479694f0bab5"
+OLD_PATH = ".agents/skills/hx-anime-karaoke-ass/examples/mushoku_ed1"
+
+
+def export_old(dst):
+    """git archive OLD_REV:OLD_PATH -> dst (跳过 out / review / __pycache__, 与原 copytree 的 ignore 一致)."""
+    import tarfile
+    top = subprocess.run(["git", "-C", HERE, "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
+    raw = subprocess.run(["git", "-C", top, "archive", "--format=tar", OLD_REV, OLD_PATH], capture_output=True, check=True).stdout
+    with tarfile.open(fileobj=io.BytesIO(raw)) as tf:
+        for m in tf.getmembers():
+            rel = os.path.relpath(m.name, OLD_PATH)
+            if not m.isfile() or rel.startswith("..") or set(rel.split("/")) & {"out", "review", "__pycache__"}:
+                continue
+            p = os.path.join(dst, rel)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "wb") as fh:
+                fh.write(tf.extractfile(m).read())
+
+
 R = dict(n=0, bad=[])
 
 
@@ -64,7 +87,7 @@ def main():
     keep = "--keep" in sys.argv
     tmp = tempfile.mkdtemp(prefix="accept_selftest_")
     proj = os.path.join(tmp, "p")
-    shutil.copytree(EX, proj, ignore=shutil.ignore_patterns("out", "review", "__pycache__"))
+    export_old(proj)
     P = A.Proj(proj)
     t0 = time.time(); c, o = run("init", P); t_on = time.time() - t0
     ck(c == 0, "init 跑生成器", o)

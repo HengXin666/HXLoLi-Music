@@ -1,0 +1,787 @@
+{
+ "version": 1,
+ "sections": [
+  {
+   "id": "V1",
+   "lines": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "budget": 0.35,
+   "why": "雪里的低语. 只在 h1 化一次雪, 其余压住"
+  },
+  {
+   "id": "C1",
+   "lines": [
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "budget": 0.75,
+   "why": "第一次副歌, 有 ED 画面. 破坏只是预告, 力量留给 h2 的托手与白闪"
+  },
+  {
+   "id": "V2",
+   "lines": [
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "budget": 0.3,
+   "why": "没有画面的第二段. 回到冷底, 只在最强鼓点亮一次"
+  },
+  {
+   "id": "C2",
+   "lines": [
+    15,
+    16,
+    17,
+    18,
+    19
+   ],
+   "budget": 0.5,
+   "why": "第二次副歌故意不给高光: 把守护翻成隐藏, 力量压到最后"
+  },
+  {
+   "id": "B",
+   "lines": [
+    20,
+    21,
+    22,
+    23
+   ],
+   "budget": 0.1,
+   "why": "桥段自问, 全曲第一处留白"
+  },
+  {
+   "id": "C3a",
+   "lines": [
+    24
+   ],
+   "budget": 0.95,
+   "why": "最后一次 壊したい, 全曲最猛的破坏"
+  },
+  {
+   "id": "Q",
+   "lines": [
+    25,
+    26,
+    27,
+    28
+   ],
+   "budget": 0.1,
+   "why": "伴奏抽空 22 秒, 字幕跟着抽空, 第二处留白"
+  },
+  {
+   "id": "C3b",
+   "lines": [
+    29,
+    30,
+    31,
+    32
+   ],
+   "budget": 1.0,
+   "why": "乐队回归到收尾: h4 斩开, h5 教会我一切, 末句只留回声"
+  }
+ ],
+ "lines": [
+  {
+   "line": 0,
+   "text": "愛のイロハを学んでも",
+   "role": "carrier",
+   "idea": "字在雪枝后一笔一笔写出来, 写完被雪轻轻盖一层. 学了也像没学会",
+   "technique": "snow-write",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "学ぶ"
+    },
+    {
+     "kind": "shot",
+     "ref": "s03"
+    }
+   ],
+   "highlight": null
+  },
+  {
+   "line": 1,
+   "text": "手に入れいれられないのなんの",
+   "role": "carrier",
+   "idea": "同样的写法, 句尾 のなんの 抖一下又被雪盖住, 嘟囔感",
+   "technique": "snow-write",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "手に入れる"
+    },
+    {
+     "kind": "shot",
+     "ref": "s03"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "雪盖的白霜传给下一句"
+   }
+  },
+  {
+   "line": 2,
+   "text": "戦い疲れ果てたコロニー 貴方が欲しい",
+   "role": "highlight",
+   "idea": "貴方が欲しい 出现时字上的积雪化开, 底下透出春山青, 与 ED 同一刀转季",
+   "technique": "thaw-bloom",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "戦い"
+    },
+    {
+     "kind": "shot",
+     "ref": "s04"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "onset",
+      "t": 32.729
+     }
+    }
+   ],
+   "highlight": "h1",
+   "thread": {
+    "mode": "carry",
+    "state": "雪霜从上句延续, 在这里化掉"
+   }
+  },
+  {
+   "line": 3,
+   "text": "(If you do) なんだって怖くないから",
+   "role": "carrier",
+   "idea": "和声句: 字从春色里浮起, 用细一号的字重显示 这是另一个声音",
+   "technique": "chorus-float",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "怖くない"
+    },
+    {
+     "kind": "shot",
+     "ref": "s06"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "春山青成为本段底色"
+   }
+  },
+  {
+   "line": 4,
+   "text": "(If you will) 背中を任せて",
+   "role": "carrier",
+   "idea": "背中を任せて: 字靠在一条竖直的石墙线上, 像背靠背",
+   "technique": "chorus-float",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "背中"
+    },
+    {
+     "kind": "shot",
+     "ref": "s07"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "和声的细字重延续"
+   }
+  },
+  {
+   "line": 5,
+   "text": "壊したい 壊してしまいたい 貴方のためなら",
+   "role": "carrier",
+   "idea": "壊したい: 字边出现赭红细裂纹, 但不碎. 第一次只是预告",
+   "technique": "crack-hint",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "壊す"
+    },
+    {
+     "kind": "shot",
+     "ref": "s08"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "sub",
+      "t": 49.969
+     }
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "break",
+    "state": "副歌进来, 从春色断到赭红"
+   }
+  },
+  {
+   "line": 6,
+   "text": "不純も矛盾も見境なんてない",
+   "role": "carrier",
+   "idea": "不純も矛盾も: 两个 純/盾 字左右轻微错位, 表示 矛盾",
+   "technique": "crack-hint",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "見境ない"
+    },
+    {
+     "kind": "shot",
+     "ref": "s11"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "赭红裂纹延续"
+   }
+  },
+  {
+   "line": 7,
+   "text": "守りたい 守りたいのは全てを",
+   "role": "carrier",
+   "idea": "守りたい: 与第 5 句同一骨架, 裂纹换成一圈守护的细光环",
+   "technique": "ring-guard",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "守る"
+    },
+    {
+     "kind": "shot",
+     "ref": "s13"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "同骨架: 第 5 句的裂纹在这里翻成光环"
+   }
+  },
+  {
+   "line": 8,
+   "text": "教えてくれた",
+   "role": "highlight",
+   "idea": "教えてくれた: 字下方浮出一双托着的手的轮廓, 粉霞光从掌心升起, 跟镜头一起上摇",
+   "technique": "palm-cradle-whiteout",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "教える"
+    },
+    {
+     "kind": "shot",
+     "ref": "s14"
+    }
+   ],
+   "highlight": "h2",
+   "thread": {
+    "mode": "carry",
+    "state": "光环收拢成掌心的光"
+   }
+  },
+  {
+   "line": 9,
+   "text": "貴方だけ",
+   "role": "highlight",
+   "idea": "貴方だけ: 掌心的光涨满整行, 白闪, 字最后只剩一只伸向光的手的剪影",
+   "technique": "palm-cradle-whiteout",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "貴方"
+    },
+    {
+     "kind": "shot",
+     "ref": "s15"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "sub",
+      "t": 75.395
+     }
+    }
+   ],
+   "highlight": "h2",
+   "thread": {
+    "mode": "carry",
+    "state": "掌心光变成白闪"
+   }
+  },
+  {
+   "line": 10,
+   "text": "目には目を歯を 尖っても",
+   "role": "carrier",
+   "idea": "第二段: 没有画面, 字回到冷蓝底, 写法同第 0 句但不盖雪, 字边有小尖角",
+   "technique": "snow-write",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "目には目を"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "break",
+    "state": "间奏后重新开始, 白闪退场"
+   }
+  },
+  {
+   "line": 11,
+   "text": "伝えられないの でも",
+   "role": "carrier",
+   "idea": "伝えられない: 字写到一半淡掉, でも 留在原地",
+   "technique": "snow-write",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "伝える"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "冷蓝底延续"
+   }
+  },
+  {
+   "line": 12,
+   "text": "悲しむ顔は負けなセオリー 素直でイタイ",
+   "role": "carrier",
+   "idea": "悲しむ顔: 字嘴硬地站直, 素直でイタイ 稍微发红",
+   "technique": "snow-write",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "悲しむ顔"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "でも 留下的字位成为本句起点"
+   }
+  },
+  {
+   "line": 13,
+   "text": "(If you do) 失っていいような未来",
+   "role": "carrier",
+   "idea": "和声句: 与第 3 句同写法, 跟 109.9s 的全曲最强鼓点一起亮一次",
+   "technique": "chorus-float",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "失う"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "onset",
+      "t": 109.923
+     }
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "和声细字重回来"
+   }
+  },
+  {
+   "line": 14,
+   "text": "(If you will) 端から見えていない",
+   "role": "carrier",
+   "idea": "端から見えていない: 字从左端开始就被雾遮住",
+   "technique": "chorus-float",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "見えていない"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "同上"
+   }
+  },
+  {
+   "line": 15,
+   "text": "壊したい 壊してしまいたい 貴方のためなら",
+   "role": "carrier",
+   "idea": "第二次 壊したい: 裂纹比第一次长, 仍不碎",
+   "technique": "crack-hint",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "壊す"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "break",
+    "state": "副歌, 断到赭红"
+   }
+  },
+  {
+   "line": 16,
+   "text": "不順も矛盾も見境なんてない",
+   "role": "carrier",
+   "idea": "不順も矛盾も: 同第 6 句的错位",
+   "technique": "crack-hint",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "見境ない"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "裂纹延续"
+   }
+  },
+  {
+   "line": 17,
+   "text": "隠したい 隠したいのは全てを",
+   "role": "carrier",
+   "idea": "隠したい: 第 7 句的光环换成一层往里收的暗幕, 把字藏起来",
+   "technique": "veil-hide",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "隠す"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "同骨架: 光环翻成暗幕"
+   }
+  },
+  {
+   "line": 18,
+   "text": "背負うと決めた",
+   "role": "carrier",
+   "idea": "背負うと決めた: 字往下沉一格, 像背上东西",
+   "technique": "veil-hide",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "背負う"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "暗幕延续"
+   }
+  },
+  {
+   "line": 19,
+   "text": "涙だけ",
+   "role": "carrier",
+   "idea": "涙だけ: 对位第 9 句, 但不白闪, 只一滴光从字上滑下",
+   "technique": "tear-drop",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "涙"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "暗幕里只留一滴光"
+   }
+  },
+  {
+   "line": 20,
+   "text": "背伸びして見える世界",
+   "role": "rest",
+   "idea": "桥段: 背伸び 的字比别的高半格, 其余什么都不加",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "背伸び"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "那滴光落地后熄灭"
+   }
+  },
+  {
+   "line": 21,
+   "text": "貴方のため？",
+   "role": "rest",
+   "idea": "貴方のため？ 只有字, 问号后留空",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "貴方のため"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "桥段的空"
+   }
+  },
+  {
+   "line": 22,
+   "text": "自分のため",
+   "role": "rest",
+   "idea": "自分のため 只有字, 与上句左右对称排",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "自分のため"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "对称的空"
+   }
+  },
+  {
+   "line": 23,
+   "text": "まだわからない 感情の裏側",
+   "role": "rest",
+   "idea": "まだわからない: 裏側 两字半透明, 像只看到一面",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "わからない"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "空延续到副歌前"
+   }
+  },
+  {
+   "line": 24,
+   "text": "壊したい 壊してしまいたい",
+   "role": "highlight",
+   "idea": "最后一次 壊したい: 字被内部的魔力光撑裂, 光从裂缝里喷出, 像菲托亚领上空的魔力暴走",
+   "technique": "mana-crack-burst",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "壊す"
+    },
+    {
+     "kind": "motif",
+     "ref": "菲托亚领转移事件 (魔力灾害)"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "onset",
+      "t": 164.908
+     }
+    }
+   ],
+   "highlight": "h3",
+   "thread": {
+    "mode": "break",
+    "state": "桥段的空被一下撑破"
+   }
+  },
+  {
+   "line": 25,
+   "text": "戻れないのなら",
+   "role": "rest",
+   "idea": "伴奏抽空的 22 秒: 字只有最基本的走字, 背景什么都不放",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "戻れない"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "break",
+    "state": "爆发后立刻抽空, 与编曲一致"
+   }
+  },
+  {
+   "line": 26,
+   "text": "尚更強く抱きしめていたい",
+   "role": "rest",
+   "idea": "抱きしめていたい: 只有字, 抱 字稍亮",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "抱きしめる"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "抽空延续"
+   }
+  },
+  {
+   "line": 27,
+   "text": "離れない優しさを消し去っても",
+   "role": "rest",
+   "idea": "消し去っても: 字写完后从尾部擦掉一半",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "優しさ"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "抽空延续"
+   }
+  },
+  {
+   "line": 28,
+   "text": "悲しいくらい 溢れ出る思い",
+   "role": "rest",
+   "idea": "溢れ出る思い: 擦掉的字重新从下面溢出来, 仍然没有特效",
+   "technique": "quiet",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "溢れ出る"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "擦掉的字在这里回来"
+   }
+  },
+  {
+   "line": 29,
+   "text": "逃げない 逃げたくないこのジレンマから",
+   "role": "highlight",
+   "idea": "乐队砸回的瞬间, 逃げない 被一道艾莉丝红的剑光横斩, 字被斩开后立住不倒",
+   "technique": "sword-cut-return",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "逃げない"
+    },
+    {
+     "kind": "motif",
+     "ref": "艾莉丝的剑 (剑神流)"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "onset",
+      "t": 189.521
+     }
+    }
+   ],
+   "highlight": "h4",
+   "thread": {
+    "mode": "break",
+    "state": "22 秒空白后的第一拍"
+   }
+  },
+  {
+   "line": 30,
+   "text": "不順も矛盾も見境なんてない",
+   "role": "carrier",
+   "idea": "不順も矛盾も: 第三次, 错位后被剑光的余辉拉直",
+   "technique": "crack-hint",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "見境ない"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "剑光余辉"
+   }
+  },
+  {
+   "line": 31,
+   "text": "守りたい守りたいのは全てを教えてくれた",
+   "role": "highlight",
+   "idea": "守りたい…教えてくれた 一口气唱完: 字旁不念咒地凝出一颗洛琪希蓝的水球, 随句子长大",
+   "technique": "silent-water-orb",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "守る"
+    },
+    {
+     "kind": "motif",
+     "ref": "无咏唱魔术"
+    },
+    {
+     "kind": "event",
+     "ref": {
+      "kind": "section",
+      "t": 201.47
+     }
+    }
+   ],
+   "highlight": "h5",
+   "thread": {
+    "mode": "carry",
+    "state": "余辉收成水球的高光"
+   }
+  },
+  {
+   "line": 32,
+   "text": "貴方だけ",
+   "role": "carrier",
+   "idea": "最后 貴方だけ: 第 9 句的回声, 只留一只伸手剪影, 不再白闪",
+   "technique": "echo-reach",
+   "anchors": [
+    {
+     "kind": "image",
+     "ref": "貴方"
+    }
+   ],
+   "highlight": null,
+   "thread": {
+    "mode": "carry",
+    "state": "水球化成光点, 落到伸出的手上"
+   }
+  }
+ ]
+}
