@@ -7,6 +7,8 @@ export default function TopBar() {
   const out = useStore((x) => x.out);
   const edl = useStore((x) => x.edl);
   const octo = useStore((x) => x.octo);
+  const octoErr = useStore((x) => x.octoErr);
+  const octoMissing = useStore((x) => x.octoMissing);
   const place = useStore((x) => x.place);
   const placeOpen = useStore((x) => x.placeOpen);
   const set = useStore((x) => x.set);
@@ -20,7 +22,9 @@ export default function TopBar() {
       <span className={s.item} title={p?.dir}>{p ? `${p.anime} / ${p.song}` : '载入中'}</span>
       <span className={s.sep} />
       <span className={s.chip} data-k="mv">画面 {mv}</span>
-      <span className={s.chip} data-state={octo}>libass {octo === 'ready' ? '就绪' : octo === 'error' ? '失败' : octo === 'off' ? '无' : '载入'}</span>
+      <span className={s.chip} data-testid="octo-chip" data-state={octo === 'partial' ? 'error' : octo} data-octo={octo} title={octoErr || undefined}>
+        libass {octo === 'ready' ? '就绪' : octo === 'partial' ? `缺图 ${octoMissing.length} 张` : octo === 'error' ? '失败' : octo === 'off' ? '无' : '载入'}
+      </span>
       <span className={s.grow} />
       <button className={s.chip} data-testid="place-btn" aria-expanded={placeOpen} data-state={place?.job.running ? 'busy' : undefined}
         onClick={() => set({ placeOpen: !placeOpen })} title="歌词位置预设">

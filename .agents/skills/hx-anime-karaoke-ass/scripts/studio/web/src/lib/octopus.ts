@@ -6,6 +6,7 @@ export interface OctopusInstance {
   setTrack(text: string): void;
   resize(w: number, h: number, top?: number, left?: number): void;
   dispose(): void;
+  writeFile(path: string, data: Uint8Array): void;
 }
 type Ctor = new (o: Record<string, unknown>) => OctopusInstance;
 
@@ -25,21 +26,76 @@ function loadScript(base: string): Promise<Ctor> {
   return loading;
 }
 
+/** ASS 里 \\1img..\\4img 引用的相对路径 (去重). 跳过 data: 和带 ! / $ 的写法, 与 render_octopus.py 一致. */
+export function imgRefs(text: string): string[] {
+  const out = new Set<string>();
+  for (const m of text.matchAll(/\\[1-4]img\(([^)]+)\)/g)) {
+    const r = m[1].trim();
+    if (!r || r.startsWith('data:') || r.includes('!') || r.includes('$')) continue;
+    out.add(r);
+  }
+  return [...out];
+}
+
+/** 取回 ASS 引用的贴图写进 worker 虚拟 FS, 再重载 track (只 writeFile 不重载, libass 不会去找图).
+ *  图片接口: /api/ass/<which> -> /api/img/<which>/<相对路径>, 按 ASS 所在目录解析. 返回写入数和取不到的路径. */
+/*
+ * Agent Notes: studio 自己把 \1img 贴图注入 worker 虚拟 FS, 逐张独立, 缺图报 partial
+ * .agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md
+ */
+async function injectImages(o: OctopusInstance, subUrl: string): Promise<{ written: number; missing: string[] }> {
+  const text = await (await fetch(subUrl)).text();
+  const refs = imgRefs(text);
+  const base = subUrl.replace('/api/ass/', '/api/img/') + '/';
+  const missing: string[] = [];
+  let written = 0;
+  // 逐张独立: 坏一张不拖累其余 (3 张坏 1 张, 另 2 张照常显示)
+  await Promise.all(refs.map(async (rel) => {
+    try {
+      const r = await fetch(base + rel.split('/').map(encodeURIComponent).join('/'));
+      if (!r.ok) { missing.push(`${rel} (HTTP ${r.status})`); return; }
+      o.writeFile(rel, new Uint8Array(await r.arrayBuffer()));
+      written++;
+    } catch (e) {
+      missing.push(`${rel} (${String((e as Error)?.message ?? e)})`);
+    }
+  }));
+  if (written) o.setTrack(text);
+  return { written, missing };
+}
+
 export async function createOctopus(
-  p: Project, canvas: HTMLCanvasElement, onReady: () => void, onError: (e: string) => void,
+  p: Project, canvas: HTMLCanvasElement, onReady: (missing: string[]) => void, onError: (e: string) => void,
 ): Promise<OctopusInstance> {
   const base = p.octopus ?? '/octopus/';
   const C = await loadScript(base);
   const avail: Record<string, string> = {};
   for (const f of p.fonts) for (const fam of f.families) avail[fam.toLowerCase()] = f.url;
-  return new C({
+  let inst: OctopusInstance | null = null;
+  let injected = false;
+  const ready = async () => {
+    if (injected || !inst) return;
+    injected = true;
+    let missing: string[] = [];
+    try {
+      const r = await injectImages(inst, p.out_ass);
+      missing = r.missing;
+      console.info(`[octo] 贴图注入 ${r.written} 张` + (missing.length ? `, 取不到 ${missing.length} 张: ${missing.join(', ')}` : ''));
+    } catch (e) {
+      missing = [`贴图注入失败: ${String((e as Error)?.message ?? e)}`];   // 读 ASS 都失败: 整体算缺, 不能当就绪
+      console.warn('[octo] 贴图注入失败', e);
+    }
+    onReady(missing);
+  };
+  inst = new C({
     canvas,
     subUrl: p.out_ass,
     workerUrl: `${base}subtitles-octopus-worker.js`,
     legacyWorkerUrl: `${base}subtitles-octopus-worker-legacy.js`,
     fonts: p.fonts.map((f) => f.url),
     availableFonts: avail,
-    onReady,
+    onReady: () => { void ready(); },
     onError: (e: unknown) => onError(String((e as Error)?.message ?? e)),
   });
+  return inst;
 }

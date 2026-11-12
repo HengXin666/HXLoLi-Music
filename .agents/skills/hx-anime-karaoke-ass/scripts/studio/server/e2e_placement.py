@@ -29,6 +29,10 @@ def sandbox(src, dst):
             shutil.copy2(p, os.path.join(dst, f))
     if os.path.isdir(os.path.join(src, "judge")):
         shutil.copytree(os.path.join(src, "judge"), os.path.join(dst, "judge"))
+    # 2026-11-13: out.ass 用 \\1img 引用 assets/ 下的图; studio 逐张注入, 缺图时 octo=partial (不算 ready).
+    # 沙盒不带图, 测试就会卡在等 ready, 所以把图一起带上 (MV 抠图源 mv/ 和实验图 _exp/ 不需要).
+    if os.path.isdir(os.path.join(src, "assets")):
+        shutil.copytree(os.path.join(src, "assets"), os.path.join(dst, "assets"), ignore=shutil.ignore_patterns("mv", "_exp"))
     # 歌名/番名要与原工程一致 (参考 ASS 按它找): 拷贝放在 <tmp>/<番名>/<歌名>
 
 

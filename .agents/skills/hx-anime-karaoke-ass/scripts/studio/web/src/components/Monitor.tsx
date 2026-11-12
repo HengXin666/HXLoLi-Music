@@ -48,7 +48,13 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
     if (!sub) return;
     let dead = false;
     createOctopus({ ...project, out_ass: sub }, canvas.current,
-      () => { if (!dead) { setReady(true); if (which === 'out') set({ octo: 'ready' }); inst.current?.setCurrentTime(clock.t()); } },
+      (miss) => {
+        if (dead) return;
+        setReady(true);
+        if (which === 'out') set(miss.length ? { octo: 'partial', octoMissing: miss, octoErr: `贴图缺 ${miss.length} 张: ${miss.join('; ')}` }
+          : { octo: 'ready', octoMissing: [], octoErr: '' });
+        inst.current?.setCurrentTime(clock.t());
+      },
       (e) => { if (which === 'out') set({ octo: 'error', octoErr: e }); },
     ).then((o) => { if (dead) o.dispose(); else inst.current = o; })
       .catch((e) => { if (which === 'out') set({ octo: 'error', octoErr: String(e) }); });

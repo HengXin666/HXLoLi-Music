@@ -502,6 +502,16 @@ class H(BaseHTTPRequestHandler):
                     if bad:
                         return self.err(400, "未知取值: %s" % ", ".join("%s=%s" % (k, cand[k]) for k in bad))
                 return self.send_json(P.placement_state(cand))
+            if path.startswith(("/api/img/out/", "/api/img/ref/")):
+                # \\1img 贴图: 按 ASS 所在目录解析 (同 render_octopus.py), 前端取回后写进 worker 虚拟 FS
+                which = path[len("/api/img/"):len("/api/img/") + 3]
+                a = P.p("out.ass") if which == "out" else P.ref_ass()
+                if not a:
+                    return self.err(404, "no ass")
+                d = os.path.realpath(os.path.dirname(a))
+                f = os.path.realpath(os.path.join(d, path[len("/api/img/out/"):]))
+                ok = f.startswith(d + os.sep) and os.path.isfile(f)
+                return self.send_file(f) if ok else self.err(404, "no image")
             if path.startswith("/media/"):
                 f = os.path.realpath(os.path.join(P.root, path[len("/media/"):]))
                 ok = (f.startswith(P.dir + os.sep) or f.startswith(os.path.join(P.root, "static", "music") + os.sep))

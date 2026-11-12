@@ -29,8 +29,9 @@ interface S {
   playing: boolean;
   rate: number;
   curLine: number; // lines 下标, -1 = 无
-  octo: 'loading' | 'ready' | 'error' | 'off';
+  octo: 'loading' | 'ready' | 'partial' | 'error' | 'off';   // partial = 渲染了但有 \\1img 贴图取不到 (会画成 \\1c 色块)
   octoErr: string;
+  octoMissing: string[];
   assRev: number; // out.ass 热重载计数
   hover: number | null; // 时间线悬停时间
   hoverLine: number | null; // 歌词浏览模式悬停句 (lines 下标)
@@ -84,6 +85,7 @@ export const useStore = create<S>((set) => ({
   curLine: -1,
   octo: 'loading',
   octoErr: '',
+  octoMissing: [],
   assRev: 0,
   hover: null,
   hoverLine: null,

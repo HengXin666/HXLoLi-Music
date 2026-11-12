@@ -1,0 +1,21 @@
+{
+ "date": "2026-11-13 02:04:06.495144",
+ "reason": "no-verify: 用户 2026-11-13 授权 (按前例: 有阻塞就 --no-verify 加诊断 JSON); 红线 0 项错误, 10 项待审核 (code-only-diff=10). 新笔记 2026-11-13-karaoke-studio-img-inject.md 覆盖本次改动; 待审核的是同目录旧笔记 2026-11-09-karaoke-studio.md / 2026-11-11-karaoke-studio-track-visibility.md 没跟着改, 它们的决策不受影响 (注入贴图和 partial 状态是新决策, 不改轨头眼睛, 也不改服务端只读口径)",
+ "files": [
+  ".agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/app.py",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_placement.py",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/octopus.ts",
+  ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts"
+ ],
+ "redline_rc": 1,
+ "redline_output": "待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/server/app.py:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_placement.py:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/octopus.ts:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/octopus.ts:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核\n待审核 .agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts:1 [code-only-diff] 代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核\nAgent Notes: 需处理, 0 项错误, 10 项待审核\n类型: code-only-diff=10\n完整报告: /home/hx/Loli/code/HXLoLis/HXLoLi-Music/.git/reports/agent-notes-staged.json\n",
+ "verify": {
+  "e2e_ui": "68/68",
+  "e2e_placement": "13/13 (改沙盒带 assets/ 前 0/0 FATAL 卡在等 octo=ready)",
+  "inject_212s": "白像素 1320 -> 1; 拦 /api/img/ 变异 1320",
+  "partial_mut": "hand_palm 404: 剑 2 张 200 照写, chip 'libass 缺图 1 张' rgb(239,107,107)"
+ }
+}
