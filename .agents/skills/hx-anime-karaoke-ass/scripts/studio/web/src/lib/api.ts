@@ -56,6 +56,9 @@ export interface ExplainItem {
 }
 export interface HitEvent { ln: number; style: string; layer: number; name: string; t0: number; t1: number; box: number[]; track: string; fns: string[] }
 export interface Review { id: string; sel: SelRange[]; t0: number; t1: number; kind: 'bad' | 'good' | 'redo' | 'note'; tags: string[]; text: string; frame?: number | null; created: string }
+/** review.jsonl 里读不出的行 (服务端逐行解析): 行号从 1 起, 原因, 开头片段. 好行照常在 items 里, 坏行不删 (留给人处理) */
+export interface ReviewBadLine { line: number; error: string; head: string }
+export interface ReviewList { items: Review[]; bad_lines: ReviewBadLine[] }
 export interface RawEvent { ln: number; layer: number; t0: number; t1: number; style: string; name: string; text: string; owners: string[]; raw?: string }
 
 /** 歌词位置预设. 坐标与位移全由服务端 (assfx/text/placement.py) 算, 前端只按矩形与位移画, 不复算布局. */
@@ -68,9 +71,16 @@ export interface PlacementRes {
   job: PlaceJob; note: string; frozen: number; candidate?: Preset; lines?: PlaceLine[]; rows_missing?: number;
 }
 
+/** 非 2xx: 带上服务端 {error} 原文 (没有就只有状态码), 不让界面只看到一个数字 */
+async function httpErr(r: Response, label: string): Promise<Error> {
+  let why = '';
+  try { const b = await r.json() as { error?: unknown }; if (typeof b?.error === 'string') why = b.error; } catch { /* 非 JSON: 只报状态码 */ }
+  return new Error(why ? `${label} ${r.status}: ${why}` : `${label} ${r.status}`);
+}
+
 async function j<T>(url: string): Promise<T> {
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`${url} ${r.status}`);
+  if (!r.ok) throw await httpErr(r, url);
   return r.json() as Promise<T>;
 }
 
@@ -83,11 +93,14 @@ export const api = {
   clips: () => j<{ clips: Clip[]; beats: Beats }>('/api/clips'),
   explain: (sel: SelRange[]) => j<{ items: ExplainItem[] }>(`/api/explain?sel=${encodeURIComponent(JSON.stringify(sel))}`).then((r) => r.items),
   hit: (t: number, x: number, y: number) => j<{ events: HitEvent[] }>(`/api/hit?t=${t}&x=${x}&y=${y}`).then((r) => r.events),
+  /** 好行 + 读不出的行. 旧服务端没有 bad_lines 字段时当作 [] */
+  reviewList: () => j<Partial<ReviewList> & { items: Review[] }>('/api/review').then((r): ReviewList => ({ items: r.items, bad_lines: r.bad_lines ?? [] })),
+  /** @deprecated 丢掉 bad_lines, 只为本批过渡期 tsc 能过; App.tsx 换成 reviewList 后删 */
   reviews: () => j<{ items: Review[] }>('/api/review').then((r) => r.items),
   events: (lines: number[], raw = true) => j<{ total: number; events: RawEvent[] }>(`/api/events?lines=${lines.join(',')}&raw=${raw ? 1 : 0}&limit=20000`),
   postReview: async (b: Omit<Review, 'id' | 'created'>) => {
     const r = await fetch('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
-    if (!r.ok) throw new Error(`review ${r.status}`);
+    if (!r.ok) throw await httpErr(r, 'review');
     return r.json() as Promise<Review>;
   },
   placement: (cand?: Preset) => j<PlacementRes>(`/api/placement${cand ? `?${new URLSearchParams(cand as unknown as Record<string, string>)}` : ''}`),

@@ -232,25 +232,43 @@ function NoteInput() {
   const nb = useStore((x) => x.noteBox)!;
   const set = useStore((x) => x.set);
   const [v, setV] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
   const ref = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => { ref.current?.focus(); if (box.current) place(box.current, nb.x, nb.y); }, [nb]);
+  // 框开着时再从菜单开一个 (openNote 直接换 noteBox, 中间不经过 null), 组件不卸载: 上一个框的红字不能串过来.
+  // v 不清: 框里没发出去的字是用户的, 不替他扔 (要扔他会自己删)
+  useLayoutEffect(() => { setErr(''); ref.current?.focus(); if (box.current) place(box.current, nb.x, nb.y); }, [nb]);
+  // 原来先关框再发请求: POST 失败时用户打的字随框一起没了, 而且没有任何提示 (以为存上了).
+  // 现在: 写入成功 (服务端 201) 才关框; 失败框留着、字留着, 框里写明没写进去和原因, 可直接再按 Enter 重试
   const submit = async () => {
     const t = v.trim();
-    if (!t) return;
-    set({ noteBox: null });
-    if (nb.kind === 'bad') await review('bad', [t], t);
-    else await review('note', [], t);
+    if (!t || busy) return;
+    setBusy(true);
+    setErr('');
+    const r = nb.kind === 'bad' ? await review('bad', [t], t) : await review('note', [], t);
+    setBusy(false);
+    // 只关 "发出这条的那个框"; 写入期间换成了新框就不去关新框, 红字也不写到新框上
+    if (useStore.getState().noteBox !== nb) return;
+    if (r?.rec) { set({ noteBox: null }); return; }
+    setErr(r ? `没写进去, 内容还在框里, 可再按 Enter 重试: ${r.error}` : '没写进去: 当前没有选区');
+    ref.current?.focus();
   };
   return (
-    <div ref={box} className={s.note} role="dialog" data-testid="note-box">
+    <div ref={box} className={s.note} role="dialog" data-testid="note-box" data-busy={busy || undefined} data-error={err ? 'y' : undefined}>
       <div className={s.noteHead}>{nb.kind === 'bad' ? '不行 · 自定义原因' : '写批注'} <span className={s.dim}>Enter 记入 review, Esc 取消</span></div>
-      <input ref={ref} value={v} onChange={(e) => setV(e.target.value)} placeholder={nb.kind === 'bad' ? '哪里不行' : '批注'}
+      <input ref={ref} value={v} onChange={(e) => setV(e.target.value)} placeholder={nb.kind === 'bad' ? '哪里不行' : '批注'} readOnly={busy}
         onKeyDown={(e) => {
           e.stopPropagation();
           if (e.key === 'Enter') void submit();
-          if (e.key === 'Escape') set({ noteBox: null });
+          if (e.key === 'Escape' && !busy) set({ noteBox: null });
         }} />
+      {(busy || err) && (
+        <div data-testid="note-msg" role={err ? 'alert' : 'status'}
+          style={{ marginTop: 6, fontSize: 11, color: err ? 'var(--bad)' : 'var(--fg-2)', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          {err || '写入中…'}
+        </div>
+      )}
     </div>
   );
 }

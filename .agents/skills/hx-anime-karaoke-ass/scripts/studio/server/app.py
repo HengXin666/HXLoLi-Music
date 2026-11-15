@@ -359,11 +359,74 @@ class Project:
     def review_path(self):
         return getattr(self, "_review", None) or self.p("review.jsonl")
 
+    REVIEW_KINDS = ("bad", "good", "redo", "note")
+
+    @staticmethod
+    def review_bad(rec):
+        # 前端按这几个字段画 (r.sel.some / t0 t1 / kind 着色): 服务端放过而前端抛 = 两边校验不一致, 一律算坏行
+        if not isinstance(rec, dict):
+            return "不是对象 (%s)" % type(rec).__name__
+        if not isinstance(rec.get("sel"), list):
+            return "缺 sel 或 sel 不是列表"
+        for k in ("t0", "t1"):
+            if not isinstance(rec.get(k), (int, float)) or isinstance(rec.get(k), bool):
+                return "%s 不是数字" % k
+        if rec.get("kind") not in Project.REVIEW_KINDS:
+            return "kind 不认识: %r" % (rec.get("kind"),)
+        return None
+
     def reviews(self):
+        """读 review.jsonl. 一行坏不拖累别的行: 好行照常返回, 坏行进 bad_lines (行号从 1 起, 带原因和开头片段).
+        逐行按字节拆, 每行单独解码, 所以一行不是 UTF-8 也只坏这一行."""
         f = self.review_path()
         if not os.path.exists(f):
-            return []
-        return [json.loads(l) for l in open(f, encoding="utf-8") if l.strip()]
+            return [], []
+        with open(f, "rb") as fh:
+            raw = fh.read()
+        items, bad = [], []
+        for no, b in enumerate(raw.split(b"\n"), 1):
+            if not b.strip():
+                continue
+            head = b[:60].decode("utf-8", "replace")
+            try:
+                rec = json.loads(b.decode("utf-8"))
+            except UnicodeDecodeError as e:
+                bad.append(dict(line=no, error="不是 UTF-8: %s" % e.reason, head=head))
+                continue
+            except ValueError as e:
+                bad.append(dict(line=no, error="JSON 读不出: %s" % e, head=head))
+                continue
+            why = self.review_bad(rec)
+            if why:
+                bad.append(dict(line=no, error=why, head=head))
+            else:
+                items.append(rec)
+        return items, bad
+
+    def append_review(self, rec):
+        """原子追加: 原文件字节原样搬 (坏行一个字节都不改) + 新记录 -> 同目录临时文件 -> fsync -> os.replace.
+        唯一的改动: 原文件末尾没有换行时补一个 "\n" 作为分隔, 否则新记录会粘到末行上, 两条一起坏;
+        末行本身的字节不变, 仍是同一行号. 失败时删临时文件, 原文件不动, 抛 OSError 给调用方报错."""
+        f = self.review_path()
+        old = b""
+        if os.path.exists(f):
+            with open(f, "rb") as fh:
+                old = fh.read()
+        sep = b"\n" if old and not old.endswith(b"\n") else b""
+        data = old + sep + (json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8")
+        tmp = "%s.tmp-%d-%d" % (f, os.getpid(), threading.get_ident())
+        try:
+            with open(tmp, "wb") as fh:
+                fh.write(data)
+                fh.flush()
+                os.fsync(fh.fileno())
+            os.replace(tmp, f)
+        except BaseException:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+            raise
 
     def watched(self):
         w = {k: (os.stat(p).st_mtime_ns if p and os.path.exists(p) else 0) for k, p in (
@@ -591,7 +654,8 @@ class H(BaseHTTPRequestHandler):
             if path == "/api/edl":
                 return self.send_json(P.edl())
             if path == "/api/review":
-                return self.send_json(dict(items=P.reviews()))
+                items, bad = P.reviews()
+                return self.send_json(dict(items=items, bad_lines=bad))
             if path == "/api/watch":
                 return self.websocket()
             if path == "/api/placement":
@@ -650,14 +714,19 @@ class H(BaseHTTPRequestHandler):
         need = {"sel", "t0", "t1", "kind"}
         if not isinstance(b, dict) or not need <= set(b):
             return self.err(400, "需要字段 %s" % sorted(need))
-        if b["kind"] not in ("bad", "good", "redo", "note"):
+        if b["kind"] not in Project.REVIEW_KINDS:
             return self.err(400, "kind 只能是 bad/good/redo/note")
         rec = dict(id="r%d" % int(time.time() * 1000), sel=b["sel"], t0=b["t0"], t1=b["t1"], kind=b["kind"],
                    tags=b.get("tags", []), text=b.get("text", ""), frame=b.get("frame"),
                    created=time.strftime("%Y-%m-%dT%H:%M:%S%z"))
-        with PROJECT.lock:
-            with open(PROJECT.review_path(), "a", encoding="utf-8") as f:
-                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        why = Project.review_bad(rec)
+        if why:  # 写进去也只会变成坏行: 直接拒, 不落盘
+            return self.err(400, "标注字段不对: %s" % why)
+        try:
+            with PROJECT.lock:
+                PROJECT.append_review(rec)
+        except OSError as e:
+            return self.err(500, "标注没写进去: %s" % e)
         return self.send_json(rec, 201)
 
     def post_ref(self):

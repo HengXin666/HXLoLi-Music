@@ -2,7 +2,7 @@
 import { api, type Review } from './api';
 import { clock } from './clock';
 import { inRanges, lineRange, merge, summarize, toSel, fmtTc, type Range } from './sel';
-import { toast, useStore, type Compare } from './store';
+import { toast, toastError, useStore, type Compare } from './store';
 import { FX_IDS, TEXT_IDS, FILTER_IDS, type VisMap } from './tracks';
 
 const S = () => useStore.getState();
@@ -102,15 +102,26 @@ export function clearLoop() {
 }
 
 // ---------- 批注与判定
-export async function review(kind: Review['kind'], tags: string[] = [], text = '') {
+/** 写一条标注. 不抛: 失败时弹常驻错误 (toastError) 并返回 { error }, 调用方 (批注框) 据此决定是否保留输入;
+ * 菜单 / 快捷键是 `void review()`, 原来失败 = 未处理的 rejection, 界面什么都不说, 用户以为存上了.
+ * 只有服务端返回 201 才进 reviews / 才说 "已记录" (不做乐观更新). 没有选区返回 null (按钮本就 disabled). */
+export type ReviewResult = { rec: Review; error?: undefined } | { rec?: undefined; error: string };
+export async function review(kind: Review['kind'], tags: string[] = [], text = ''): Promise<ReviewResult | null> {
   const s = S();
   const sm = selSummary();
-  if (!sm) return;
-  const rec = await api.postReview({ sel: toSel(s.ranges, s.lines, s.ix), t0: +sm.t0.toFixed(3), t1: +sm.t1.toFixed(3), kind, tags, text, frame: +clock.t().toFixed(3) });
-  useStore.setState({ reviews: [...S().reviews, rec] });
+  if (!sm) return null;
   const what = kind === 'bad' ? `不行 · ${tags.join(' ') || text}` : kind === 'good' ? '好 (冻结)' : kind === 'redo' ? '换一个构想' : '批注';
+  let rec: Review;
+  try {
+    rec = await api.postReview({ sel: toSel(s.ranges, s.lines, s.ix), t0: +sm.t0.toFixed(3), t1: +sm.t1.toFixed(3), kind, tags, text, frame: +clock.t().toFixed(3) });
+  } catch (e) {
+    const error = String(e instanceof Error ? e.message : e);
+    toastError(`标注没写进去 (${what}, ${sm.label} ${sm.n} 字): ${error}`);
+    return { error };
+  }
+  useStore.setState({ reviews: [...S().reviews, rec] });
   toast(`已记录 ${what} (${sm.label} ${sm.n} 字)`);
-  return rec;
+  return { rec };
 }
 
 // ---------- 对比 / 只看

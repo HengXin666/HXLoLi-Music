@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Beats, Clip, Edl, ExplainItem, FontMissing, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review } from './api';
+import type { Beats, Clip, Edl, ExplainItem, FontMissing, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review, ReviewBadLine } from './api';
 import { buildIndex, type Index, type Range } from './sel';
 import { defaultVis, type VisMap } from './tracks';
 
@@ -24,6 +24,10 @@ interface S {
   clips: Clip[];
   beats: Beats | null;
   reviews: Review[];
+  // reviewBad = review.jsonl 里读不出的行 (服务端报的, 坏行留在文件里等人处理, 好行照常在 reviews);
+  // reviewsLoaded = 至少成功读到过一次. 读失败时据此分清 "一条都没加载到 (列表是空的, 不是没有标注)" 和 "没刷新 (显示旧数据)"
+  reviewBad: ReviewBadLine[];
+  reviewsLoaded: boolean;
   duration: number;
   view: View;
   playing: boolean;
@@ -75,6 +79,8 @@ interface S {
   placeCand: Preset | null;
   placeLines: PlaceLine[] | null;
   toast: string;
+  // 写失败这类必须看到的错误: 不随 toast 2.6s 消失, 也不被下一条普通 toast 盖掉; 点了才关
+  toastErr: string;
   set: (p: Partial<S>) => void;
 }
 
@@ -89,6 +95,8 @@ export const useStore = create<S>((set) => ({
   clips: [],
   beats: null,
   reviews: [],
+  reviewBad: [],
+  reviewsLoaded: false,
   duration: 0,
   view: { v0: 0, v1: 1 },
   playing: false,
@@ -132,6 +140,7 @@ export const useStore = create<S>((set) => ({
   placeCand: null,
   placeLines: null,
   toast: '',
+  toastErr: '',
   set: (p) => set(p),
 }));
 
@@ -184,4 +193,9 @@ export function toast(msg: string) {
   useStore.setState({ toast: msg });
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => useStore.setState({ toast: '' }), 2600);
+}
+/** 必须被看到的错误 (例如标注没写进去): 常驻, 点了才关. 同时进 console 方便排查 */
+export function toastError(msg: string) {
+  console.error('[toast]', msg);
+  useStore.setState({ toastErr: msg });
 }
