@@ -29,8 +29,12 @@ interface S {
   playing: boolean;
   rate: number;
   curLine: number; // lines 下标, -1 = 无
-  octo: 'loading' | 'ready' | 'partial' | 'error' | 'off';   // partial = 渲染了但有 \\1img 贴图取不到 (会画成 \\1c 色块)
+  // partial = 渲染了但有 \\1img 贴图取不到 (会画成 \\1c 色块); error = 载入失败;
+  // crashed = 就绪后 worker 崩了 (不可恢复, 需重载); stalled = worker 一段时间没回应 (可能自己恢复)
+  octo: 'loading' | 'ready' | 'partial' | 'error' | 'crashed' | 'stalled' | 'off';
   octoErr: string;
+  octoAt: number;   // crashed/stalled 时最后同步给 libass 的时刻 (秒)
+  octoGen: number;  // 点重载 +1, 监视器据此重建 libass 实例
   octoMissing: string[];
   fontsMissing: FontMissing[];   // 字形可能不对 (后备字体), 与 octo 状态无关, 不算失败
   fontsUnparsed: string[];
@@ -87,6 +91,8 @@ export const useStore = create<S>((set) => ({
   curLine: -1,
   octo: 'loading',
   octoErr: '',
+  octoAt: 0,
+  octoGen: 0,
   octoMissing: [],
   fontsMissing: [],
   fontsUnparsed: [],

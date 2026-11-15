@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, type PlaceBlock, type PlaceLine } from '../lib/api';
 import { clock } from '../lib/clock';
-import { createOctopus, type OctopusInstance } from '../lib/octopus';
+import { createOctopus, type OctoHandle } from '../lib/octopus';
 import { inRanges } from '../lib/sel';
 import { useStore } from '../lib/store';
 import { filterAss } from '../lib/tracks';
@@ -27,8 +27,11 @@ function fit(W: number, H: number): Rect {
 
 function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement | null>, r: Rect, active: boolean, gen = '') {
   const project = useStore((x) => x.project);
-  const inst = useRef<OctopusInstance | null>(null);
+  const inst = useRef<OctoHandle | null>(null);
   const [ready, setReady] = useState(false);
+  // '' = 正常; 非空 = 画面已不可信 (crashed / stalled). 画布据此隐藏 (不清像素: libass 只在画面变化时回帧,
+  // 清掉后若 stalled 自己恢复, 停在同一画面时不会重画, 会留下假的空白), 并显示角标.
+  const [halt, setHalt] = useState<'' | 'crashed' | 'stalled'>('');
   const set = useStore((x) => x.set);
   // 像素 = CSS x DPR
   useEffect(() => {
@@ -47,15 +50,23 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
     const sub = which === 'out' ? project.out_ass : project.ref_ass;
     if (!sub) return;
     let dead = false;
+    let base: { octo: 'ready' | 'partial'; octoErr: string } = { octo: 'ready', octoErr: '' };   // stalled 恢复后回到的状态
     createOctopus({ ...project, out_ass: sub }, canvas.current,
       (miss) => {
         if (dead) return;
         setReady(true);
-        if (which === 'out') set(miss.length ? { octo: 'partial', octoMissing: miss, octoErr: `贴图缺 ${miss.length} 张: ${miss.join('; ')}` }
-          : { octo: 'ready', octoMissing: [], octoErr: '' });
+        base = miss.length ? { octo: 'partial', octoErr: `贴图缺 ${miss.length} 张: ${miss.join('; ')}` } : { octo: 'ready', octoErr: '' };
+        if (which === 'out') set({ ...base, octoMissing: miss });
         inst.current?.setCurrentTime(clock.t());
       },
       (e) => { if (which === 'out') set({ octo: 'error', octoErr: e }); },
+      (h) => {
+        if (dead) return;
+        if (h.state === 'ok') { setHalt(''); if (which === 'out') set(base); return; }
+        setHalt(h.state);
+        console.error(`[octo:${which}] ${h.state} @${h.at.toFixed(2)}s: ${h.reason}`);
+        if (which === 'out') set({ octo: h.state, octoAt: h.at, octoErr: h.reason });
+      },
     ).then((o) => { if (dead) o.dispose(); else inst.current = o; })
       .catch((e) => { if (which === 'out') set({ octo: 'error', octoErr: String(e) }); });
     return () => { dead = true; };
@@ -66,9 +77,10 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
     inst.current?.dispose();
     inst.current = null;
     setReady(false);
+    setHalt('');
   }, [active, gen]);
   useEffect(() => clock.subscribe((t) => inst.current?.setCurrentTime(t)), []);
-  return { inst, ready };
+  return { inst, ready, halt };
 }
 
 function usePlacementPreview(src: React.RefObject<HTMLCanvasElement | null>, dst: React.RefObject<HTMLCanvasElement | null>, lines: PlaceLine[] | null) {
@@ -169,10 +181,13 @@ export default function Monitor() {
   const rRef = useMemo(() => (side ? (() => { const a = fit(W.w / 2 - 2, W.h); return { ...a, x: Math.ceil(W.w / 2 + 2) }; })() : rOut), [W, side, rOut]);
   const refActive = compare !== 'off' && !!project?.ref_ass;
 
-  const out = useOcto('out', cvOut, rOut, true);
+  // 点顶栏 libass 标签 / 角标重载: octoGen +1, 两个实例都重建 (不自动重载, 免得崩溃循环被掩盖)
+  const octoGen = useStore((x) => x.octoGen);
+  const reload = () => set({ octoGen: useStore.getState().octoGen + 1, octo: 'loading', octoErr: '' });
+  const out = useOcto('out', cvOut, rOut, true, `g${octoGen}`);
   // 参考实例: 换容器 (并排 <-> 叠放) 时重建
   const refKey = side ? 'side' : 'inline';
-  const ref = useOcto('ref', cvRef, rRef, refActive, refKey);
+  const ref = useOcto('ref', cvRef, rRef, refActive, `${refKey}:g${octoGen}`);
   useVideoSync(vidOut);
   useVideoSync(vidRef);
   usePlacementPreview(cvOut, cvPrev, previewing ? placeLines : null);
@@ -255,10 +270,11 @@ export default function Monitor() {
       <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out"
         onContextMenu={(e) => onCtx(e, rOut)}>
         {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-out" />}
-        <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" style={{ visibility: showOut && !previewing ? 'visible' : 'hidden', clipPath: outClip }} />
-        {previewing && <canvas ref={cvPrev} className={s.subs} data-hidpi="monitor-preview" data-testid="monitor-preview"
+        <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" data-testid="subs-out" data-halt={out.halt || undefined}
+          style={{ visibility: showOut && !previewing ? 'visible' : 'hidden', clipPath: outClip }} />
+        {previewing && <canvas ref={cvPrev} className={s.subs} data-hidpi="monitor-preview" data-testid="monitor-preview" data-halt={out.halt || undefined}
           style={{ visibility: showOut ? 'visible' : 'hidden', clipPath: outClip }} />}
-        {refInline && <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref"
+        {refInline && <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref" data-testid="subs-ref" data-halt={ref.halt || undefined}
           style={{ visibility: compare === 'ab' && abShow === 'out' ? 'hidden' : 'visible', clipPath: refClip }} />}
         <svg className={s.ov} viewBox={`0 0 ${PW} ${PH}`} preserveAspectRatio="none">
           {overlay.bands.map(({ li, b }) => (
@@ -284,14 +300,21 @@ export default function Monitor() {
             <span className={s.wl}>out</span><span className={s.wr}>参考</span>
           </div>
         )}
+        {(out.halt || (refInline && ref.halt)) && (
+          <div className={s.halt} data-testid="halt-tag" data-which={out.halt ? (refInline && ref.halt ? 'both' : 'out') : 'ref'}
+            data-below={compare !== 'off' || undefined} onClick={reload} title="点击重载 libass">
+            {out.halt ? '字幕渲染已停' : '参考字幕渲染已停'}
+          </div>
+        )}
         {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? '参考 (static/music 参考 ASS)' : '成品 (out.ass)'}</div>}
         {side && <div className={s.badge}>out</div>}
       </div>
       {side && (
         <div className={s.frame} style={{ left: rRef.x, top: rRef.y, width: rRef.w, height: rRef.h }} data-testid="frame-ref">
           {src && <video ref={vidRef} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-ref" />}
-          <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref" />
+          <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref" data-testid="subs-ref" data-halt={ref.halt || undefined} />
           <div className={s.badge}>参考</div>
+          {ref.halt && <div className={s.halt} data-testid="halt-tag" data-which="ref" data-below onClick={reload} title="点击重载 libass">字幕渲染已停</div>}
         </div>
       )}
     </div>

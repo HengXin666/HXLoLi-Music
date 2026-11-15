@@ -8,6 +8,11 @@
 .wl, .wr { position: absolute; top: 8px; font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.6); white-space: nowrap; }
 .wl { right: 14px; }
 .wr { left: 14px; }
+.subs[data-halt] { opacity: 0; } /* libass 崩了/没回应: 旧帧是假的, 藏起来 (不清像素, 恢复时还能接着画) */
+/* 字幕渲染已停: 只是说明 "这里空白不是本来没字". 顶栏已经是红标签, 这里不再吼: 半透明小字, 无底框. 点击重载. */
+.halt { position: absolute; left: 8px; top: 8px; z-index: 2; font-size: 11px; color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9); white-space: nowrap; cursor: pointer; }
+.halt[data-below] { top: 28px; } /* 让开 A/B、并排的 out/参考 角标 */
 .badge { position: absolute; left: 8px; top: 8px; font-size: 11px; padding: 1px 7px; border-radius: 3px; background: rgba(0, 0, 0, 0.6); color: #fff; z-index: 2; }
 .box[data-preview] .frame { box-shadow: 0 0 0 2px var(--warn); }
 .prevNote {

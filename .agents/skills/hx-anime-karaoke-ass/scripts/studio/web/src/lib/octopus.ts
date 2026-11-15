@@ -64,9 +64,23 @@ async function injectImages(o: OctopusInstance, subUrl: string): Promise<{ writt
   return { written, missing };
 }
 
+/** 实例健康: crashed = 就绪后 worker 抛错/abort (SubtitlesOctopus 已自己 dispose, 不可恢复);
+ *  stalled = 看门狗 STALL_MS 内没收到 worker 任何消息 (被杀/卡死/单帧太慢); ok = stalled 后又有回包. */
+export type OctoHealth = { state: 'crashed' | 'stalled' | 'ok'; reason: string; at: number };
+export interface OctoHandle extends OctopusInstance {
+  /** 非空 = 已死 (原因), 之后所有调用都是空操作 */
+  readonly dead: string;
+}
+
+/** 看门狗阈值 (ms). 默认 4000, 可用 window.__octoStallMs 覆盖 (e2e / 量真实工程时调). */
+export const STALL_MS = 4000;
+const stallMs = () => (window as unknown as { __octoStallMs?: number }).__octoStallMs ?? STALL_MS;
+const PING_MS = 1000;
+
 export async function createOctopus(
   p: Project, canvas: HTMLCanvasElement, onReady: (missing: string[]) => void, onError: (e: string) => void,
-): Promise<OctopusInstance> {
+  onHealth: (h: OctoHealth) => void = () => undefined,
+): Promise<OctoHandle> {
   const base = p.octopus ?? '/octopus/';
   const C = await loadScript(base);
   // availableFonts 只是按名字懒加载的索引, 一个名字只能指一个文件; 所有字体文件已经在 fonts 里整批预载,
@@ -84,8 +98,57 @@ export async function createOctopus(
   if (clash.length) console.info(`[octo] 字体同名 ${clash.length} 处, 索引按常规字重优先:`, clash);
   let inst: OctopusInstance | null = null;
   let injected = false;
+  // ---- 死亡标记 + 看门狗
+  // SubtitlesOctopus 的 workerError (上游与定制版都一样): onErrorEvent -> 非 debug 下 self.dispose() (worker 置 null) -> throw.
+  // 之后再调 setCurrentTime 会抛 TypeError; 以前这一抛打断 clock 的 rAF, 整个 studio 定住. 所以 onError 一来就标 dead, 之后全空操作.
+  // 被 terminate / worker 卡死则没有任何事件 (实测), 只能靠回包判断: 每秒发一次 get-styles (worker 必回, 主线程忽略回包),
+  // 任何 worker 消息都算活着. 不能靠渲染回包: worker 只在画面变了时才回 renderCanvas, 停在两段空白之间时本来就不回.
+  let dead = '';
+  let armed = false;
+  let lastT = 0;
+  let pingAt = 0;      // 未回的 ping 发出时刻, 0 = 无
+  let stalled = false;
+  let maxPing = 0, maxSpent = 0;
+  let dog = 0;
+  const now = () => performance.now();
+  const worker = () => (inst as unknown as { worker?: Worker | null } | null)?.worker ?? null;
+  const stop = () => { if (dog) { clearInterval(dog); dog = 0; } };
+  const die = (reason: string) => {
+    if (dead) return;
+    dead = reason || '未知错误';
+    stop();
+  };
+  const onMsg = (ev: MessageEvent) => {
+    if (pingAt) { maxPing = Math.max(maxPing, now() - pingAt); pingAt = 0; canvas.dataset.octoPingMaxMs = maxPing.toFixed(0); }
+    const d = ev.data as { target?: string; spentTime?: number } | null;
+    if (d?.target === 'canvas' && typeof d.spentTime === 'number' && d.spentTime > maxSpent) {
+      maxSpent = d.spentTime;
+      canvas.dataset.octoFrameMaxMs = maxSpent.toFixed(0);   // worker 自报的单帧渲染耗时最大值, 给定阈值用
+    }
+    if (stalled && !dead) { stalled = false; onHealth({ state: 'ok', reason: '', at: lastT }); }
+  };
+  const arm = () => {
+    const w = worker();
+    if (armed || dead || !w) return;
+    armed = true;
+    w.addEventListener('message', onMsg);
+    dog = window.setInterval(() => {
+      const ww = worker();
+      if (dead) return stop();
+      if (!ww) { die('worker 已不存在'); onHealth({ state: 'crashed', reason: dead, at: lastT }); return; }
+      if (pingAt) {
+        if (!stalled && now() - pingAt > stallMs()) {
+          stalled = true;
+          onHealth({ state: 'stalled', reason: `worker ${Math.round(stallMs() / 1000)}s 没有回应 (被终止, 卡死, 或单帧过慢)`, at: lastT });
+        }
+        return;
+      }
+      pingAt = now();
+      try { ww.postMessage({ target: 'get-styles' }); } catch (e) { die(String((e as Error)?.message ?? e)); onHealth({ state: 'crashed', reason: dead, at: lastT }); }
+    }, PING_MS);
+  };
   const ready = async () => {
-    if (injected || !inst) return;
+    if (injected || !inst || dead) return;
     injected = true;
     let missing: string[] = [];
     try {
@@ -96,7 +159,9 @@ export async function createOctopus(
       missing = [`贴图注入失败: ${String((e as Error)?.message ?? e)}`];   // 读 ASS 都失败: 整体算缺, 不能当就绪
       console.warn('[octo] 贴图注入失败', e);
     }
+    if (dead) return;
     onReady(missing);
+    arm();
   };
   inst = new C({
     canvas,
@@ -106,7 +171,38 @@ export async function createOctopus(
     fonts: p.fonts.map((f) => f.url),
     availableFonts: avail,
     onReady: () => { void ready(); },
-    onError: (e: unknown) => onError(String((e as Error)?.message ?? e)),
+    onError: (e: unknown) => {
+      const msg = String((e as ErrorEvent)?.message ?? (e as Error)?.message ?? e);
+      const wasReady = armed || injected;
+      die(msg);
+      if (wasReady) onHealth({ state: 'crashed', reason: msg, at: lastT });
+      else onError(msg);   // 载入阶段就失败: 维持原来的 'error'
+    },
   });
-  return inst;
+  const o = inst;
+  // 外壳: dead 之后全部空操作; 内层抛错 (例如 worker 已被置 null) 也就地标死, 不往外抛
+  const guard = (what: string, f: () => void) => {
+    if (dead) return;
+    try { f(); } catch (e) {
+      die(`${what}: ${String((e as Error)?.message ?? e)}`);
+      onHealth({ state: 'crashed', reason: dead, at: lastT });
+    }
+  };
+  let disposed = false;
+  return {
+    get dead() { return dead; },
+    setCurrentTime: (t) => { lastT = t; guard('setCurrentTime', () => o.setCurrentTime(t)); },
+    setTrack: (text) => guard('setTrack', () => o.setTrack(text)),
+    resize: (w, h, top, left) => guard('resize', () => o.resize(w, h, top, left)),
+    writeFile: (path, data) => guard('writeFile', () => o.writeFile(path, data)),
+    dispose: () => {
+      if (disposed) return;
+      disposed = true;
+      stop();
+      worker()?.removeEventListener('message', onMsg);
+      const wasDead = !!dead;   // 已死 = workerError 已自行 dispose (worker=null), 再调必抛, 这种才静默
+      if (!dead) dead = 'disposed';
+      try { o.dispose(); } catch (e) { if (!wasDead) console.warn('[octo] dispose 抛错 (实例当时还活着):', e); }
+    },
+  };
 }

@@ -18,6 +18,8 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, acceptDownloads: true });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: cfg.url.replace(/\/$/, '') });
   const p = await ctx.newPage();
+  // OC2/OC3 造崩溃用: 只记下页面里创建的 Worker (libass 的), 不改行为
+  await p.addInitScript(() => { const W = window.Worker; window.__hxW = []; window.Worker = function (u, o) { const w = new W(u, o); window.__hxW.push(w); return w; }; window.Worker.prototype = W.prototype; });
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e).slice(0, 300)));
   await p.goto(cfg.url, { waitUntil: 'load' });
@@ -1114,6 +1116,70 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await p.mouse.down();
     await p.mouse.move(sp.x + sp.width / 2, sp.y + sp.height / 2, { steps: 4 });
     await p.mouse.up();
+  });
+
+  // ======================= libass 崩溃 / 无响应 (放最后: 会杀掉 worker, 用例内点重载恢复) =======================
+  const ink = () => p.evaluate(() => { const c = document.querySelector('[data-testid=subs-out]'); const g = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < g.length; i += 4) if (g[i]) n++; return n; });
+  const inkAt = async (t) => { await seek(t); await sleep(700); return ink(); };
+  // 找一个有字的时刻: 句中点
+  const tInk = async () => { for (const li of [LI, L2, 0, 8, 12]) { const t = await S(`s.lines[${li}] ? (s.lines[${li}].t[0] + s.lines[${li}].t[1]) / 2 : -1`); if (t > 0 && (await inkAt(t)) > 0) return t; } for (let t = 20; t < 200; t += 9) if ((await inkAt(t)) > 0) return t; throw new Error('找不到有字的时刻'); };
+  const probeCalls = async (ms) => p.evaluate(async (ms) => { let n = 0; const un = window.__hx.clock.subscribe(() => { n++; }); const c = window.__hx.clock; for (let i = 0; i < 4; i++) { c.seek(10 + i * 7); await new Promise((r) => setTimeout(r, ms / 4)); } un(); return n; }, ms);
+  const reloadChip = async () => {
+    await p.click('[data-testid=octo-chip]');
+    await p.waitForFunction(() => ['ready', 'partial'].includes(window.__hx.store.getState().octo), null, { timeout: 30000 });
+    await sleep(300);
+  };
+  await test('OC1', 'clock 订阅者抛错被隔离: 其它订阅者照常收到回调, rAF 不断, 每个坏订阅者只报一次', async () => {
+    const r = await p.evaluate(async () => {
+      const c = window.__hx.clock; const e0 = window.__clockErrors || 0; let n = 0;
+      const u1 = c.subscribe(() => { throw new Error('OC1 boom'); });
+      const u2 = c.subscribe(() => { n++; });
+      for (const t of [11, 22, 33]) { c.seek(t); await new Promise((r) => setTimeout(r, 120)); }
+      let f = 0; const t0 = performance.now(); await new Promise((res) => { const g = () => { f++; if (performance.now() - t0 < 500) requestAnimationFrame(g); else res(); }; requestAnimationFrame(g); });
+      u1(); u2();
+      return { n, errs: (window.__clockErrors || 0) - e0, f };
+    });
+    assert(r.n >= 4, `好订阅者只收到 ${r.n} 次 (订阅 1 + seek 3)`);
+    assert(r.errs >= 4, `坏订阅者抛错没被计数: ${r.errs}`);
+    assert(r.f >= 20, `rAF 500ms 只跑了 ${r.f} 帧`);
+  });
+  await test('OC2', 'worker 抛错 (就绪后): octo=crashed, 顶栏红标签带时刻可点重载, 旧帧藏起 + 角标 "字幕渲染已停", clock 不死; 点重载后恢复出字', async () => {
+    const t = await tInk();
+    const before = await ink();
+    const e0 = errors.length;
+    await p.evaluate(() => window.__hxW.forEach((w) => w.postMessage({ target: 'OC2-bogus' })));
+    await p.waitForFunction(() => window.__hx.store.getState().octo === 'crashed', null, { timeout: 5000 });
+    const chip = p.locator('[data-testid=octo-chip]');
+    assert((await chip.getAttribute('data-state')) === 'error', 'chip 不是 error');
+    assert(/^libass 崩溃 @\d+:\d\d\.\d · 点击重载$/.test((await chip.textContent()).trim()), 'chip 文字: ' + await chip.textContent());
+    assert((await p.getAttribute('[data-testid=subs-out]', 'data-halt')) === 'crashed', '画布没标 halt');
+    assert(await p.evaluate(() => getComputedStyle(document.querySelector('[data-testid=subs-out]')).opacity) === '0', '旧帧没藏');
+    const tag = p.locator('[data-testid=halt-tag]');
+    assert((await tag.count()) === 1 && (await tag.textContent()) === '字幕渲染已停', '角标');
+    assert(await tag.evaluate((e) => getComputedStyle(e).backgroundColor) === 'rgba(0, 0, 0, 0)', '角标不该有底框');
+    const n = await probeCalls(800);
+    assert(n >= 4, `崩溃后 clock 订阅者只收到 ${n} 次 (clock 被弄死)`);
+    const newErr = errors.slice(e0);
+    assert(newErr.every((x) => /Worker error/.test(x)), '除 SubtitlesOctopus 自己的 throw 外不该有页面错误 (尤其 TypeError): ' + newErr.join(' | '));
+    errors.splice(e0);   // 那一条是库里 workerError 的 throw, 预期内
+    await reloadChip();
+    assert(!(await p.getAttribute('[data-testid=subs-out]', 'data-halt')), '重载后 halt 没清');
+    assert((await p.locator('[data-testid=halt-tag]').count()) === 0, '重载后角标没消');
+    const after = await inkAt(t);
+    assert(after > 0, `重载后 t=${t.toFixed(2)} 没出字 (崩前 ${before})`);
+  });
+  await test('OC3', 'worker 被终止 (无任何事件): 看门狗判 stalled, 顶栏 "libass 无响应 · 点击重载", 旧帧藏起 + 角标; 点重载恢复', async () => {
+    const t = await tInk();
+    await p.evaluate(() => window.__hxW.forEach((w) => w.terminate()));
+    await p.waitForFunction(() => window.__hx.store.getState().octo === 'stalled', null, { timeout: 8000 });
+    assert((await p.textContent('[data-testid=octo-chip]')).trim() === 'libass 无响应 · 点击重载', 'chip 文字');
+    assert((await p.getAttribute('[data-testid=subs-out]', 'data-halt')) === 'stalled', '画布没标 halt');
+    assert((await p.textContent('[data-testid=halt-tag]')) === '字幕渲染已停', '角标');
+    const n = await probeCalls(800);
+    assert(n >= 4, `clock 订阅者只收到 ${n} 次`);
+    await reloadChip();
+    assert((await inkAt(t)) > 0, '重载后没出字');
+    console.log('PROBE OC3 frame_max_ms=' + (await p.getAttribute('[data-testid=subs-out]', 'data-octo-frame-max-ms')) + ' ping_max_ms=' + (await p.getAttribute('[data-testid=subs-out]', 'data-octo-ping-max-ms')));
   });
 
   await reset();
