@@ -1,0 +1,18 @@
+originalName: adrenaline!!! - TrySail.flac
+totalSize: 58875212
+mimeType: application/octet-stream
+chunkSize: 19922944
+createdAt: "2026-10-25T09:40:06.977Z"
+chunks:
+  - fileName: 0-adrenaline!!! - TrySail.flac
+    index: 0
+    size: 19922944
+    sha256: e64a410561b134cd28bab328ab95d259186a325f9b67e8fefe84cb86e896339a
+  - fileName: 1-adrenaline!!! - TrySail.flac
+    index: 1
+    size: 19922944
+    sha256: 8c1cc67892e4ef3cf22d7f43774d0e47a54ca8e42bf04f5f7d8d83b51117b344
+  - fileName: 2-adrenaline!!! - TrySail.flac
+    index: 2
+    size: 19029324
+    sha256: 4734d1e7e0fe9459920534fbccccdf1d24aab3a1c350cd92e35664bc8ff7beb2

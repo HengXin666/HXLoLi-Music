@@ -1,0 +1,14 @@
+originalName: LXGWWenKai-Medium.ttf
+totalSize: 24289708
+mimeType: application/octet-stream
+chunkSize: 19922944
+createdAt: "2026-10-25T09:40:07.092Z"
+chunks:
+  - fileName: 0-LXGWWenKai-Medium.ttf
+    index: 0
+    size: 19922944
+    sha256: 469a75fb13899fe8c4249e6cada338f2db0a40363652463e16b35e2446f1b1c5
+  - fileName: 1-LXGWWenKai-Medium.ttf
+    index: 1
+    size: 4366764
+    sha256: e9e5d260ade2ba8988fdc1eab9b376bd9b520f2e5800e556caff58852b0549aa

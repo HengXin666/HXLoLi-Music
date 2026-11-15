@@ -1,0 +1,14 @@
+originalName: ちぃむdmp☆ - ろりこんでよかった~.flac
+totalSize: 27997712
+mimeType: application/octet-stream
+chunkSize: 19922944
+createdAt: "2026-10-25T09:40:07.220Z"
+chunks:
+  - fileName: 0-ちぃむdmp☆ - ろりこんでよかった~.flac
+    index: 0
+    size: 19922944
+    sha256: 24dbd582a4a2a3a4f7add2d36aeec190777079ae2e1ab91d9315af798329ee64
+  - fileName: 1-ちぃむdmp☆ - ろりこんでよかった~.flac
+    index: 1
+    size: 8074768
+    sha256: c0efae0f80f83292168d84521f65da452eaf40e46fa39d75757771bd62037a98
