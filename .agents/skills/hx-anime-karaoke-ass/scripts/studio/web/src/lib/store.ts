@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Beats, Clip, Edl, ExplainItem, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review } from './api';
+import type { Beats, Clip, Edl, ExplainItem, FontMissing, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review } from './api';
 import { buildIndex, type Index, type Range } from './sel';
 import { defaultVis, type VisMap } from './tracks';
 
@@ -32,6 +32,8 @@ interface S {
   octo: 'loading' | 'ready' | 'partial' | 'error' | 'off';   // partial = 渲染了但有 \\1img 贴图取不到 (会画成 \\1c 色块)
   octoErr: string;
   octoMissing: string[];
+  fontsMissing: FontMissing[];   // 字形可能不对 (后备字体), 与 octo 状态无关, 不算失败
+  fontsUnparsed: string[];
   assRev: number; // out.ass 热重载计数
   hover: number | null; // 时间线悬停时间
   hoverLine: number | null; // 歌词浏览模式悬停句 (lines 下标)
@@ -86,6 +88,8 @@ export const useStore = create<S>((set) => ({
   octo: 'loading',
   octoErr: '',
   octoMissing: [],
+  fontsMissing: [],
+  fontsUnparsed: [],
   assRev: 0,
   hover: null,
   hoverLine: null,

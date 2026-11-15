@@ -66,7 +66,7 @@ export default function App() {
       const p = await api.project();
       if (!live) return;
       clock.setSrc(p.audio[0]);
-      set({ project: p, edl: p.edl, duration: p.duration, view: { v0: 0, v1: p.duration || 1 } });
+      set({ project: p, edl: p.edl, duration: p.duration, view: { v0: 0, v1: p.duration || 1 }, fontsMissing: p.fonts_missing ?? [], fontsUnparsed: p.fonts_unparsed ?? [] });
       const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]);
       if (!live) return;
       set({ lines, out });
@@ -82,6 +82,8 @@ export default function App() {
         const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]);
         set({ lines, out, assRev: useStore.getState().assRev + 1 });
         api.clips().then((r) => set({ clips: r.clips, beats: r.beats })).catch(() => undefined);
+        // out.ass 换了 \fn 字体也会变: 只刷字体标签, 不换 project (换 project 会重建 libass 实例)
+        api.project().then((p) => set({ fontsMissing: p.fonts_missing ?? [], fontsUnparsed: p.fonts_unparsed ?? [] })).catch(() => undefined);
       }
       if (what.includes('review')) set({ reviews: await api.reviews() });
       if (what.includes('edl')) set({ edl: await api.edl() });

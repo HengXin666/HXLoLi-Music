@@ -69,8 +69,19 @@ export async function createOctopus(
 ): Promise<OctopusInstance> {
   const base = p.octopus ?? '/octopus/';
   const C = await loadScript(base);
+  // availableFonts 只是按名字懒加载的索引, 一个名字只能指一个文件; 所有字体文件已经在 fonts 里整批预载,
+  // 同族多字重 (Regular/Bold) 时 libass 照样能按 \\b 挑到对的字重. 这里只让索引确定: 常规字重优先, 其余按文件名先到先得,
+  // 不再 "后到覆盖" (以前取决于目录排序). 被挤掉的名字打一条日志, 方便对拍时查.
   const avail: Record<string, string> = {};
-  for (const f of p.fonts) for (const fam of f.families) avail[fam.toLowerCase()] = f.url;
+  const clash: string[] = [];
+  for (const f of [...p.fonts].sort((a, b) => Number(!!b.regular) - Number(!!a.regular))) {
+    for (const fam of f.families) {
+      const k = fam.toLowerCase();
+      if (!(k in avail)) avail[k] = f.url;
+      else if (avail[k] !== f.url) clash.push(`${fam}: ${avail[k]} (保留) / ${f.url}`);
+    }
+  }
+  if (clash.length) console.info(`[octo] 字体同名 ${clash.length} 处, 索引按常规字重优先:`, clash);
   let inst: OctopusInstance | null = null;
   let injected = false;
   const ready = async () => {

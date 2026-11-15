@@ -103,6 +103,24 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     catch (e) { results.push({ id, row, ok: false, err: String(e.message || e).slice(0, 300), ms: Date.now() - t0 }); }
   }
   const LI = 3; // p03 (If you do) なんだって怖くないから: 有振假名
+  // ======================= 字体 (后备字体提示) =======================
+  await test('FN1', '缺字体只提示 "字形可能不对": 顶栏 font-chip 与 /api/project.fonts_missing 一致 (空则不出现), 不影响 octo 状态', async () => {
+    const pj = await (await p.request.get(cfg.url + 'api/project')).json();
+    assert(Array.isArray(pj.fonts_missing) && Array.isArray(pj.fonts_unparsed), 'api/project 缺 fonts_missing / fonts_unparsed');
+    const names = pj.fonts_missing.map((f) => f.name).join('|');
+    const chip = p.locator('[data-testid=font-chip]');
+    const n = await chip.count();
+    if (!pj.fonts_missing.length && !pj.fonts_unparsed.length) assert(n === 0, '没缺字体却出了 font-chip');
+    else {
+      assert(n === 1, '缺字体但没有 font-chip: ' + names);
+      assert((await chip.getAttribute('data-state')) === 'warn', 'font-chip 不是 warn');
+      assert((await chip.getAttribute('data-missing')) === names, 'font-chip 名单和接口不一致');
+    }
+    const octo = await S('s.octo');
+    assert(octo === 'ready', 'octo 应为 ready (缺字体不算失败), 实际 ' + octo);
+    console.log('PROBE FN1 fonts_missing=' + JSON.stringify(pj.fonts_missing) + ' unparsed=' + JSON.stringify(pj.fonts_unparsed));
+  });
+
   const L2 = 4;
 
   // ======================= 3.5 显示 =======================

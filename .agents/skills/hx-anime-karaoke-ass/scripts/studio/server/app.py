@@ -69,19 +69,85 @@ def parse_events(text):
 
 
 def family_of(path):
+    """字体文件的名字表. families: nameID 1/4/16 (给前端 availableFonts 建索引, 与旧行为一致);
+    match: libass 按名字找字体时真正比对的那几个 (族名 1, 全名 4, PostScript 名 6), 小写去重;
+    regular: 是不是常规字重 (同族多字重时 availableFonts 索引优先指向它); ok: 名字表解析成功没有.
+    注意 nameID 16 (排版族名, 如 'Cormorant Garamond') 不在 match 里: libass 不认它, ASS 写这个名字会落到后备字体."""
+    stem = os.path.splitext(os.path.basename(path))[0]
     try:
         from fontTools.ttLib import TTFont
         t = TTFont(path, lazy=True, fontNumber=0)
         names = {}
         for rec in t["name"].names:
-            if rec.nameID in (1, 4, 16):
+            if rec.nameID in (1, 2, 4, 6, 16):
                 try:
                     names.setdefault(rec.nameID, []).append(rec.toUnicode())
                 except Exception:
                     pass
-        return sorted({n for v in names.values() for n in v})
+        fam = sorted({n for i in (1, 4, 16) for n in names.get(i, [])})
+        match = sorted({n.strip().lower() for i in (1, 4, 6) for n in names.get(i, []) if n.strip()})
+        sub = {n.strip().lower() for n in names.get(2, [])}
+        try:
+            w = t["OS/2"].usWeightClass
+        except Exception:
+            w = 400
+        return dict(families=fam or [stem], match=match, regular=bool(sub & {"regular", "normal", "book", "roman"}) and w <= 500, ok=bool(match))
     except Exception:
-        return [os.path.splitext(os.path.basename(path))[0]]
+        return dict(families=[stem], match=[], regular=False, ok=False)
+
+
+FN_TAG = re.compile(r"\\fn([^\\}]*)")
+
+
+def used_fonts(text):
+    """ASS 实际会用到的字体名 -> {uses, line(首见行号), via(style 名或 '\\fn')}.
+    Style 只算被 Dialogue 引用到的 (没事件用的 Style 不会去找字体); \\fn 扫全部 Dialogue 文本, Comment 不渲染不算.
+    '@' 前缀 (竖排) 去掉再比, 与 libass 一致; 空 \\fn 是回到 Style 字体, 不算新名字."""
+    styles, sfmt, efmt, used = {}, None, None, {}
+    sec = ""
+    for ln, line in enumerate(text.splitlines(), 1):
+        st = line.strip()
+        if st.startswith("["):
+            sec = st.lower()
+            continue
+        if st.startswith("Format:"):
+            f = [x.strip().lower() for x in st[7:].split(",")]
+            if "styles" in sec:
+                sfmt = f
+            elif "events" in sec:
+                efmt = f
+            continue
+        if st.startswith("Style:") and "styles" in sec:
+            f = sfmt or ["name", "fontname"]
+            p = [x.strip() for x in st[6:].split(",", len(f) - 1)]
+            if len(p) >= 2 and "name" in f and "fontname" in f:
+                styles[p[f.index("name")]] = (p[f.index("fontname")], ln)
+            continue
+        if not st.startswith("Dialogue:"):
+            continue
+        f = efmt or ["layer", "start", "end", "style", "name", "marginl", "marginr", "marginv", "effect", "text"]
+        p = st[9:].lstrip().split(",", len(f) - 1)
+        if len(p) < len(f):
+            continue
+        sty = p[f.index("style")].strip() if "style" in f else ""
+        names = []
+        if sty in styles:
+            names.append((styles[sty][0], "style " + sty))
+        elif sty.lstrip("*") in styles:
+            names.append((styles[sty.lstrip("*")][0], "style " + sty))
+        for m in FN_TAG.finditer(p[-1]):
+            if m.group(1).strip():
+                names.append((m.group(1), "\\fn"))
+        for n, via in names:
+            k = n.strip().lstrip("@").strip()
+            if not k:
+                continue
+            u = used.setdefault(k, dict(name=k, uses=0, line=ln, via=set()))
+            u["uses"] += 1
+            u["via"].add(via)
+    for u in used.values():
+        u["via"] = sorted(u["via"])
+    return used
 
 
 class Project:
@@ -183,15 +249,33 @@ class Project:
         return float(sh.get("video_offset", 0.0)) if isinstance(sh, dict) else 0.0
 
     # ---- 资源
-    def fonts(self):
+    def _font_names(self):
+        """fonts 目录每个文件的名字表. 每个文件按 (路径, mtime) 缓存, 首屏之后只剩 listdir + stat, 不再读 ttf."""
         d = self.fonts_dir()
         out = []
         if d:
             for f in sorted(os.listdir(d)):
                 if f.lower().endswith((".ttf", ".otf", ".ttc", ".woff2")):
-                    fam = self.cached("fam:" + f, os.path.join(d, f), family_of)
-                    out.append(dict(file=f, url="/fonts/" + f, families=fam))
+                    fp = os.path.join(d, f)
+                    out.append((f, self.cached("fam:" + fp, fp, family_of)))
         return out
+
+    def fonts(self):
+        return [dict(file=f, url="/fonts/" + f, families=n["families"], regular=n["regular"]) for f, n in self._font_names()]
+
+    def fonts_missing(self):
+        """out.ass 用到、但 fonts 目录里没有哪个文件的族名/全名/PostScript 名对得上的字体 (忽略大小写).
+        libass 遇到这种会拿后备字体画: 能显示, 但字形和出片可能不同. 不是 fatal.
+        ASS 扫描按 out.ass 的 mtime 缓存; 比对是集合查找, 很便宜."""
+        path = self.p("out.ass")
+        used = self.cached("usedfonts:" + path, path, lambda p: used_fonts(self.text(p))) or {}
+        names = self._font_names()
+        have = {m for _, n in names for m in n["match"]}
+        return [dict(u) for k, u in sorted(used.items()) if k.lower() not in have]
+
+    def fonts_unparsed(self):
+        """名字表读不出来的字体文件 (fontTools 缺失 / 文件坏). 它们参与不了比对, 可能让 fonts_missing 误报, 一并告诉前端."""
+        return [f for f, n in self._font_names() if not n["ok"]]
 
     def edl(self):
         e = self.json(self.p("mv.edl.json"))
@@ -437,7 +521,7 @@ class H(BaseHTTPRequestHandler):
                     video=("/media/" + P.rel(v)) if v else None,
                     out_ass="/api/ass/out", ref_ass="/api/ass/ref" if P.ref_ass() else None,
                     ref_path=P.rel(P.ref_ass()) if P.ref_ass() else None,
-                    fonts=P.fonts(), edl=P.edl(), sections=P.sections(),
+                    fonts=P.fonts(), fonts_missing=P.fonts_missing(), fonts_unparsed=P.fonts_unparsed(), edl=P.edl(), sections=P.sections(),
                     octopus="/octopus/" if find_octopus() else None))
             if path in ("/api/ass/out", "/api/ass/ref"):
                 f = P.p("out.ass") if path.endswith("out") else P.ref_ass()

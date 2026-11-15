@@ -1,4 +1,6 @@
-export interface FontInfo { file: string; url: string; families: string[] }
+export interface FontInfo { file: string; url: string; families: string[]; regular?: boolean }
+/** out.ass 用到但 fonts 目录里对不上名字的字体 (服务端算, 忽略大小写比族名/全名/PostScript 名). libass 会用后备字体画: 能显示, 字形可能不对. 不是 fatal. */
+export interface FontMissing { name: string; uses: number; line: number; via: string[] }
 export interface EdlSegment { kind: 'orig' | 'reuse' | 'still' | 'none'; t0: number; t1: number | null; src: string; src_t0: number }
 export interface Edl { version: number; source: 'file' | 'default' | 'none'; segments: EdlSegment[] }
 export interface Section { id: string; lines: number[]; budget?: number; why?: string }
@@ -6,7 +8,7 @@ export interface Project {
   dir: string; anime: string; song: string; duration: number;
   audio: (string | null)[]; video: string | null;
   out_ass: string; ref_ass: string | null; ref_path: string | null;
-  fonts: FontInfo[]; edl: Edl; sections: Section[]; octopus: string | null;
+  fonts: FontInfo[]; fonts_missing?: FontMissing[]; fonts_unparsed?: string[]; edl: Edl; sections: Section[]; octopus: string | null;
 }
 export interface LyricChar {
   i: number; ch: string; s: number; e: number; x: number; w: number;
