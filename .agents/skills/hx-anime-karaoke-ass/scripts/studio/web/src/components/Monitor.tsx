@@ -5,7 +5,7 @@ import { createOctopus, type OctoHandle } from '../lib/octopus';
 import { inRanges } from '../lib/sel';
 import { syncFail, syncOk, useStore } from '../lib/store';
 import { filterAss } from '../lib/tracks';
-import { setSelection, selectLine } from '../lib/actions';
+import { baseName, REF_SRC, setSelection, selectLine } from '../lib/actions';
 import s from './Monitor.module.css';
 
 /**
@@ -49,11 +49,15 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
     if (!project.octopus) { if (which === 'out') set({ octo: 'off' }); return; }
     const sub = which === 'out' ? project.out_ass : project.ref_ass;
     if (!sub) return;
+    // dead 只管 "创建还没完成就被取消"; 实例建好后它的生命周期归下面 [active, gen] 那个 effect (dispose).
+    // 回调是否作数看 "我还是不是当前实例", 不看这个 effect 有没有重跑 (尺寸 0->恢复 / project 换对象都会让它重跑).
     let dead = false;
+    let mine: OctoHandle | null = null;
+    const gone = () => dead || (mine !== null && inst.current !== mine);
     let base: { octo: 'ready' | 'partial'; octoErr: string } = { octo: 'ready', octoErr: '' };   // stalled 恢复后回到的状态
     createOctopus({ ...project, out_ass: sub }, canvas.current,
       (miss) => {
-        if (dead) return;
+        if (gone()) return;
         setReady(true);
         base = miss.length ? { octo: 'partial', octoErr: `贴图缺 ${miss.length} 张: ${miss.join('; ')}` } : { octo: 'ready', octoErr: '' };
         if (which === 'out') set({ ...base, octoMissing: miss });
@@ -61,17 +65,20 @@ function useOcto(which: 'out' | 'ref', canvas: React.RefObject<HTMLCanvasElement
       },
       (e) => { if (which === 'out') set({ octo: 'error', octoErr: e }); },
       (h) => {
-        if (dead) return;
+        if (gone()) return;
         if (h.state === 'ok') { setHalt(''); if (which === 'out') set(base); return; }
         setHalt(h.state);
         console.error(`[octo:${which}] ${h.state} @${h.at.toFixed(2)}s: ${h.reason}`);
         if (which === 'out') set({ octo: h.state, octoAt: h.at, octoErr: h.reason });
       },
-    ).then((o) => { if (dead) o.dispose(); else inst.current = o; })
+    ).then((o) => { if (dead) o.dispose(); else { mine = o; inst.current = o; } })
       .catch((e) => { if (which === 'out') set({ octo: 'error', octoErr: String(e) }); });
-    return () => { dead = true; };
+    return () => { if (!mine) dead = true; };
+    // 原来 cleanup 无条件 dead=true: 依赖一变 (project 被整体替换 / 监视器尺寸 0 -> 恢复) effect 重跑,
+    // 实例还在 (inst.current 非空直接 return), 它的崩溃/无响应回调却全被吞掉, 静默. 现在已建好的实例不受 cleanup 影响.
+    // 依赖也只列真正决定实例的字段 (不是 project 对象); 换参考文件靠 gen 里的 refPath 重建.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project, r.w > 0, active, gen]);
+  }, [!!project, project?.octopus, which === 'out' ? project?.out_ass : project?.ref_ass, r.w > 0, active, gen]);
   useEffect(() => () => {
     // 关掉对比 / 换容器: 释放实例, 下次重建
     inst.current?.dispose();
@@ -150,6 +157,8 @@ export default function Monitor() {
   const edl = useStore((x) => x.edl);
   const assRev = useStore((x) => x.assRev);
   const compare = useStore((x) => x.compare);
+  // 角标写明参考是哪份文件 + 怎么定的 (原来只写 "参考")
+  const refName = useStore((x) => `${baseName(x.project?.ref_path)} · ${REF_SRC[x.project?.ref?.source ?? 'none']}`);
   const abShow = useStore((x) => x.abShow);
   const wipe = useStore((x) => x.wipe);
   const vis = useStore((x) => x.vis);
@@ -187,9 +196,10 @@ export default function Monitor() {
   const offline = useStore((x) => x.live === 'down');
   const reload = () => set({ octoGen: useStore.getState().octoGen + 1, octo: 'loading', octoErr: '' });
   const out = useOcto('out', cvOut, rOut, true, `g${octoGen}`);
-  // 参考实例: 换容器 (并排 <-> 叠放) 时重建
+  // 参考实例: 换容器 (并排 <-> 叠放) / 换了参考文件 (URL 不变, 实例不会自己重取) 时重建
   const refKey = side ? 'side' : 'inline';
-  const ref = useOcto('ref', cvRef, rRef, refActive, `${refKey}:g${octoGen}`);
+  const refPath = useStore((x) => x.project?.ref_path ?? '');
+  const ref = useOcto('ref', cvRef, rRef, refActive, `${refKey}:g${octoGen}:${refPath}`);
   useVideoSync(vidOut);
   useVideoSync(vidRef);
   usePlacementPreview(cvOut, cvPrev, previewing ? placeLines : null);
@@ -318,14 +328,14 @@ export default function Monitor() {
             {assErr ? '字幕是旧版 · 刷新失败' : '未连接 · 字幕可能不是最新'}
           </div>
         )}
-        {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? '参考 (static/music 参考 ASS)' : '成品 (out.ass)'}</div>}
+        {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? `参考 (${refName})` : '成品 (out.ass)'}</div>}
         {side && <div className={s.badge}>out</div>}
       </div>
       {side && (
         <div className={s.frame} style={{ left: rRef.x, top: rRef.y, width: rRef.w, height: rRef.h }} data-testid="frame-ref">
           {src && <video ref={vidRef} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-ref" />}
           <canvas key={refKey} ref={cvRef} className={s.subs} data-hidpi="monitor-ref" data-testid="subs-ref" data-halt={ref.halt || undefined} />
-          <div className={s.badge}>参考</div>
+          <div className={s.badge}>参考 ({refName})</div>
           {ref.halt && <div className={s.halt} data-testid="halt-tag" data-which="ref" data-below onClick={reload} title="点击重载 libass">字幕渲染已停</div>}
         </div>
       )}

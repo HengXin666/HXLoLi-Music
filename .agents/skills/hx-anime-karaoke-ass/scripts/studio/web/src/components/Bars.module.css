@@ -23,6 +23,8 @@
 }
 .chip[data-state='ready'] { color: var(--good); }
 .chip[data-state='error'] { color: var(--bad); }
+/* 长错误不撑开顶栏: 200px 封顶 + 省略号, 全文在 title (否则一条带路径的错误能把整行推出去) */
+.chip[data-testid='audio-chip'] { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
 .chip[data-state='busy'] { color: var(--warn); }
 .chip[data-state='warn'] { color: var(--warn); cursor: help; }
 button.chip { border: 0; cursor: pointer; }

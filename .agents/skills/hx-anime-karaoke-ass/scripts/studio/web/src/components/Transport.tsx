@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { clock } from '../lib/clock';
-import { clearLoop, loopSelection, setCompare } from '../lib/actions';
+import { baseName, clearLoop, loopSelection, REF_SRC, setCompare } from '../lib/actions';
 import { fmtTime, useStore } from '../lib/store';
 import s from './Transport.module.css';
 
-const abTip = (ref: string) => `与参考对比 (A/B 切换): 成品 = 本工程生成的 out.ass; 参考 = ${ref || '参考 ASS'}. 两者同一时刻、同一画面, 点 成品 / 参考 在两者间切换, 画面角标写明当前看的是哪个. 划变 / 左右并排在右键 > 与参考对比.`;
+const abTip = (ref: string) => `与参考对比 (A/B 切换): 成品 = 本工程生成的 out.ass; 参考 = ${ref}. 两者同一时刻、同一画面, 点 成品 / 参考 在两者间切换, 画面角标写明当前看的是哪个. 划变 / 左右并排在右键 > 与参考对比.`;
 
 export default function Transport() {
   const playing = useStore((x) => x.playing);
@@ -12,7 +12,11 @@ export default function Transport() {
   const rate = useStore((x) => x.rate);
   const set = useStore((x) => x.set);
   const loop = useStore((x) => x.loop);
-  const AB_TIP = abTip(String(useStore((x) => x.project?.ref_ass) ?? '').split('/').pop() ?? '');
+  // 原来取 ref_ass (接口 URL "/api/ass/ref") 的末段, 永远显示 "ref": 等于没说在跟谁比
+  const refPath = useStore((x) => x.project?.ref_path);
+  const refInfo = useStore((x) => x.project?.ref);
+  const AB_TIP = abTip(`${baseName(refPath)} (${REF_SRC[refInfo?.source ?? 'none']})`);
+  const noRefTip = refInfo?.error ? `参考 ASS ${REF_SRC[refInfo.source]}: ${refInfo.error}. 点顶栏 "参考" 选一份` : '没有参考 ASS (static/music/<番名>/ 下没有文件名含歌名的 .ass), 不能对比';
   const compare = useStore((x) => x.compare);
   const abShow = useStore((x) => x.abShow);
   const hasSel = useStore((x) => x.ranges.length > 0);
@@ -31,7 +35,7 @@ export default function Transport() {
       <span className={s.grow} />
       {compare !== 'ab' ? (
         <button className={s.wide} disabled={!hasRef} data-testid="ab-btn"
-          title={hasRef ? AB_TIP : '没有参考 ASS (static/music 下找不到同名 .ass), 不能对比'} onClick={() => setCompare('ab')}>
+          title={hasRef ? AB_TIP : noRefTip} onClick={() => setCompare('ab')}>
           对比: 成品 / 参考
         </button>
       ) : (

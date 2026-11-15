@@ -1214,6 +1214,188 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await sleep(500);
   });
 
+  // ======================= 参考 ASS 选择 (RF): 新开页面, route 模拟 /api/project 的候选状态 + POST /api/ref (不写真实 ref.json) =======================
+  const refPage = async (state) => {
+    const c2 = await b.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+    const p2 = await c2.newPage();
+    const errs = [];
+    p2.on('pageerror', (e) => errs.push(String(e).slice(0, 300)));
+    const A = '_歌 - 曲.ass', B = '歌 - 曲.ass', dir = 'static/music/番/';
+    const cands = [{ path: dir + A, dialogues: 18475, mtime: '2026-11-01 10:00:00' }, { path: dir + B, dialogues: 16510, mtime: '2026-10-20 09:30:00' }];
+    const posts = [];
+    await p2.route('**/api/project', async (r) => {
+      if (state.projFail && state.posted) return r.fulfill({ status: 500, json: { error: 'boom (模拟)' } });   // RF5: 写成了但重取失败
+      const real = await (await r.fetch()).json();
+      const pick = state.pick;
+      Object.assign(real, state.mode === 'none'
+        ? { ref_ass: null, ref_path: null, ref: { source: 'none', error: null, set_at: null, candidates: [] } }
+        : state.mode === 'refjson'   // RF6/RF7: 错误文字故意不以 "ref.json" 开头, 证明按 err_kind 而不是文字判断
+        ? { ref_ass: null, ref_path: null, ref: { source: 'error', err_kind: 'ref_json', error: '手动指定的文件不存在: static/music/番/gone.ass', set_at: null, candidates: cands } }
+        : state.mode === 'error'
+        ? { ref_ass: null, ref_path: null, ref: { source: 'error', error: 'playlist.json 的 assUrl 不在 static/music/番/ 的候选里 (跨目录或文件不存在): static/music/别的/歌 - 曲.ass', set_at: null, candidates: cands } }
+        : pick
+        ? { ref_ass: '/api/ass/ref', ref_path: pick, ref: { source: 'manual', error: null, set_at: 'Sun 2026-11-15 11:50 PM CST (UTC+08:00)', candidates: cands } }
+        : { ref_ass: null, ref_path: null, ref: { source: 'ambiguous', error: '2 份候选, 没有明确来源 (ref.json / playlist.json), 未指定', set_at: null, candidates: cands } });
+      await r.fulfill({ json: real });
+    });
+    // 门禁 judge 来自真实工程的参考; mock 成 "没有参考" (未选 / none / error / refjson) 时也要从 out profile 里去掉, 否则两边打架 (门禁显示真实 10/10)
+    await p2.route((u) => u.pathname === '/api/profile' && u.searchParams.get('which') === 'out', async (r) => {
+      const real = await (await r.fetch()).json();
+      if (!state.pick) delete real.judge;
+      await r.fulfill({ json: real });
+    });
+    // ref profile: 用 route.fetch() 取真实响应 (p2.request 会再走一遍路由, 和上面的 out mock 互相递归, 直接卡死)
+    await p2.route((u) => u.pathname === '/api/profile' && u.searchParams.get('which') === 'ref', async (r) => {
+      const real = await (await r.fetch()).json();
+      if (!state.pick) delete real.judge;
+      await r.fulfill({ json: real });
+    });
+    await p2.route('**/api/ref', async (r) => {
+      const body = JSON.parse(r.request().postData() || '{}');
+      posts.push(body);
+      if (state.fail) return r.fulfill({ status: 400, json: { error: '不是候选文件: ' + body.ass } });
+      state.pick = body.ass;
+      state.posted = true;
+      if (body.ass === null) state.mode = undefined;   // 清除 -> 回到 "未定"
+      return r.fulfill({ json: {} });
+    });
+    await p2.goto(cfg.url, { waitUntil: 'load' });
+    await p2.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 30000 });
+    return { c2, p2, errs, posts, A, B, dir };
+  };
+  await test('RF1', '参考 ASS 多份候选且无明确来源: 不选; 顶栏 error 标签写明 "未定 · 2 份候选"; A/B 停用并说明; 门禁写 "未判定" 而不是 0/0 绿', async () => {
+    const { c2, p2, errs } = await refPage({});
+    try {
+      const chip = p2.locator('[data-testid=ref-chip]');
+      assert((await chip.textContent()).trim() === '参考 ASS 未定 · 2 份候选', 'ref-chip: ' + await chip.textContent());
+      assert((await chip.getAttribute('data-state')) === 'error', 'ref-chip 应为 error');
+      assert(await p2.locator('[data-testid=ab-btn]').isDisabled(), 'A/B 应停用');
+      assert((await p2.getAttribute('[data-testid=ab-btn]', 'title')).includes('参考 ASS 未定'), 'A/B 提示没说明未定');
+      const gate = await p2.textContent('[data-testid=gate-chip]');
+      assert(gate.includes('门禁 未判定 · 参考未定'), '门禁: ' + gate);
+      assert((await p2.getAttribute('[data-testid=gate-chip]', 'data-judge')) === 'none', '门禁 data-judge 应为 none (未判定)');
+      assert((await p2.getAttribute('[data-testid=gate-chip]', 'data-state')) !== 'ready', '门禁无参考不该是 ready (绿)');
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+  });
+  await test('RF4', '三种 "没有参考" 文字互不相同: 无 (目录里没有) / 未定 (多份候选) / 出错 (来源有问题); 门禁写明对应原因, data-judge 都是 none', async () => {
+    const seen = {};
+    for (const mode of ['none', 'error', 'ambiguous']) {
+      const { c2, p2, errs } = await refPage({ mode });
+      try {
+        const chip = (await p2.textContent('[data-testid=ref-chip]')).trim();
+        const gate = await p2.textContent('[data-testid=gate-chip]');
+        const tip = await p2.getAttribute('[data-testid=ab-btn]', 'title');
+        assert((await p2.getAttribute('[data-testid=ref-chip]', 'data-source')) === mode, mode + ' data-source');
+        assert((await p2.getAttribute('[data-testid=gate-chip]', 'data-judge')) === 'none', mode + ' data-judge');
+        assert(await p2.locator('[data-testid=ab-btn]').isDisabled(), mode + ' A/B 应停用');
+        seen[mode] = { chip, gate, tip };
+        assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+      } finally { await c2.close(); }
+    }
+    assert(seen.none.chip === '无参考 ASS · 目录里没有同名 .ass' && seen.none.gate.includes('未判定 · 无参考') && seen.none.tip.includes('没有文件名含歌名的 .ass'), 'none: ' + JSON.stringify(seen.none));
+    assert(seen.error.chip === '参考 ASS 出错 · 未选' && seen.error.gate.includes('未判定 · 参考出错') && seen.error.tip.includes('跨目录'), 'error: ' + JSON.stringify(seen.error));
+    assert(seen.ambiguous.chip === '参考 ASS 未定 · 2 份候选' && seen.ambiguous.gate.includes('未判定 · 参考未定'), 'ambiguous: ' + JSON.stringify(seen.ambiguous));
+    for (const k of ['chip', 'gate', 'tip']) assert(new Set(Object.values(seen).map((x) => x[k])).size === 3, k + ' 三种状态有重复文字');
+  });
+  await test('RF2', '候选面板列出文件名/条数/修改时间; 点 "用这份" -> POST /api/ref; 之后顶栏/面板写明 "手动指定" 与指定时间, A/B 提示写真实文件名 (不再是 "ref")', async () => {
+    const { c2, p2, errs, posts, B, dir } = await refPage({});
+    try {
+      await p2.click('[data-testid=ref-chip]');
+      await p2.waitForSelector('[data-testid=ref-panel]');
+      const rows = p2.locator('[data-testid=ref-cand]');
+      assert((await rows.count()) === 2, '候选行数 ' + await rows.count());
+      const t1 = await rows.nth(1).textContent();
+      assert(t1.includes(B) && t1.includes('16510 条') && t1.includes('改于 2026-10-20 09:30:00'), '候选行: ' + t1);
+      assert((await p2.textContent('[data-testid=ref-why]')).includes('2 份候选'), '面板没写原因');
+      await rows.nth(1).locator('[data-testid=ref-use]').click();
+      await p2.waitForSelector('[data-testid=ref-chip][data-source=manual]', { timeout: 6000 });
+      assert(JSON.stringify(posts) === JSON.stringify([{ ass: dir + B }]), 'POST: ' + JSON.stringify(posts));
+      assert((await p2.textContent('[data-testid=ref-chip]')).trim() === `参考 ${B} · 手动指定`, 'ref-chip: ' + await p2.textContent('[data-testid=ref-chip]'));
+      assert((await p2.textContent('[data-testid=ref-why]')).includes('指定于 Sun 2026-11-15 11:50 PM CST (UTC+08:00)'), '没留指定时间');
+      assert((await rows.nth(1).textContent()).includes('当前'), '选中行没标当前');
+      const tip = await p2.getAttribute('[data-testid=ab-btn]', 'title');
+      assert(!(await p2.locator('[data-testid=ab-btn]').isDisabled()) && tip.includes(`参考 = ${B} (手动指定)`), 'A/B 提示: ' + tip);
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+  });
+  await test('RF3', '指定失败 (POST 400): 面板写出服务端原因, 顶栏仍是 "未定", 无未处理错误', async () => {
+    const { c2, p2, errs } = await refPage({ fail: true });
+    try {
+      await p2.click('[data-testid=ref-chip]');
+      await p2.locator('[data-testid=ref-cand]').nth(0).locator('[data-testid=ref-use]').click();
+      await p2.waitForSelector('[data-testid=ref-msg][data-error]', { timeout: 6000 });
+      assert((await p2.textContent('[data-testid=ref-msg]')).startsWith('指定失败: 不是候选文件'), 'ref-msg: ' + await p2.textContent('[data-testid=ref-msg]'));
+      assert((await p2.textContent('[data-testid=ref-chip]')).trim() === '参考 ASS 未定 · 2 份候选', '失败后顶栏变了');
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+  });
+  await test('RF5', '写入成功但重取 /api/project 失败: 面板不说 "指定失败", 而写明 "选择已保存 … 但界面刷新失败"; 顶栏 sync 标签 "参考 ASS 未刷新"; 界面保留旧的一致状态', async () => {
+    const st = { projFail: true };
+    const { c2, p2, errs, posts } = await refPage(st);
+    try {
+      await p2.click('[data-testid=ref-chip]');
+      await p2.locator('[data-testid=ref-cand]').nth(1).locator('[data-testid=ref-use]').click();
+      await p2.waitForSelector('[data-testid=ref-msg][data-error]', { timeout: 6000 });
+      const msg = await p2.textContent('[data-testid=ref-msg]');
+      assert(posts.length === 1 && msg.startsWith('选择已保存 (已写入 ref.json), 不用再点') && msg.includes('界面刷新失败') && !msg.includes('指定失败'), 'ref-msg: ' + msg);
+      const sc = await p2.textContent('[data-testid=sync-chip]');
+      assert(sc.includes('参考 ASS') && sc.includes('未刷新'), 'sync-chip: ' + sc);
+      assert((await p2.textContent('[data-testid=ref-chip]')).trim() === '参考 ASS 未定 · 2 份候选', '重取失败时顶栏不该变 (旧状态保持一致)');
+      st.projFail = false;   // 恢复后点重试 -> 变成手动指定, sync 标签消失
+      await p2.click('[data-testid=sync-chip]');
+      await p2.waitForSelector('[data-testid=ref-chip][data-source=manual]', { timeout: 6000 });
+      await p2.waitForSelector('[data-testid=sync-chip]', { state: 'detached', timeout: 4000 });
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+  });
+  await test('RF8', '音频来源出错时顶栏 audio-chip 截断长错误 (宽度 <= 380px, 不撑开顶栏), 全文在 title', async () => {
+    const c2 = await b.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+    const p2 = await c2.newPage();
+    const long = 'playlist.json 的 audioUrl 不在 static/music/番/ 的候选里 (跨目录或文件不存在): ' + 'static/music/很长的目录名/'.repeat(8) + '歌.flac';
+    await p2.route('**/api/project', async (r) => { const real = await (await r.fetch()).json(); real.audio_error = long; await r.fulfill({ json: real }); });
+    try {
+      await p2.goto(cfg.url, { waitUntil: 'load' });
+      await p2.waitForSelector('[data-testid=audio-chip]', { timeout: 30000 });
+      const w = await p2.evaluate(() => document.querySelector('[data-testid=audio-chip]').getBoundingClientRect().width);
+      const tip = await p2.getAttribute('[data-testid=audio-chip]', 'title');
+      assert(w <= 380 && tip.endsWith('歌.flac'), `宽 ${w}, title: ${tip}`);
+      assert(await p2.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), '顶栏把页面撑出横向滚动');
+    } finally { await c2.close(); }
+  });
+  await test('RF6', 'ref.json 出错 (err_kind=ref_json, 错误文字不以 "ref.json" 开头): 面板给出清除按钮; 点了 POST {ass:null}, 之后回到 "未定"; playlist 类错误不给清除按钮', async () => {
+    const st = { mode: 'refjson' };
+    const { c2, p2, errs, posts } = await refPage(st);
+    try {
+      await p2.click('[data-testid=ref-chip]');
+      await p2.waitForSelector('[data-testid=ref-clear]', { timeout: 4000 });
+      await p2.click('[data-testid=ref-clear]');
+      await p2.waitForSelector('[data-testid=ref-chip][data-source=ambiguous]', { timeout: 6000 });
+      assert(JSON.stringify(posts) === JSON.stringify([{ ass: null }]), 'POST: ' + JSON.stringify(posts));
+      assert((await p2.locator('[data-testid=ref-clear]').count()) === 0, '清除后按钮还在');
+      assert(!(await p2.getAttribute('[data-testid=ref-msg]', 'data-error')), 'ref-msg: ' + await p2.textContent('[data-testid=ref-msg]'));
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+    const e = await refPage({ mode: 'error' });   // playlist 类错误: ref.json 里没东西可清, 不给按钮
+    try {
+      await e.p2.click('[data-testid=ref-chip]');
+      await e.p2.waitForSelector('[data-testid=ref-panel]');
+      assert((await e.p2.locator('[data-testid=ref-clear]').count()) === 0, 'playlist 错误不该有清除按钮');
+    } finally { await e.c2.close(); }
+  });
+  await test('RF7', '清除成功但重取失败: 文案写 "已清除手动指定 (已从 ref.json 移除)", 不写 "已写入"', async () => {
+    const st = { mode: 'refjson', projFail: true };
+    const { c2, p2, errs } = await refPage(st);
+    try {
+      await p2.click('[data-testid=ref-chip]');
+      await p2.click('[data-testid=ref-clear]');
+      await p2.waitForSelector('[data-testid=ref-msg][data-error]', { timeout: 6000 });
+      const msg = await p2.textContent('[data-testid=ref-msg]');
+      assert(msg.startsWith('已清除手动指定 (已从 ref.json 移除), 不用再点') && msg.includes('界面刷新失败') && !msg.includes('已写入'), 'ref-msg: ' + msg);
+      assert(errs.length === 0, '页面错误: ' + errs.join(' | '));
+    } finally { await c2.close(); }
+  });
+
   // ======================= libass 崩溃 / 无响应 (放最后: 会杀掉 worker, 用例内点重载恢复) =======================
   const ink = () => p.evaluate(() => { const c = document.querySelector('[data-testid=subs-out]'); const g = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < g.length; i += 4) if (g[i]) n++; return n; });
   const inkAt = async (t) => { await seek(t); await sleep(700); return ink(); };
@@ -1263,6 +1445,22 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     assert((await p.locator('[data-testid=halt-tag]').count()) === 0, '重载后角标没消');
     const after = await inkAt(t);
     assert(after > 0, `重载后 t=${t.toFixed(2)} 没出字 (崩前 ${before})`);
+  });
+  await test('OC4', '监视器尺寸 0 -> 恢复 (useOcto 依赖变化但实例不重建) 之后, worker 崩溃仍能被发现: octo=crashed (不是静默)', async () => {
+    await tInk();
+    const box = '[data-testid=monitor]';
+    await p.evaluate((q) => { document.querySelector(q).style.display = 'none'; }, box);
+    await p.waitForFunction(() => document.querySelector('[data-testid=frame-out]') === null || document.querySelector('[data-testid=frame-out]').getBoundingClientRect().width === 0, null, { timeout: 3000 }).catch(() => {});
+    await sleep(400);
+    await p.evaluate((q) => { document.querySelector(q).style.display = ''; }, box);
+    await sleep(800);
+    assert(['ready', 'partial'].includes(await S('s.octo')), '恢复尺寸后 octo 应仍就绪: ' + await S('s.octo'));
+    const e0 = errors.length;
+    await p.evaluate(() => window.__hxW.forEach((w) => w.postMessage({ target: 'OC4-bogus' })));
+    await p.waitForFunction(() => window.__hx.store.getState().octo === 'crashed', null, { timeout: 5000 }).catch(() => {});
+    assert((await S('s.octo')) === 'crashed', '尺寸变化后崩溃回调被吞: octo=' + await S('s.octo'));
+    errors.splice(e0);
+    await reloadChip();
   });
   await test('OC3', 'worker 被终止 (无任何事件): 看门狗判 stalled, 顶栏 "libass 无响应 · 点击重载", 旧帧藏起 + 角标; 点重载恢复', async () => {
     const t = await tInk();

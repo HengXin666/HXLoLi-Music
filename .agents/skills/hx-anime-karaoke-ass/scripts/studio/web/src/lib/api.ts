@@ -4,10 +4,16 @@ export interface FontMissing { name: string; uses: number; line: number; via: st
 export interface EdlSegment { kind: 'orig' | 'reuse' | 'still' | 'none'; t0: number; t1: number | null; src: string; src_t0: number }
 export interface Edl { version: number; source: 'file' | 'default' | 'none'; segments: EdlSegment[] }
 export interface Section { id: string; lines: number[]; budget?: number; why?: string }
+/** 参考 ASS 用的是哪份, 怎么定的 (服务端 refpick.py). 不挑 "更好的那版": 只认 ref.json / playlist.json / 唯一同名 */
+export type RefSource = 'manual' | 'playlist' | 'unique' | 'ambiguous' | 'error' | 'none';
+export interface RefCand { path: string; dialogues: number; mtime: string }
+/** err_kind: error 的来源, 前端按它分支 (不看 error 文字). ref_json = 工程 ref.json (可在面板清除) / playlist / candidates = 多份未定 */
+export type RefErrKind = 'ref_json' | 'playlist' | 'candidates';
+export interface RefInfo { source: RefSource; error: string | null; err_kind?: RefErrKind | null; set_at: string | null; candidates: RefCand[] }
 export interface Project {
   dir: string; anime: string; song: string; duration: number;
   audio: (string | null)[]; video: string | null;
-  out_ass: string; ref_ass: string | null; ref_path: string | null;
+  out_ass: string; ref_ass: string | null; ref_path: string | null; ref: RefInfo; audio_error?: string | null;
   fonts: FontInfo[]; fonts_missing?: FontMissing[]; fonts_unparsed?: string[]; edl: Edl; sections: Section[]; octopus: string | null;
 }
 export interface LyricChar {
@@ -90,6 +96,14 @@ export const api = {
     const b = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error((b as { error?: string }).error || `placement ${r.status}`);
     return b as { started: boolean; preset: Preset };
+  },
+  chooseRef: async (ass: string | null) => {
+    const r = await fetch('/api/ref', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ass }) });
+    const t = await r.text();
+    let b: { error?: string } = {};
+    try { b = JSON.parse(t); } catch { /* 非 JSON: 下面按状态码报 */ }
+    if (!r.ok) throw new Error(b.error || `/api/ref ${r.status}${t ? ': ' + t.slice(0, 120) : ''}`);
+    return b as Pick<Project, 'ref_ass' | 'ref_path' | 'ref'>;
   },
   // 不查 r.ok 的话 404/500 的错误 JSON 会被当成字幕喂给 libass (画面空白, 无任何提示)
   assText: async (which: 'out' | 'ref') => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { shortcut } from '../lib/actions';
+import { reloadRef, shortcut } from '../lib/actions';
 import { api, watch } from '../lib/api';
 import { clock } from '../lib/clock';
 import { lineAt, sync, syncFail, syncOk, useStore } from '../lib/store';
@@ -93,8 +93,9 @@ export default function App() {
       if (what.includes('review')) await step('review', async () => set({ reviews: await api.reviews() }));
       if (what.includes('edl')) await step('edl', async () => set({ edl: await api.edl() }));
       if (what.includes('job') || what.includes('placement')) await step('place', onPlacementChanged);
+      if (what.includes('ref') || what.includes('playlist')) await step('ref', reloadRef);
     };
-    sync.retry = () => { void refresh(['out', 'manifest', 'review', 'edl', 'placement']); };
+    sync.retry = () => { void refresh(['out', 'manifest', 'review', 'edl', 'placement', 'ref']); };
     const off = watch((what) => { void refresh(what); }, (up) => set({ live: up ? 'up' : 'down' }));
     return () => { live = false; off(); };
   }, [set]);

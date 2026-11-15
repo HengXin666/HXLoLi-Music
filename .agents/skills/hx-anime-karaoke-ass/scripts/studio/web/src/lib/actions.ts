@@ -27,6 +27,17 @@ export function selectLine(li: number) {
   setSelection([r], r[0], r[0]);
 }
 
+/** 参考 ASS 变了 (界面里选了 / ref.json 或 playlist.json 被改): 换 project (重建参考实例) + 重取两份 profile (门禁阈值来自参考) */
+export async function reloadRef() {
+  const p = await api.project();
+  const [out, ref] = await Promise.all([api.profile('out'), p.ref_ass ? api.profile('ref') : Promise.resolve(null)]);
+  useStore.setState({ project: p, out, ref });
+}
+
+/** 参考来源的人话 (界面各处共用, 带文字不只靠颜色) */
+export const REF_SRC: Record<string, string> = { manual: '手动指定', playlist: 'playlist.json', unique: '唯一同名', ambiguous: '未定', error: '出错', none: '无' };
+export const baseName = (p: string | null | undefined) => (p ?? '').split(/[\\/]/).pop() ?? '';  // 服务端 relpath 在 Windows 上是反斜杠
+
 /** 右键点在选区外: 先把选区换成被点的字 (PR 的行为) */
 export function ensureSelectedAt(g: number) {
   const s = S();
@@ -238,7 +249,7 @@ export function menuItems(): MEntry[] {
   const s = S();
   const has = !!s.ranges.length;
   const noSel = has ? false : '没有选区: 先在歌词里选字, 或右键时间线片段';
-  const noRef = s.project?.ref_ass ? false : '没有参考 ASS';
+  const noRef = s.project?.ref_ass ? false : s.project?.ref?.error ? `参考 ASS ${REF_SRC[s.project.ref.source]}: ${s.project.ref.error}` : '没有参考 ASS';
   const nEv = (s.explain || []).reduce((a, it) => a + it.n, 0) + (s.menu?.hits?.length ?? 0);
   const anySolo = (ids: readonly string[]) => FILTER_IDS.every((t) => !!s.vis[t]?.solo === ids.includes(t));
   return [

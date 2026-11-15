@@ -71,6 +71,7 @@ interface S {
   // 位置预设: place = 服务端状态 (当前预设/任务); placeCand = 正在预览的候选 (null = 不预览); placeLines = 服务端给的每句块位移
   place: PlacementRes | null;
   placeOpen: boolean;
+  refOpen: boolean;
   placeCand: Preset | null;
   placeLines: PlaceLine[] | null;
   toast: string;
@@ -127,6 +128,7 @@ export const useStore = create<S>((set) => ({
   monitorKept: 0,
   place: null,
   placeOpen: false,
+  refOpen: false,
   placeCand: null,
   placeLines: null,
   toast: '',

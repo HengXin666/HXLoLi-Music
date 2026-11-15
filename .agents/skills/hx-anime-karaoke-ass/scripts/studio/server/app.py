@@ -26,6 +26,7 @@ from render.octo_browser import find_octopus  # noqa: E402  与出片同一份�
 sys.path.insert(0, HERE)
 from analysis import Analysis  # noqa: E402
 from assfx.text import placement as PLC  # noqa: E402  位置公式唯一实现 (前端不复算)
+import refpick as REF  # noqa: E402  参考 ASS / 音频: 只认明确来源, 不挑
 
 MIME = {".html": "text/html; charset=utf-8", ".js": "application/javascript", ".mjs": "application/javascript",
         ".css": "text/css", ".json": "application/json", ".wasm": "application/wasm", ".svg": "image/svg+xml",
@@ -171,24 +172,37 @@ class Project:
     def rel(self, path):
         return os.path.relpath(path, self.root)
 
-    def ref_ass(self):
+    def resolved(self, kind):
+        # 原来取 "文件名含歌名" 的 sorted()[0]: "_" 前缀排在假名前, 静默选错. 规则见 refpick.py; 按相关 mtime 缓存
         d = os.path.join(self.root, "static", "music", self.anime)
-        if os.path.isdir(d):
-            c = sorted(f for f in os.listdir(d) if f.endswith(".ass") and self.song in f)
-            if c:
-                return os.path.join(d, c[0])
-        return None
+        sig = tuple(os.stat(f).st_mtime_ns if os.path.exists(f) else 0 for f in (self.p(REF.FILE), os.path.join(self.root, "playlist.json"), d))
+        with self.lock:
+            hit = self._cache.get("ref:" + kind)
+            if hit and hit[0] == sig:
+                return hit[1]
+        v = REF.resolve(self.root, self.anime, self.song, self.dir, kind)
+        with self.lock:
+            self._cache["ref:" + kind] = (sig, v)
+        return v
+
+    def ref_ass(self):
+        return self.resolved("ass")["path"]
+
+    def ref_info(self):
+        r = self.resolved("ass")
+
+        def dlg(p):
+            return sum(1 for l in self.text(p).splitlines() if l.startswith("Dialogue:"))
+        return dict(source=r["source"], error=r["error"], err_kind=r["err_kind"], set_at=r["set_at"],
+                    candidates=[dict(path=self.rel(c), dialogues=self.cached("dlg:" + c, c, dlg),
+                                     mtime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.stat(c).st_mtime)))
+                                for c in r["candidates"]])
 
     def audio(self):
         for c in ("song.mp3", "song.flac", "song.m4a"):
             if os.path.exists(self.p(c)):
                 return self.p(c)
-        d = os.path.join(self.root, "static", "music", self.anime)
-        if os.path.isdir(d):
-            for f in sorted(os.listdir(d)):
-                if self.song in f and f.lower().endswith((".mp3", ".flac", ".m4a", ".ogg")):
-                    return os.path.join(d, f)
-        return None
+        return self.resolved("audio")["path"]
 
     def video(self):
         f = self.p("source", "ed1_creditless.mp4")
@@ -354,7 +368,8 @@ class Project:
     def watched(self):
         w = {k: (os.stat(p).st_mtime_ns if p and os.path.exists(p) else 0) for k, p in (
             ("out", self.p("out.ass")), ("edl", self.p("mv.edl.json")), ("review", self.review_path()),
-            ("manifest", self.p("out.manifest.json")), ("placement", self.p(PLC.FILE)))}
+            ("manifest", self.p("out.manifest.json")), ("placement", self.p(PLC.FILE)),
+            ("ref", self.p(REF.FILE)), ("playlist", os.path.join(self.root, "playlist.json")))}
         w["job"] = self.job["seq"]
         return w
 
@@ -520,7 +535,8 @@ class H(BaseHTTPRequestHandler):
                     audio=[("/media/" + P.rel(P.audio())) if P.audio() else None],
                     video=("/media/" + P.rel(v)) if v else None,
                     out_ass="/api/ass/out", ref_ass="/api/ass/ref" if P.ref_ass() else None,
-                    ref_path=P.rel(P.ref_ass()) if P.ref_ass() else None,
+                    ref_path=P.rel(P.ref_ass()) if P.ref_ass() else None, ref=P.ref_info(),
+                    audio_error=None if P.audio() else P.resolved("audio")["error"],
                     fonts=P.fonts(), fonts_missing=P.fonts_missing(), fonts_unparsed=P.fonts_unparsed(), edl=P.edl(), sections=P.sections(),
                     octopus="/octopus/" if find_octopus() else None))
             if path in ("/api/ass/out", "/api/ass/ref"):
@@ -626,6 +642,8 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         if u.path == "/api/placement":
             return self.post_placement()
+        if u.path == "/api/ref":
+            return self.post_ref()
         if u.path != "/api/review":
             return self.err(404, "unknown api")
         b = self.body() or {}
@@ -641,6 +659,20 @@ class H(BaseHTTPRequestHandler):
             with open(PROJECT.review_path(), "a", encoding="utf-8") as f:
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
         return self.send_json(rec, 201)
+
+    def post_ref(self):
+        # 界面里点「用这份」: 只接受候选; 写 ref.json 并留指定时间. {"ass": null} 清除手动指定
+        P = PROJECT
+        b = self.body()
+        if not isinstance(b, dict) or "ass" not in b or not (b["ass"] is None or isinstance(b["ass"], str)):
+            return self.err(400, "需要 {ass: 候选路径 或 null}")
+        try:
+            with P.lock:
+                REF.choose(P.root, P.anime, P.song, P.dir, "ass", b["ass"])
+        except ValueError as e:
+            return self.err(400, str(e))
+        return self.send_json(dict(ref_ass="/api/ass/ref" if P.ref_ass() else None,
+                                   ref_path=P.rel(P.ref_ass()) if P.ref_ass() else None, ref=self.ref_info()))
 
     def post_placement(self):
         P = PROJECT

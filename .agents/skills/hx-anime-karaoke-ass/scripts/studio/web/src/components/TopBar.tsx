@@ -1,8 +1,12 @@
 import { sync, useStore } from '../lib/store';
+import { baseName, REF_SRC } from '../lib/actions';
 import PlacementPanel from './PlacementPanel';
+import RefPanel from './RefPanel';
 import s from './Bars.module.css';
 
-const SYNC_LABEL: Record<string, string> = { ass: '监视器字幕', data: '歌词/门禁', review: '标注', edl: 'EDL', place: '位置状态' };
+// 门禁没有阈值时写明为什么 (三种不同: 根本没有 / 有几份没定 / 来源出错)
+const GATE_WHY: Record<string, string> = { none: '无参考', ambiguous: '参考未定', error: '参考出错' };
+const SYNC_LABEL: Record<string, string> = { ass: '监视器字幕', data: '歌词/门禁', review: '标注', edl: 'EDL', place: '位置状态', ref: '参考 ASS' };
 
 const fmtT = (t: number) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
 
@@ -18,6 +22,7 @@ export default function TopBar() {
   const fontsUnparsed = useStore((x) => x.fontsUnparsed);
   const place = useStore((x) => x.place);
   const placeOpen = useStore((x) => x.placeOpen);
+  const refOpen = useStore((x) => x.refOpen);
   const set = useStore((x) => x.set);
   const live = useStore((x) => x.live);
   const syncErr = useStore((x) => x.syncErr);
@@ -69,17 +74,36 @@ export default function TopBar() {
         </button>
       )}
       <span className={s.grow} />
+      {p && p.audio_error && (
+        <span className={s.chip} data-testid="audio-chip" data-state="error" title={p.audio_error}>音频未定 · {p.audio_error}</span>
+      )}
+      {p && (
+        // 参考 ASS 用的是哪份 + 怎么定的, 一直写在顶栏 (原来前端完全不显示, 选错了 A/B 和门禁全错也看不出). 未定 / 出错 = error 色
+        <button className={s.chip} data-testid="ref-chip" data-source={p.ref.source} aria-expanded={refOpen}
+          data-state={p.ref.source === 'ambiguous' || p.ref.source === 'error' ? 'error' : p.ref.source === 'none' ? 'warn' : undefined}
+          title={[`参考 ASS: ${p.ref_path ?? '(未选)'}`, `来源: ${REF_SRC[p.ref.source]}${p.ref.set_at ? ` (指定于 ${p.ref.set_at})` : ''}`, ...(p.ref.error ? [p.ref.error] : []), '点击查看全部候选 / 指定'].join('\n')}
+          onClick={() => set({ refOpen: !refOpen, placeOpen: false })}>
+          {p.ref.source === 'ambiguous' ? `参考 ASS 未定 · ${p.ref.candidates.length} 份候选`
+            : p.ref.source === 'error' ? '参考 ASS 出错 · 未选'
+            : p.ref.source === 'none' ? '无参考 ASS · 目录里没有同名 .ass'
+            : `参考 ${baseName(p.ref_path)} · ${REF_SRC[p.ref.source]}`}
+        </button>
+      )}
       <button className={s.chip} data-testid="place-btn" aria-expanded={placeOpen} data-state={place?.job.running ? 'busy' : undefined}
-        onClick={() => set({ placeOpen: !placeOpen })} title="歌词位置预设">
+        onClick={() => set({ placeOpen: !placeOpen, refOpen: false })} title="歌词位置预设">
         位置{place?.job.running ? ' · 生成中' : ''}
       </button>
       {out && (
-        <span className={s.chip} data-testid="gate-chip" data-state={ok === tot ? 'ready' : 'error'} data-stale={syncErr.data ? 'y' : undefined}
-          title={syncErr.data ? `门禁数据刷新失败, 显示的是上一次成功的结果: ${syncErr.data}` : 'check_fx_profile (只读调用)'}>
-          FX {out.profile.fx_count} · 门禁 {ok}/{tot}{syncErr.data ? ' (旧)' : ''}
+        // 没有参考就没有阈值: 原来显示 "门禁 0/0" 且是绿色 (ok === tot), 像全部通过. 现在写 "未判定"
+        <span className={s.chip} data-testid="gate-chip" data-judge={out.judge ? `${ok}/${tot}` : 'none'}
+          data-state={!out.judge ? 'warn' : ok === tot ? 'ready' : 'error'} data-stale={syncErr.data ? 'y' : undefined}
+          title={[syncErr.data ? `门禁数据刷新失败, 显示的是上一次成功的结果: ${syncErr.data}` : 'check_fx_profile (只读调用)',
+            out.judge ? `阈值来自参考: ${p?.ref_path} (${REF_SRC[p?.ref.source ?? 'none']})` : `没有阈值: 参考 ASS ${REF_SRC[p?.ref.source ?? 'none']}${p?.ref.error ? ` · ${p.ref.error}` : ''}`].join('\n')}>
+          FX {out.profile.fx_count} · 门禁 {out.judge ? `${ok}/${tot}` : `未判定 · ${GATE_WHY[p?.ref.source ?? 'none'] ?? '无参考'}`}{syncErr.data ? ' (旧)' : ''}
         </span>
       )}
       <PlacementPanel />
+      <RefPanel />
     </header>
   );
 }
