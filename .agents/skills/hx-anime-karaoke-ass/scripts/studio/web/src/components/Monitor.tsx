@@ -3,7 +3,7 @@ import { api, type PlaceBlock, type PlaceLine } from '../lib/api';
 import { clock } from '../lib/clock';
 import { createOctopus, type OctoHandle } from '../lib/octopus';
 import { inRanges } from '../lib/sel';
-import { useStore } from '../lib/store';
+import { syncFail, syncOk, useStore } from '../lib/store';
 import { filterAss } from '../lib/tracks';
 import { setSelection, selectLine } from '../lib/actions';
 import s from './Monitor.module.css';
@@ -183,6 +183,8 @@ export default function Monitor() {
 
   // 点顶栏 libass 标签 / 角标重载: octoGen +1, 两个实例都重建 (不自动重载, 免得崩溃循环被掩盖)
   const octoGen = useStore((x) => x.octoGen);
+  const assErr = useStore((x) => x.syncErr.ass);
+  const offline = useStore((x) => x.live === 'down');
   const reload = () => set({ octoGen: useStore.getState().octoGen + 1, octo: 'loading', octoErr: '' });
   const out = useOcto('out', cvOut, rOut, true, `g${octoGen}`);
   // 参考实例: 换容器 (并排 <-> 叠放) 时重建
@@ -196,7 +198,10 @@ export default function Monitor() {
   const outText = useRef<string | null>(null);
   const applyFilter = useCallback(async (reload: boolean) => {
     if (!out.inst.current) return;
-    if (reload || outText.current == null) outText.current = await api.assText('out');
+    if (reload || outText.current == null) {
+      try { outText.current = await api.assText('out'); syncOk('ass'); }
+      catch (e) { syncFail('ass', e); return; }   // 取不到就保留旧轨 (不重设), 顶栏报黄
+    }
     const st = useStore.getState();
     const f = filterAss(outText.current, st.vis, st.onlyUnits);
     out.inst.current?.setTrack(f.text);
@@ -267,7 +272,7 @@ export default function Monitor() {
   return (
     <div className={s.box} ref={box} data-testid="monitor" data-compare={compare} data-ab={abShow}
       data-kept={kept} data-ref-ready={ref.ready || undefined} data-preview={previewing || undefined}>
-      <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out"
+      <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out" data-stale={assErr || offline ? 'y' : undefined}
         onContextMenu={(e) => onCtx(e, rOut)}>
         {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-out" />}
         <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" data-testid="subs-out" data-halt={out.halt || undefined}
@@ -304,6 +309,13 @@ export default function Monitor() {
           <div className={s.halt} data-testid="halt-tag" data-which={out.halt ? (refInline && ref.halt ? 'both' : 'out') : 'ref'}
             data-below={compare !== 'off' || undefined} onClick={reload} title="点击重载 libass">
             {out.halt ? '字幕渲染已停' : '参考字幕渲染已停'}
+          </div>
+        )}
+        {!out.halt && !(refInline && ref.halt) && (assErr || offline) && (
+          // 监视器画的不是磁盘上最新的 out.ass (读失败保留了旧轨 / 断线收不到变化). 文字为主, 虚线框为辅
+          <div className={s.stale} data-testid="stale-tag" data-why={assErr ? 'error' : 'offline'} data-below={compare !== 'off' || undefined}
+            title={assErr ? `out.ass 读取失败, 画的是上一次成功的版本: ${assErr}` : '与服务断开, out.ass 的改动不会显示'}>
+            {assErr ? '字幕是旧版 · 刷新失败' : '未连接 · 字幕可能不是最新'}
           </div>
         )}
         {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? '参考 (static/music 参考 ASS)' : '成品 (out.ass)'}</div>}

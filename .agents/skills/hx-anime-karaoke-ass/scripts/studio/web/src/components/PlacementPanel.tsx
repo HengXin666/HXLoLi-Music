@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { Preset } from '../lib/api';
 import { applyPlacement, clearPreview, pickPlacement, refreshPlacement, samePreset } from '../lib/placement';
-import { useStore } from '../lib/store';
+import { syncFail, syncOk, useStore } from '../lib/store';
 import s from './PlacementPanel.module.css';
 
 const VN: Record<Preset['v'], string> = { top: '顶', middle: '中', bottom: '底' };
@@ -20,7 +20,9 @@ export default function PlacementPanel() {
   const cand = useStore((x) => x.placeCand);
   const open = useStore((x) => x.placeOpen);
   const set = useStore((x) => x.set);
-  useEffect(() => { if (open) void refreshPlacement(); }, [open]);
+  const placeErr = useStore((x) => x.syncErr.place);
+  // 打开时刷新; 成败同样记进 syncErr (原来是未处理的 rejection)
+  useEffect(() => { if (open) refreshPlacement().then(() => syncOk('place'), (e) => syncFail('place', e)); }, [open]);
   if (!open || !place) return null;
   const cur = place.current;
   const sel = cand ?? cur;
@@ -70,8 +72,9 @@ export default function PlacementPanel() {
           </div>
         </div>
       </div>
-      <div className={s.msg} data-testid="place-msg">
-        {running ? '生成器运行中, 完成后监视器自动刷新'
+      <div className={s.msg} data-testid="place-msg" data-stale={placeErr ? 'y' : undefined} title={placeErr || undefined}>
+        {placeErr ? `状态刷新失败, 下面可能是旧状态: ${placeErr.slice(0, 40)}`
+          : running ? '生成器运行中, 完成后监视器自动刷新'
           : place.frozen > 0 ? `有 ${place.frozen} 条冻结的 "好", 请走 accept 流程`
           : place.job.ok === false ? `上次失败, 配置未改: ${(place.job.error || '').slice(0, 60)}`
           : dirty ? place.note : '选一个位置即可在监视器预览'}

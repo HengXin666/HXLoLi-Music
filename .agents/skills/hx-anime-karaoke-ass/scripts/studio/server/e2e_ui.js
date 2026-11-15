@@ -1118,6 +1118,102 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await p.mouse.up();
   });
 
+  // ======================= 热更新 (HR): 只改 out.ass 的 mtime (内容不动), 服务端 watch 据此推 changed; 结束时还原 mtime =======================
+  const outAss = require('path').join(cfg.project, 'out.ass');
+  const mt0 = fs.statSync(outAss);
+  const touch = () => { const t = new Date(); fs.utimesSync(outAss, t, t); };
+  let assReq = 0;
+  p.on('request', (r) => { if (r.url().includes('/api/ass/out')) assReq++; });
+  const until = async (f, ms, msg) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await f()) return; await sleep(100); } throw new Error(msg); };
+  const chip = () => p.locator('[data-testid=sync-chip]');
+  await test('HR1', 'out.ass 在磁盘上变了: 监视器重取 out.ass, 无告警标签', async () => {
+    const n0 = assReq;
+    touch();
+    await until(() => assReq > n0, 6000, '6s 内监视器没重取 out.ass');
+    await sleep(800);
+    assert((await chip().count()) === 0, '不该有热更新告警标签');
+  });
+  await test('HR2', '热更新部分失败: lyrics 500 时监视器照样重载, 顶栏黄标签 "歌词/门禁未刷新"; out.ass 读失败保留旧轨并报; 点击重试恢复', async () => {
+    const e0 = errors.length;   // 各处 500 都必须被接住: 不许有未处理的 rejection (那就是又一个静默失败)
+    await p.route('**/api/lyrics', (r) => r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"HR2"}' }));
+    try {
+      const n0 = assReq;
+      touch();
+      await until(() => assReq > n0, 6000, 'lyrics 失败时监视器没重取 out.ass (仍被 lyrics 卡住)');
+      await p.waitForSelector('[data-testid=sync-chip][data-sync=stale]', { timeout: 6000 });
+      assert((await chip().getAttribute('data-keys')) === 'data', 'keys: ' + await chip().getAttribute('data-keys'));
+      assert((await chip().getAttribute('data-state')) === 'warn', '应为 warn 黄色');
+      assert((await chip().textContent()).trim() === '歌词/门禁未刷新 · 点击重试', 'chip 文字: ' + await chip().textContent());
+      // 就地标记 (带文字, 不只靠颜色): 歌词面板标题旁 + 门禁 chip
+      assert((await p.textContent('[data-testid=stale-lyrics]')).trim() === '上次刷新失败 · 旧版', '歌词面板没标旧版');
+      assert((await p.textContent('[data-testid=gate-chip]')).trim().endsWith('(旧)'), '门禁 chip 没标 (旧)');
+      assert((await p.locator('[data-testid=stale-tag]').count()) === 0, 'out.ass 已刷新, 监视器不该标旧');
+    } finally { await p.unroute('**/api/lyrics'); }
+    await p.route('**/api/ass/out', (r) => r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"HR2"}' }));
+    try {
+      const k0 = await S('s.monitorKept');
+      touch();
+      await until(async () => (await chip().getAttribute('data-keys', { timeout: 500 }).catch(() => '')) === 'ass', 6000, 'out.ass 500 后 keys 应只剩 ass (data 已刷新成功)');
+      assert((await chip().textContent()).trim() === '监视器字幕未刷新 · 点击重试', 'chip 文字: ' + await chip().textContent());
+      assert((await S('s.monitorKept')) === k0 && k0 > 0, '读失败时不该换掉旧轨');
+      assert((await p.textContent('[data-testid=stale-tag]')).trim() === '字幕是旧版 · 刷新失败', '监视器没标旧版');
+      assert((await p.getAttribute('[data-testid=frame-out]', 'data-stale')) === 'y', '画框没标 stale');
+      assert((await p.locator('[data-testid=stale-lyrics]').count()) === 0, '歌词已刷新成功, 不该再标旧');
+      assert(!(await p.textContent('[data-testid=gate-chip]')).includes('(旧)'), '门禁已刷新成功, 不该再标 (旧)');
+    } finally { await p.unroute('**/api/ass/out'); }
+    const n1 = assReq;
+    await chip().click();
+    await until(() => assReq > n1, 4000, '点击重试没重取 out.ass');
+    await p.waitForSelector('[data-testid=sync-chip]', { state: 'detached', timeout: 6000 });
+    assert((await p.locator('[data-testid=stale-tag]').count()) === 0, '重试成功后监视器还标着旧版');
+    // 标注刷新失败: 标注轨头写 "(旧)". 测试的批注文件在 cfg.tmp, 动它的 mtime 触发 review 变化
+    const rv = require('path').join(cfg.tmp, 'review.jsonl');
+    if (!fs.existsSync(rv)) fs.writeFileSync(rv, '');
+    const bump = () => { const t = new Date(Date.now() + 2000); fs.utimesSync(rv, t, t); };
+    const rname = p.locator('[data-track=review] [data-stale]');
+    await p.route('**/api/review', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"HR2"}' }) : r.continue()));
+    try {
+      bump();
+      await rname.waitFor({ timeout: 6000 });
+      assert((await rname.textContent()).trim() === '标注 (旧)', '标注轨头: ' + await rname.textContent());
+    } finally { await p.unroute('**/api/review'); }
+    bump();
+    await rname.waitFor({ state: 'detached', timeout: 6000 });
+    await p.waitForSelector('[data-testid=sync-chip]', { state: 'detached', timeout: 4000 });
+    // 位置状态刷新失败: 打开位置面板时 GET /api/placement 500 -> 面板提示行写明可能是旧状态
+    await p.route('**/api/placement', (r) => (r.request().method() === 'GET' ? r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"HR2"}' }) : r.continue()));
+    try {
+      await p.click('[data-testid=place-btn]');
+      await p.waitForSelector('[data-testid=place-msg][data-stale]', { timeout: 6000 });
+      assert((await p.textContent('[data-testid=place-msg]')).startsWith('状态刷新失败, 下面可能是旧状态'), '位置面板: ' + await p.textContent('[data-testid=place-msg]'));
+    } finally { await p.unroute('**/api/placement'); }
+    await p.click('[data-testid=place-btn]');   // 关
+    await p.click('[data-testid=place-btn]');   // 再开: 刷新成功, 提示消失
+    await p.waitForSelector('[data-testid=place-msg]:not([data-stale])', { timeout: 6000 });
+    await p.click('[data-testid=place-btn]');
+    await p.waitForSelector('[data-testid=sync-chip]', { state: 'detached', timeout: 4000 });
+    assert(errors.length === e0, '有未处理的错误: ' + errors.slice(e0).join(' | '));
+  });
+  await test('HR3', '连接断开: 顶栏 "未连接"; 断开期间 out.ass 改了不刷新; 重连后按 hello 补刷', async () => {
+    await p.evaluate(() => window.__hxWatch.drop());
+    await p.waitForSelector('[data-testid=sync-chip][data-sync=offline]', { timeout: 4000 });
+    assert((await chip().textContent()).trim() === '未连接 · 改动不会自动刷新', 'chip 文字: ' + await chip().textContent());
+    assert((await p.textContent('[data-testid=stale-lyrics]')).trim() === '未连接 · 可能不是最新', '歌词面板没标未连接');
+    assert((await p.textContent('[data-testid=stale-tag]')).trim() === '未连接 · 字幕可能不是最新', '监视器没标未连接');
+    const n0 = assReq;
+    touch();
+    await sleep(1500);
+    assert(assReq === n0, '断开时不该收到变化');
+    await p.evaluate(() => window.__hxWatch.release());
+    await until(() => assReq > n0, 6000, '重连后没按 hello 补刷 out.ass');
+    await p.waitForSelector('[data-testid=sync-chip]', { state: 'detached', timeout: 4000 });
+    assert((await p.locator('[data-testid=stale-lyrics], [data-testid=stale-tag]').count()) === 0, '重连后就地标记没消');
+    const n1 = assReq;
+    fs.utimesSync(outAss, mt0.atimeMs / 1000, mt0.mtimeMs / 1000);   // 还原 mtime
+    await until(() => assReq > n1, 6000, '还原 mtime 后没刷新');
+    await sleep(500);
+  });
+
   // ======================= libass 崩溃 / 无响应 (放最后: 会杀掉 worker, 用例内点重载恢复) =======================
   const ink = () => p.evaluate(() => { const c = document.querySelector('[data-testid=subs-out]'); const g = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < g.length; i += 4) if (g[i]) n++; return n; });
   const inkAt = async (t) => { await seek(t); await sleep(700); return ink(); };

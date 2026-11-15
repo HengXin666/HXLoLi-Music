@@ -18,6 +18,9 @@ const IDLE = 3000;
 
 export default function LyricsPanel() {
   const lines = useStore((x) => x.lines);
+  const staleErr = useStore((x) => x.syncErr.data);
+  const offline = useStore((x) => x.live === 'down');
+  const stale = !!staleErr || offline;
   const ix = useStore((x) => x.ix);
   const cur = useStore((x) => x.curLine);
   const ranges = useStore((x) => x.ranges);
@@ -223,8 +226,15 @@ export default function LyricsPanel() {
   };
 
   return (
-    <aside className={s.panel}>
+    <aside className={s.panel} data-stale={stale || undefined}>
       <div className={s.head}>歌词 <span className={s.dim}>{lines.length} 句</span>
+        {stale && (
+          // 歌词/门禁热更新失败或连接断开: 这里显示的不是最新. 就地标出来, 不只靠顶栏
+          <span className={s.stale} data-testid="stale-lyrics" data-why={staleErr ? 'error' : 'offline'}
+            title={staleErr ? `歌词刷新失败, 显示的是上一次成功的版本: ${staleErr}` : '与服务断开, 磁盘上的改动不会显示'}>
+            {staleErr ? '上次刷新失败 · 旧版' : '未连接 · 可能不是最新'}
+          </span>
+        )}
         <span className={s.grow} />
         <span className={s.mode} data-testid="lyrics-mode">{browse ? '浏览' : '跟随'}</span>
       </div>

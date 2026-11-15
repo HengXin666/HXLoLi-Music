@@ -33,7 +33,7 @@ def main(argv=None):
     srv = app.make_server(a.project, "127.0.0.1", port, review=os.path.join(tmp, "review.jsonl"))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     cfg = os.path.join(tmp, "cfg.json")
-    json.dump(dict(chrome=chrome, url="http://127.0.0.1:%d/" % port, tmp=tmp, only=[x for x in a.only.split(",") if x], shots=a.shots), open(cfg, "w"))
+    json.dump(dict(chrome=chrome, url="http://127.0.0.1:%d/" % port, tmp=tmp, project=os.path.abspath(a.project), only=[x for x in a.only.split(",") if x], shots=a.shots), open(cfg, "w"))
     r = subprocess.run(["node", os.path.join(HERE, a.js), pw, cfg], capture_output=True, text=True, timeout=1500)
     srv.shutdown()
     for l in r.stdout.splitlines():

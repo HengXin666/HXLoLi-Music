@@ -1,0 +1,259 @@
+{
+  "version": 2,
+  "mode": "diff",
+  "base": "c543ab0e85868c375595610a9695cd4d97166968",
+  "base_commit": "9f790c064d8390cd052c931326bf4ab935799441",
+  "head": null,
+  "changed": [
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_ui.js",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_ui.py",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/App.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/LyricsPanel.module.css",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/LyricsPanel.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.module.css",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/PlacementPanel.module.css",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/PlacementPanel.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.module.css",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/api.ts",
+    ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts"
+  ],
+  "deleted": [],
+  "issues": [
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_ui.js",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/server/e2e_ui.py",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/App.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/App.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/LyricsPanel.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/LyricsPanel.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/PlacementPanel.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/PlacementPanel.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/TopBar.tsx",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/api.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/api.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/api.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-09-karaoke-studio.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-09-karaoke-studio.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-11-karaoke-studio-track-visibility.md"
+      ]
+    },
+    {
+      "rule": "code-only-diff",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/lib/store.ts",
+      "line": 1,
+      "message": "代码已改动, 对应决策记录未同步修改: .agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md; 请审核",
+      "severity": "review",
+      "related": [
+        ".agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md"
+      ]
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/LyricsPanel.module.css",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Monitor.module.css",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/PlacementPanel.module.css",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    },
+    {
+      "rule": "resource-review",
+      "path": ".agents/skills/hx-anime-karaoke-ass/scripts/studio/web/src/components/Timeline.module.css",
+      "line": 1,
+      "message": "受保护资源已改动, 其格式不在 AST 支持范围内; 请审核对应决策及引用",
+      "severity": "review",
+      "related": []
+    }
+  ],
+  "ok": false
+}

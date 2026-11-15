@@ -178,6 +178,9 @@ export default function Timeline() {
   const dur = useStore((x) => x.duration);
   const view = useStore((x) => x.view);
   const vis = useStore((x) => x.vis);
+  const syncErr = useStore((x) => x.syncErr);
+  // 热更新失败的轨: 标注轨 <- review, MV 轨 <- edl. 轨头写 "(旧)"
+  const staleOf = (id: string) => (id === 'review' ? syncErr.review : id === 'mv' ? syncErr.edl : undefined);
   const trackH = useStore((x) => x.trackH);
   const collapsed = useStore((x) => x.collapsed);
   const explain = useStore((x) => x.explain);
@@ -626,7 +629,9 @@ export default function Timeline() {
               {r.members
                 ? <span className={s.hname} data-testid={`group-head-${r.group}`} style={{ cursor: 'pointer' }} title={`${GROUP_NAME[r.group!]}: 点击展开${r.auto ? ' (高度不够, 已自动折叠)' : ''}`}
                     onClick={() => set({ collapsed: { ...collapsed, [r.group!]: false } })}>▸ {r.group === 'fx' ? 'FX 0-8' : '字层'}</span>
-                : <span className={s.hname} title={r.def?.title ?? r.name}>{r.name}</span>}
+                : <span className={s.hname} data-stale={staleOf(r.id) ? 'y' : undefined}
+                    title={staleOf(r.id) ? `${r.def?.title ?? r.name}\n刷新失败, 显示的是上一次成功的版本: ${staleOf(r.id)}` : r.def?.title ?? r.name}>
+                    {r.name}{staleOf(r.id) ? ' (旧)' : ''}</span>}
               {r.id !== 'overview' && (
                 <span className={s.btns}>
                   {(filt || hasEye(r.def)) && <button data-act="eye" aria-pressed={eye} className={s.hb} title={r.id === 'mv' ? '显示视频 (关掉则监视器只画字幕)' : '显示'} onClick={() => toggle(r.id, 'eye', r.members)}><EyeIcon on={eye} /></button>}

@@ -32,3 +32,4 @@
 button:disabled { cursor: not-allowed; opacity: 0.5; }
 .msg { margin-top: 8px; color: var(--fg-1); font-size: 11px; min-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel[data-running] .msg { color: var(--warn); }
+.msg[data-stale] { color: var(--warn); }

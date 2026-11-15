@@ -53,3 +53,6 @@
   border: 0; border-radius: 14px; padding: 4px 14px; background: var(--accent); color: #fff; cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
+/* 歌词不是最新 (热更新失败 / 断线): 文字说明 + 黄色内框. 文字是主信号 (色弱/截图也能看懂), 颜色只是辅助 */
+.panel[data-stale] { box-shadow: inset 0 0 0 1px var(--warn); }
+.stale { color: var(--warn); font-size: 11px; white-space: nowrap; }

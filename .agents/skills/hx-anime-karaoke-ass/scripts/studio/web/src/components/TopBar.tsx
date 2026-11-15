@@ -1,6 +1,8 @@
-import { useStore } from '../lib/store';
+import { sync, useStore } from '../lib/store';
 import PlacementPanel from './PlacementPanel';
 import s from './Bars.module.css';
+
+const SYNC_LABEL: Record<string, string> = { ass: '监视器字幕', data: '歌词/门禁', review: '标注', edl: 'EDL', place: '位置状态' };
 
 const fmtT = (t: number) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, '0')}`;
 
@@ -17,6 +19,9 @@ export default function TopBar() {
   const place = useStore((x) => x.place);
   const placeOpen = useStore((x) => x.placeOpen);
   const set = useStore((x) => x.set);
+  const live = useStore((x) => x.live);
+  const syncErr = useStore((x) => x.syncErr);
+  const errKeys = Object.keys(syncErr);
   const ok = out?.judge?.filter((r) => r.state === 'OK').length ?? 0;
   const tot = out?.judge?.length ?? 0;
   const mv = !edl || edl.segments.length === 0 ? '黑底' : edl.source === 'file' ? 'EDL' : '原画';
@@ -50,14 +55,28 @@ export default function TopBar() {
           {fontsMissing.length ? `字形可能不对 · ${fontsMissing.length} 个字体未找到` : `字体文件读不出 ${fontsUnparsed.length} 个`}
         </span>
       )}
+      {live === 'down' ? (
+        // 文件变化推送断了: 磁盘上的改动不会进界面. 重连后按服务端状态自动补刷
+        <span className={s.chip} data-testid="sync-chip" data-state="warn" data-sync="offline"
+          title="与 studio 服务的连接断开, 正在重连. 期间 out.ass / 标注 / EDL 的改动不会显示; 重连后自动补刷">
+          未连接 · 改动不会自动刷新
+        </span>
+      ) : errKeys.length > 0 && (
+        <button className={s.chip} data-testid="sync-chip" data-state="warn" data-sync="stale" data-keys={errKeys.join(',')}
+          title={['以下内容热更新失败, 界面显示的还是旧版:', ...errKeys.map((k) => `  ${SYNC_LABEL[k] ?? k}: ${syncErr[k]}`), '点击重试'].join('\n')}
+          onClick={() => sync.retry()}>
+          {SYNC_LABEL[errKeys[0]] ?? errKeys[0]}{errKeys.length > 1 ? ` 等 ${errKeys.length} 项` : ''}未刷新 · 点击重试
+        </button>
+      )}
       <span className={s.grow} />
       <button className={s.chip} data-testid="place-btn" aria-expanded={placeOpen} data-state={place?.job.running ? 'busy' : undefined}
         onClick={() => set({ placeOpen: !placeOpen })} title="歌词位置预设">
         位置{place?.job.running ? ' · 生成中' : ''}
       </button>
       {out && (
-        <span className={s.chip} data-state={ok === tot ? 'ready' : 'error'} title="check_fx_profile (只读调用)">
-          FX {out.profile.fx_count} · 门禁 {ok}/{tot}
+        <span className={s.chip} data-testid="gate-chip" data-state={ok === tot ? 'ready' : 'error'} data-stale={syncErr.data ? 'y' : undefined}
+          title={syncErr.data ? `门禁数据刷新失败, 显示的是上一次成功的结果: ${syncErr.data}` : 'check_fx_profile (只读调用)'}>
+          FX {out.profile.fx_count} · 门禁 {ok}/{tot}{syncErr.data ? ' (旧)' : ''}
         </span>
       )}
       <PlacementPanel />

@@ -24,3 +24,8 @@
 .prevNote b { font-size: 1.15em; letter-spacing: 0.06em; }
 .prevNote[data-at='top'] { top: 0; }
 .prevNote[data-at='bottom'] { bottom: 0; } /* 预览顶部位置时提示条让到底部, 不压歌词 */
+/* 字幕不是最新: 角标文字 (主) + 虚线框 (辅, 与预览的实线框区分). 这里要比 .halt 醒目: 画面有字, 人会以为是新的 */
+.frame[data-stale] { outline: 2px dashed var(--warn); outline-offset: -2px; }
+.stale { position: absolute; left: 8px; top: 8px; z-index: 2; font-size: 11px; padding: 1px 7px; border-radius: 3px;
+  background: rgba(0, 0, 0, 0.7); color: var(--warn); white-space: nowrap; pointer-events: none; }
+.stale[data-below] { top: 28px; }

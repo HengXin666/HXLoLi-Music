@@ -39,6 +39,10 @@ interface S {
   fontsMissing: FontMissing[];   // 字形可能不对 (后备字体), 与 octo 状态无关, 不算失败
   fontsUnparsed: string[];
   assRev: number; // out.ass 热重载计数
+  // 热更新: live = /api/watch 连接状态 (down = 改动不会自动刷新);
+  // syncErr = 热更新各环节最近一次失败 (ass 监视器字幕 / data 歌词+门禁 / review / edl / place), 该环节下次成功即删
+  live: 'connecting' | 'up' | 'down';
+  syncErr: Record<string, string>;
   hover: number | null; // 时间线悬停时间
   hoverLine: number | null; // 歌词浏览模式悬停句 (lines 下标)
   // 选区
@@ -97,6 +101,8 @@ export const useStore = create<S>((set) => ({
   fontsMissing: [],
   fontsUnparsed: [],
   assRev: 0,
+  live: 'connecting',
+  syncErr: {},
   hover: null,
   hoverLine: null,
   caret: null,
@@ -157,6 +163,19 @@ export function fmtTime(t: number, cs = true): string {
   const s = t - m * 60;
   return `${String(m).padStart(2, '0')}:${cs ? s.toFixed(2).padStart(5, '0') : String(Math.floor(s)).padStart(2, '0')}`;
 }
+
+/** 热更新某环节失败 / 成功. 失败不清旧数据 (旧的总比空的好), 只让顶栏亮黄标签说 "这块没刷新". */
+export function syncFail(k: string, e: unknown) {
+  const msg = String((e as Error)?.message ?? e);
+  console.warn(`[sync] ${k} 刷新失败:`, msg);
+  useStore.setState((s) => ({ syncErr: { ...s.syncErr, [k]: msg } }));
+}
+export function syncOk(k: string) {
+  if (!(k in useStore.getState().syncErr)) return;
+  useStore.setState((s) => { const e = { ...s.syncErr }; delete e[k]; return { syncErr: e }; });
+}
+/** 顶栏 "点击重试": App 注册的全量补刷 */
+export const sync = { retry: () => {} };
 
 let toastTimer = 0;
 export function toast(msg: string) {

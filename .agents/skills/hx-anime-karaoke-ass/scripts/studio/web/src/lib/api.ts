@@ -91,22 +91,48 @@ export const api = {
     if (!r.ok) throw new Error((b as { error?: string }).error || `placement ${r.status}`);
     return b as { started: boolean; preset: Preset };
   },
-  assText: (which: 'out' | 'ref') => fetch(`/api/ass/${which}`, { cache: 'no-cache' }).then((r) => r.text()),
+  // 不查 r.ok 的话 404/500 的错误 JSON 会被当成字幕喂给 libass (画面空白, 无任何提示)
+  assText: async (which: 'out' | 'ref') => {
+    const r = await fetch(`/api/ass/${which}`, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(`/api/ass/${which} ${r.status}`);
+    return r.text();
+  },
 };
 
-export function watch(onChange: (what: string[]) => void): () => void {
+/** 服务端文件变化推送. onConn: 连上 true / 断开 false (断开期间的改动收不到, 界面要说).
+ *  重连时服务端先发 hello{state}: 与断开前最后一次 state 比对, 有变化的项当作 changed 补发, 免得服务器重启期间改过的 out.ass 永不刷新. */
+export function watch(onChange: (what: string[]) => void, onConn?: (up: boolean) => void): () => void {
   let ws: WebSocket | null = null;
   let stop = false;
+  let held = false;   // 测试钩子: 断开后暂不重连
   let retry = 0;
+  let last: Record<string, number> | null = null;
   const open = () => {
-    if (stop) return;
-    ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/watch`);
-    ws.onmessage = (m) => {
-      retry = 0;
-      const d = JSON.parse(m.data as string);
-      if (d.type === 'changed') onChange(d.what as string[]);
+    if (stop || held) return;
+    const w = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/watch`);
+    ws = w;
+    w.onopen = () => { retry = 0; onConn?.(true); };
+    w.onmessage = (m) => {
+      let d: { type?: string; what?: string[]; state?: Record<string, number> };
+      try { d = JSON.parse(m.data as string); } catch { return; }
+      if (d.type !== 'hello' && d.type !== 'changed') return;
+      const prev = last;
+      if (d.state) last = d.state;
+      const what = d.type === 'changed' ? d.what ?? [] : prev && d.state ? Object.keys(d.state).filter((k) => d.state![k] !== prev[k]) : [];
+      if (what.length) onChange(what);
     };
-    ws.onclose = () => { if (!stop) setTimeout(open, Math.min(5000, 500 * 2 ** retry++)); };
+    w.onclose = () => {
+      if (ws !== w) return;
+      ws = null;
+      if (stop) return;
+      onConn?.(false);
+      if (!held) setTimeout(open, Math.min(5000, 500 * 2 ** retry++));
+    };
+  };
+  // e2e HR3 用: drop() 断开且不自动重连, release() 放开重连. 不影响正常使用
+  (window as unknown as { __hxWatch: unknown }).__hxWatch = {
+    drop: () => { held = true; ws?.close(); },
+    release: () => { if (held) { held = false; open(); } },
   };
   open();
   return () => { stop = true; ws?.close(); };

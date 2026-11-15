@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { shortcut } from '../lib/actions';
 import { api, watch } from '../lib/api';
 import { clock } from '../lib/clock';
-import { lineAt, useStore } from '../lib/store';
+import { lineAt, sync, syncFail, syncOk, useStore } from '../lib/store';
 import { onPlacementChanged, refreshPlacement } from '../lib/placement';
 import ContextMenu from './ContextMenu';
 import Inspector from './Inspector';
@@ -77,18 +77,25 @@ export default function App() {
       refreshPlacement().catch(() => undefined);
       document.body.dataset.ready = '1';
     })().catch((e) => { document.body.dataset.ready = 'error'; console.error(e); });
-    const off = watch(async (what) => {
+    // 每个环节各自 try: 一处失败不拖累别处, 失败进 syncErr 让顶栏报黄 (原来是未处理的 rejection, 界面静默停在旧版)
+    const step = async (k: string, fn: () => Promise<unknown>) => {
+      try { await fn(); syncOk(k); } catch (e) { syncFail(k, e); }
+    };
+    const refresh = async (what: string[]) => {
+      // 监视器只依赖 out.ass 本身: 先发 assRev, 不等 lyrics/profile (它们 500 时原来会把监视器卡在旧 out.ass)
+      if (what.includes('out')) set({ assRev: useStore.getState().assRev + 1 });
       if (what.includes('out') || what.includes('manifest')) {
-        const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]);
-        set({ lines, out, assRev: useStore.getState().assRev + 1 });
+        await step('data', async () => { const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]); set({ lines, out }); });
         api.clips().then((r) => set({ clips: r.clips, beats: r.beats })).catch(() => undefined);
         // out.ass 换了 \fn 字体也会变: 只刷字体标签, 不换 project (换 project 会重建 libass 实例)
         api.project().then((p) => set({ fontsMissing: p.fonts_missing ?? [], fontsUnparsed: p.fonts_unparsed ?? [] })).catch(() => undefined);
       }
-      if (what.includes('review')) set({ reviews: await api.reviews() });
-      if (what.includes('edl')) set({ edl: await api.edl() });
-      if (what.includes('job') || what.includes('placement')) await onPlacementChanged();
-    });
+      if (what.includes('review')) await step('review', async () => set({ reviews: await api.reviews() }));
+      if (what.includes('edl')) await step('edl', async () => set({ edl: await api.edl() }));
+      if (what.includes('job') || what.includes('placement')) await step('place', onPlacementChanged);
+    };
+    sync.retry = () => { void refresh(['out', 'manifest', 'review', 'edl', 'placement']); };
+    const off = watch((what) => { void refresh(what); }, (up) => set({ live: up ? 'up' : 'down' }));
     return () => { live = false; off(); };
   }, [set]);
 

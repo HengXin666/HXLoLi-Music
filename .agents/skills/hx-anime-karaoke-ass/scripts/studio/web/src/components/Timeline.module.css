@@ -51,3 +51,4 @@
   pointer-events: auto; cursor: ns-resize; opacity: 0; transition: opacity 0.15s; z-index: 2;
 }
 .tl:hover .vbar, .vbar:active { opacity: 1; }
+.hname[data-stale] { color: var(--warn); } /* 文字 "(旧)" 是主信号, 颜色辅助 */
