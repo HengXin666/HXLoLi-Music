@@ -75,3 +75,6 @@ test/dist/
 /timing.json
 /out.ass
 
+
+# hxoa 客户端本地登录态 (含明文令牌)
+.hxoa/
