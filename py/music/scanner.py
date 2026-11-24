@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .config import (
     STATIC_MUSIC_DIR, AUDIO_EXTENSIONS, FONT_DOWNLOAD_MAP, NON_ANIME_DIRS,
+    COVER_EXTENSIONS,
 )
 from .cache import file_md5, get_file_id, path_to_url
 from .metadata import extract_metadata, extract_cover_from_audio, find_matching_cover
@@ -29,6 +30,26 @@ def anime_of(audio_path: Path) -> dict | None:
     if len(parts) < 2 or parts[0] in NON_ANIME_DIRS:
         return None
     return {"title": parts[0]}
+
+
+DIR_COVER_NAMES = ('cover', 'folder')
+
+
+def dir_covers_of(audio_path: Path) -> dict[str, str]:
+    """
+    .agents/notes/implemented/feature/2026-11-25-playlist-dir-covers.md
+    歌曲所在的每一级目录 (static/music/ 之下, 不含根) 里的 cover.* / folder.*: {相对 static/music/ 的目录路径: 图片 URL}.
+    """
+    out: dict[str, str] = {}
+    rel_dirs = audio_path.parent.relative_to(STATIC_MUSIC_DIR).parts
+    for depth in range(1, len(rel_dirs) + 1):
+        d = STATIC_MUSIC_DIR.joinpath(*rel_dirs[:depth])
+        for name in DIR_COVER_NAMES:
+            hit = next((d / (name + ext) for ext in sorted(COVER_EXTENSIONS) if (d / (name + ext)).is_file()), None)
+            if hit:
+                out['/'.join(rel_dirs[:depth])] = path_to_url(hit)
+                break
+    return out
 
 
 def scan_music_dir() -> list[dict]:
@@ -85,6 +106,9 @@ def scan_music_dir() -> list[dict]:
             "audioUrl": path_to_url(audio_path),
             "anime": anime_of(audio_path),
         }
+        dir_covers = dir_covers_of(audio_path)
+        if dir_covers:
+            track["dirCovers"] = dir_covers
 
         if ass_path:
             # Agent Notes: KFX 质量红线（静态拦截）
