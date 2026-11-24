@@ -32,6 +32,23 @@ def anime_of(audio_path: Path) -> dict | None:
     return {"title": parts[0]}
 
 
+UNKNOWN_ARTIST = 'Unknown'
+NAME_SEP = ' - '
+
+
+def split_artist_title(title: str, artist: str) -> tuple[str, str]:
+    """
+    .agents/notes/implemented/feature/2026-11-25-playlist-artist-title-split.md
+    标签里没有歌手时, 文件名 (此时就是 title) 按 "歌手 - 歌名" 拆开; 有歌手标签或标题里没有 " - " 的原样返回.
+    """
+    if artist.strip() and artist.strip() != UNKNOWN_ARTIST:
+        return title, artist
+    left, sep, right = title.partition(NAME_SEP)
+    if not sep or not left.strip() or not right.strip():
+        return title, artist
+    return right.strip(), left.strip()
+
+
 DIR_COVER_NAMES = ('cover', 'folder')
 
 
@@ -99,10 +116,11 @@ def scan_music_dir() -> list[dict]:
         local_fonts = find_fonts_in_dir(audio_path.parent)
         all_fonts = sorted(set(global_fonts + local_fonts))
 
+        title, artist = split_artist_title(meta["title"], meta["artist"])
         track = {
             "id": get_file_id(audio_path),
-            "title": meta["title"],
-            "artist": meta["artist"],
+            "title": title,
+            "artist": artist,
             "audioUrl": path_to_url(audio_path),
             "anime": anime_of(audio_path),
         }
