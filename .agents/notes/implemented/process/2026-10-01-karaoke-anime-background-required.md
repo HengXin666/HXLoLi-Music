@@ -52,3 +52,9 @@ validate_ass.py 照样通过，只有成片「缺内涵」，而这是没有机�
 - `anime.notes.md` 直接解释了此前的设计选择为何成立（比翼=成对、ED 反向的偶像风），
   这些理由此前只存在于 `make_ass.py` 的注释里。
 - 抓取失败时 `fetch_anime_bg.py` 要求 `--register --why`，把「为什么没查成」写下来，而不是静默跳过。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.

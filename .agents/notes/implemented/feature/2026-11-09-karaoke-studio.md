@@ -20,7 +20,7 @@ Decision-ID: karaoke-studio
 ## Decision
 
 - 新建 `scripts/studio/`, 取代 `scripts/station/` (已删, 未曾入库).
-- server 为标准库 HTTP, 只读产物, 只写工程内 `review.jsonl` / `mv.edl.json`; 标注走 `POST /api/review`.
+- server 为标准库 HTTP, 只读产物, 只写工程内 `review.jsonl` / `mv.edl.json`; 标注走 `POST /api/review`. 候选 / 冻结不在服务进程里改工程, 由 `/api/loop/*` 后台调 `accept.py` (决策见 `.agents/notes/implemented/feature/2026-11-17-karaoke-station-loop.md`). 片源、偏移、字身层、对比对象都从工程元数据读, 不带某首歌的默认值.
 - web 为 React + 定制版 libass (系统 libass 会静默退化 `\1img` 等标签), 按轨分层显示, 可叠参考对比.
 - 事件读写复用 `scripts/assdoc/` (见 `.agents/notes/implemented/feature/2026-11-06-karaoke-preview-station.md`).
 

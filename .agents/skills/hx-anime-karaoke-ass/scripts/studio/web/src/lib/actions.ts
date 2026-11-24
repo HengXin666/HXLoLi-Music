@@ -34,6 +34,18 @@ export async function reloadRef() {
   useStore.setState({ project: p, out, ref });
 }
 
+/**
+ * 看, 挑, 改, 证: 标注状态 / 候选 / 对比对象. 服务端旧版没有 /api/loop 时静默 (面板显示载入中)
+ * Agent Notes: .agents/notes/implemented/feature/2026-11-17-karaoke-station-loop.md
+ */
+export async function reloadLoop() {
+  const st = await api.loop();
+  useStore.setState({ loopState: st });
+}
+
+/** 对比对象的人话: 参考 ASS 在时是参考; 没有参考时自动退到上一版或候选 (服务端 loop.py) */
+export const cmpName = (p: { cmp?: { label: string }; ref_ass: string | null } | null | undefined) => (p?.cmp ? p.cmp.label : p?.ref_ass ? '参考' : '无');
+
 /** 参考来源的人话 (界面各处共用, 带文字不只靠颜色) */
 export const REF_SRC: Record<string, string> = { manual: '手动指定', playlist: 'playlist.json', unique: '唯一同名', ambiguous: '未定', error: '出错', none: '无' };
 export const baseName = (p: string | null | undefined) => (p ?? '').split(/[\\/]/).pop() ?? '';  // 服务端 relpath 在 Windows 上是反斜杠
@@ -260,7 +272,9 @@ export function menuItems(): MEntry[] {
   const s = S();
   const has = !!s.ranges.length;
   const noSel = has ? false : '没有选区: 先在歌词里选字, 或右键时间线片段';
-  const noRef = s.project?.ref_ass ? false : s.project?.ref?.error ? `参考 ASS ${REF_SRC[s.project.ref.source]}: ${s.project.ref.error}` : '没有参考 ASS';
+  // 对比对象: 参考 ASS, 没有参考时退到上一版 / 候选 (服务端给 ref_ass). 三者都没有才停用
+  const noRef = s.project?.ref_ass ? false : s.project?.ref?.error ? `参考 ASS ${REF_SRC[s.project.ref.source]}: ${s.project.ref.error}` : '没有参考 ASS, 也没有上一版或候选';
+  const cn = cmpName(s.project);
   const nEv = (s.explain || []).reduce((a, it) => a + it.n, 0) + (s.menu?.hits?.length ?? 0);
   const anySolo = (ids: readonly string[]) => FILTER_IDS.every((t) => !!s.vis[t]?.solo === ids.includes(t));
   return [
@@ -281,8 +295,8 @@ export function menuItems(): MEntry[] {
     { id: 'redo', label: '换一个构想', kbd: 'R', disabled: noSel, run: () => review('redo') },
     'sep',
     {
-      id: 'compare', label: '与参考对比', disabled: noRef, sub: [
-        { id: 'cmp:ab', label: s.compare === 'ab' ? `A/B 切换 (现在: ${s.abShow === 'ref' ? '参考' : 'out'})` : 'A/B 切换', checked: s.compare === 'ab', run: () => setCompare('ab') },
+      id: 'compare', label: `与${noRef ? '参考' : cn}对比`, disabled: noRef, sub: [
+        { id: 'cmp:ab', label: s.compare === 'ab' ? `A/B 切换 (现在: ${s.abShow === 'ref' ? cn : 'out'})` : 'A/B 切换', checked: s.compare === 'ab', run: () => setCompare('ab') },
         { id: 'cmp:wipe', label: '划变对比', checked: s.compare === 'wipe', run: () => setCompare('wipe') },
         { id: 'cmp:side', label: '左右并排', checked: s.compare === 'side', run: () => setCompare('side') },
       ],

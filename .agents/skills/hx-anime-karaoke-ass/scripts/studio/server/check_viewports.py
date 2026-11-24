@@ -8,9 +8,9 @@
   - 除 [data-scroll-ok] 两处外, 任何元素内部溢出可滚
   - 每块 canvas[data-hidpi]: canvas.width == round(CSS 宽 x DPR) (允许 devicePixelContentBox 的 ±1 取整差), 高同理
   - 时间线文字: DOM 文字层 (不在画布上), 统计数量与字号
-  - libass 就绪, 并在 42s 处取监视器画布非透明像素数 (说明定制 libass 真在画)
+  - libass 就绪, 并在一句歌词中间 (工程数据里第一句起点 >= 20s 的句; 原来写死 42s, 只对 オンリー 成立) 取监视器画布非透明像素数 (说明定制 libass 真在画)
 用法:
-  python3 scripts/studio/server/check_viewports.py --project dev/无职转生/オンリー [--shots <dir>] [--json out.json]
+  python3 scripts/studio/server/check_viewports.py --project dev/<番>/<歌> [--shots <dir>] [--json out.json]
 服务在本进程内起 (线程), 跑完即停; 不常驻.
 """
 import argparse, json, os, subprocess, sys, tempfile, threading
@@ -42,7 +42,7 @@ const { chromium } = req('playwright');
     await p.waitForFunction(() => document.body.dataset.ready, null, { timeout: 30000 });
     await p.waitForFunction(() => /就绪|失败|无/.test(document.querySelector('header')?.textContent || ''), null, { timeout: 30000 }).catch(() => {});
     await p.evaluate(() => new Promise(r => setTimeout(r, 400)));
-    // 定位到 42s 并等 libass 出帧
+    // 定位到 cfg.t (一句歌词中间) 并等 libass 出帧
     await p.evaluate(() => { const a = document.querySelector('[data-testid=play]'); return a ? 1 : 0; });
     await p.mouse.click(0, 0).catch(() => {});
     await p.evaluate(async () => {
@@ -53,7 +53,7 @@ const { chromium } = req('playwright');
       // 通过时间线换算点击 seek 太绕: 直接走 window.__clock 不存在, 用音频元素
       const audios = [...document.querySelectorAll('audio')];
       return audios.length;
-    }, 42);
+    }, cfg.t);
     const m = await p.evaluate(async () => {
       const de = document.documentElement, bd = document.body;
       const page = { iw: innerWidth, ih: innerHeight, dsh: de.scrollHeight, dsw: de.scrollWidth, bsh: bd.scrollHeight, bsw: bd.scrollWidth };
@@ -78,7 +78,7 @@ const { chromium } = req('playwright');
       const header = document.querySelector('header')?.textContent || '';
       return { page, native, overflow, canv, tlText: texts.length, tlFont: fs, header };
     });
-    // seek 42s: 点击时间线对应位置
+    // seek cfg.t: 点击时间线对应位置
     const seek = await p.evaluate(async () => {
       const lane = document.querySelector('[data-hidpi=timeline-static]').parentElement;
       const r = lane.getBoundingClientRect();
@@ -87,7 +87,7 @@ const { chromium } = req('playwright');
     const dur = await p.evaluate(() => { const t = document.querySelector('[data-testid=play]')?.parentElement?.textContent || ''; return t; });
     const mm = /\/ (\d+):(\d+)/.exec(dur);
     const total = mm ? (+mm[1]) * 60 + (+mm[2]) : 230;
-    await p.mouse.click(seek.x + seek.w * (42 / total), seek.y + 60);
+    await p.mouse.click(seek.x + seek.w * (cfg.t / total), seek.y + 60);
     await p.evaluate(() => new Promise(r => setTimeout(r, 1500)));
     const ink = await p.evaluate(() => {
       const c = document.querySelector('canvas[data-hidpi=monitor]');
@@ -123,7 +123,11 @@ def main(argv=None):
         os.makedirs(a.shots, exist_ok=True)
     tmp = tempfile.mkdtemp(prefix="hxstudio-")
     cfg = os.path.join(tmp, "cfg.json")
-    json.dump(dict(chrome=chrome, url="http://127.0.0.1:%d/" % port, viewports=VIEWPORTS, dprs=DPRS,
+    lines = [l for l in app.PROJECT.lyrics_cached() if l.get("t")]
+    pick = next((l for l in lines if l["t"][0] >= 20), lines[0] if lines else None)
+    t = round((pick["t"][0] + pick["t"][1]) / 2, 2) if pick else 42.0
+    print("取样时刻 %.2fs (%s)" % (t, pick and pick.get("label")))
+    json.dump(dict(chrome=chrome, url="http://127.0.0.1:%d/" % port, viewports=VIEWPORTS, dprs=DPRS, t=t,
                    shots=os.path.abspath(a.shots) if a.shots else None), open(cfg, "w"))
     js = os.path.join(tmp, "run.js")
     open(js, "w").write(NODE)

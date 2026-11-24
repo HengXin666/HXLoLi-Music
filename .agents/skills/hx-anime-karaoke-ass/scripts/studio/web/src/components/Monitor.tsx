@@ -1,3 +1,4 @@
+import { withBase } from '../lib/base';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, type PlaceBlock, type PlaceLine } from '../lib/api';
 import { clock } from '../lib/clock';
@@ -121,29 +122,49 @@ function usePlacementPreview(src: React.RefObject<HTMLCanvasElement | null>, dst
   }, [lines, src, dst]);
 }
 
+/**
+ * 视频跟时钟: 逐帧按 EDL 对齐, 播放状态一变 (clock.subscribeState) 无条件同步, 暂停时硬停.
+ * Agent Notes: 暂停后视频不停 (逐帧回调只在 t 变化时触发)
+ * .agents/notes/implemented/bug-fix/2026-11-19-studio-pause-video-sync.md
+ */
 function useVideoSync(vid: React.RefObject<HTMLVideoElement | null>) {
   const edl = useStore((x) => x.edl);
-  useEffect(() => clock.subscribe((t) => {
+  useEffect(() => {
+    const sync = (t: number) => {
+      const v = vid.current;
+      if (!v) return;
+      const seg = edl?.segments.find((g) => t >= g.t0 && (g.t1 == null || t < g.t1));
+      const want = seg ? seg.src_t0 + (t - seg.t0) : -1;
+      const inRange = seg && want >= 0 && (!Number.isFinite(v.duration) || want < v.duration - 0.05);
+      v.style.visibility = inRange ? 'visible' : 'hidden';
+      if (!inRange) { if (!v.paused) v.pause(); return; }
+      // 声音只来自 clock 的 song.mp3. 视频 (片源自带同一首歌, 比 song 晚 0.73s) 必须静音:
+      // React 的 muted 只设属性不写 attribute, 某些浏览器/换 src 后会丢, 这里每帧兜底, 再把音量压到 0
+      if (!v.muted) v.muted = true;
+      if (v.volume !== 0) v.volume = 0;
+      v.playbackRate = clock.audio.playbackRate;
+      if (clock.playing) {
+        if (v.paused) void v.play().catch(() => undefined);
+        if (Math.abs(v.currentTime - want) > 0.2) v.currentTime = want;
+      } else {
+        if (!v.paused) v.pause();
+        if (Math.abs(v.currentTime - want) > 0.03) v.currentTime = want;
+      }
+    };
+    const offT = clock.subscribe(sync);
+    // 暂停/播放不能只靠逐帧回调 (t 不变就没有回调): 状态一变就无条件同步一次, 暂停时先硬停视频.
+    // 视频自己的 play 事件 (浏览器恢复、上一次 play() 的 promise 晚到) 也拉回到时钟状态.
+    const offS = clock.subscribeState((playing) => {
+      const v = vid.current;
+      if (v && !playing && !v.paused) v.pause();
+      sync(clock.t());
+    });
     const v = vid.current;
-    if (!v) return;
-    const seg = edl?.segments.find((g) => t >= g.t0 && (g.t1 == null || t < g.t1));
-    const want = seg ? seg.src_t0 + (t - seg.t0) : -1;
-    const inRange = seg && want >= 0 && (!Number.isFinite(v.duration) || want < v.duration - 0.05);
-    v.style.visibility = inRange ? 'visible' : 'hidden';
-    if (!inRange) { if (!v.paused) v.pause(); return; }
-    // 声音只来自 clock 的 song.mp3. 视频 (片源自带同一首歌, 比 song 晚 0.73s) 必须静音:
-    // React 的 muted 只设属性不写 attribute, 某些浏览器/换 src 后会丢, 这里每帧兜底, 再把音量压到 0
-    if (!v.muted) v.muted = true;
-    if (v.volume !== 0) v.volume = 0;
-    v.playbackRate = clock.audio.playbackRate;
-    if (clock.playing) {
-      if (v.paused) void v.play().catch(() => undefined);
-      if (Math.abs(v.currentTime - want) > 0.2) v.currentTime = want;
-    } else {
-      if (!v.paused) v.pause();
-      if (Math.abs(v.currentTime - want) > 0.03) v.currentTime = want;
-    }
-  }), [edl, vid]);
+    const guard = () => { if (!clock.playing && v && !v.paused) v.pause(); };
+    v?.addEventListener('play', guard);
+    v?.addEventListener('playing', guard);
+    return () => { offT(); offS(); v?.removeEventListener('play', guard); v?.removeEventListener('playing', guard); };
+  }, [edl, vid]);
 }
 
 export default function Monitor() {
@@ -158,7 +179,9 @@ export default function Monitor() {
   const assRev = useStore((x) => x.assRev);
   const compare = useStore((x) => x.compare);
   // 角标写明参考是哪份文件 + 怎么定的 (原来只写 "参考")
-  const refName = useStore((x) => `${baseName(x.project?.ref_path)} · ${REF_SRC[x.project?.ref?.source ?? 'none']}`);
+  // 没有参考 ASS 时对比对象是上一版或候选 (服务端 cmp), 角标写明是哪一种
+  const refName = useStore((x) => (x.project?.cmp && x.project.cmp.kind !== 'ref' ? `${x.project.cmp.label} · ${baseName(x.project?.ref_path)}` : `${baseName(x.project?.ref_path)} · ${REF_SRC[x.project?.ref?.source ?? 'none']}`));
+  const cmpWord = useStore((x) => (x.project?.cmp && x.project.cmp.kind !== 'ref' ? x.project.cmp.label : '参考'));
   const abShow = useStore((x) => x.abShow);
   const wipe = useStore((x) => x.wipe);
   const vis = useStore((x) => x.vis);
@@ -273,7 +296,7 @@ export default function Monitor() {
     el.addEventListener('pointerup', up);
   };
 
-  const src = project?.video && edl && edl.segments.length ? `/media/${edl.segments[0].src}` : null;
+  const src = project?.video && edl && edl.segments.length ? withBase(`/media/${edl.segments[0].src}`) : null;
   const showOut = !(compare === 'ab' && abShow === 'ref');
   const outClip = compare === 'wipe' ? `inset(0 ${((1 - wipe) * 100).toFixed(2)}% 0 0)` : undefined;
   const refClip = compare === 'wipe' ? `inset(0 0 0 ${(wipe * 100).toFixed(2)}%)` : undefined;
@@ -285,6 +308,7 @@ export default function Monitor() {
       <div className={s.frame} style={{ left: rOut.x, top: rOut.y, width: rOut.w, height: rOut.h }} data-testid="frame-out" data-stale={assErr || offline ? 'y' : undefined}
         onContextMenu={(e) => onCtx(e, rOut)}>
         {src && <video ref={vidOut} className={s.video} src={src} muted playsInline preload="auto" style={mvStyle} data-mv-off={!mvOn || undefined} data-testid="video-out" />}
+        {!src && <div className={s.noVideo} data-testid="no-video"><span>{project?.static ? '发布库 · 只渲染字幕' : '没有片源 · 只渲染字幕'}</span></div>}
         <canvas ref={cvOut} className={s.subs} data-hidpi="monitor" data-testid="subs-out" data-halt={out.halt || undefined}
           style={{ visibility: showOut && !previewing ? 'visible' : 'hidden', clipPath: outClip }} />
         {previewing && <canvas ref={cvPrev} className={s.subs} data-hidpi="monitor-preview" data-testid="monitor-preview" data-halt={out.halt || undefined}
@@ -328,7 +352,7 @@ export default function Monitor() {
             {assErr ? '字幕是旧版 · 刷新失败' : '未连接 · 字幕可能不是最新'}
           </div>
         )}
-        {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? `参考 (${refName})` : '成品 (out.ass)'}</div>}
+        {compare === 'ab' && <div className={s.badge} data-testid="ab-badge">{abShow === 'ref' ? `${cmpWord} (${refName})` : '成品 (out.ass)'}</div>}
         {side && <div className={s.badge}>out</div>}
       </div>
       {side && (

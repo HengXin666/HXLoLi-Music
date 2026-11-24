@@ -32,6 +32,9 @@ from assfx.layer.trace import TR
 from assfx.text.anim import Karaoke
 
 
+ONLY_ENV = "ASSFX_ONLY"
+
+
 def phrase_keys(phrases):
     """位置无关的句子标识: 优先 P['id']，否则 sha1(句子文字)[:10] + '#' + 同文字出现次序。
     插入/删除/重排其它句都不会改变本句的 key，从而不会重抽它的随机特效。"""
@@ -124,7 +127,13 @@ class Generator:
         self.lead = lead; self.verbose = verbose; self.salts = salts or {}
         self.ly_seed = ly_seed
         self.ov = OV.load() if overrides is None else overrides
+        # 候选只重跑单元 (验收台, accept/cands.py): ASSFX_ONLY=k1,k2 时只给这些句单元跑特效函数, 其它句
+        # 的字层与特效都不进输出 (出入场规划照旧按全部句算, 所以本单元的窗口与整首跑时相同).
+        # 种子按单元 key 派生, 与别的句无关, 故本单元的事件与整首跑逐行相同; accept pick 时再整首重跑核对一次.
+        only = os.environ.get(ONLY_ENV, "")
+        self.only = {k for k in only.split(",") if k} or None
         self.phs, self.ks = [], []
+        MF.REG.meta["text_lift"] = getattr(doc, "TEXT_LIFT", 0)   # 台子按它认字层 (字身 = text_lift + 2), 不再假设 0
         load_skill_presets()
         TR.install()                         # 代码依赖追踪 (验收台 G2), 不改输出
         if TR.on:
@@ -208,6 +217,8 @@ class Generator:
             o["din"] = max(0.12, min(o["din"], ph.s - t_in))
             name = P.get("name", f"p{i:02d}")
             key = keys[i]
+            skip = self.only is not None and key not in self.only
+            n_ev = len(self.doc.events)
             with TR.scope(key, orig[i]):
                 salt = self.ov.get(key, {}).get("salt", salts.get(key, 0))
                 ly_seed = seed if self.ly_seed is None else self.ly_seed
@@ -218,9 +229,11 @@ class Generator:
                 self.doc.band(name, *ph.band, t_in, k.t_end)
                 f = FX(self.doc, name, ph.band, seed=derive(seed, key, "fx", salt), knobs=P.get("knobs"))
                 fn = FXMAP.get(P.get("fx")) if P.get("fx") else None
-                if fn:
+                if fn and not skip:
                     fn(f, ph, k)
                 self.ks.append(k)
+            if skip:
+                del self.doc.events[n_ev:]
             eff = OV.effective(defaults[i], self.ov.get(key, {}))
             nxt = [keys[i + 1]] if i + 1 < len(keys) else []
             MF.REG.add(dict(key=key, kind="phrase", name=name, label=orig[i].get("label") or ph_text(ph), lines=P.get("lines"),

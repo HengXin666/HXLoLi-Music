@@ -5,6 +5,7 @@ fade_in / fade_out 不写 0: libass 把 \\t(0,0) 当整段时长 (31 句 v3 踩�
 from scene import *  # noqa: F401,F403
 import motif_img  # noqa: E402
 import math
+from assfx.layer.provenance import main_motif
 
 H29 = {"dark": "#2B3A4A", "base": "#7D8C9C", "glow": "#C9D6E3", "pale": "#EEF3F8"}
 H30 = {"dark": "#1A0E10", "base": "#C8102E", "glow": "#FF6B7D", "pale": "#FFD3D9"}
@@ -125,6 +126,7 @@ def p29_chain(f, t0, t1, pts, lag=0.0, step=0.014):
     return P29_PITCH, n
 
 
+@main_motif("chain")
 def p29(f, ph, k):
     print(f"[main] p29 t0 {ph.chars[0]['s']:.3f} t_end {k.t_end:.3f} t_out {k.t_out:.3f} band {tuple(round(v) for v in f.b[:4])}")
     _mark(f); R = f.rng
@@ -162,6 +164,7 @@ def p29(f, ph, k):
     _unmark(f)
 
 
+@main_motif("sword_cross")
 def p30(f, ph, k):
     print(f"[main] p30 t0 {ph.chars[0]['s']:.3f} t_end {k.t_end:.3f} t_out {k.t_out:.3f} band {tuple(round(v) for v in f.b[:4])}")
     _mark(f); R = f.rng
@@ -215,6 +218,7 @@ def _star_poly(s, rot=-8):
     return "m " + " l ".join(f"{x:.2f} {y:.2f}" for x, y in pts) + " "
 
 
+@main_motif("hat_star")
 def p32(f, ph, k):
     print(f"[main] p32 t0 {ph.chars[0]['s']:.3f} t_end {k.t_end:.3f} t_out {k.t_out:.3f} band {tuple(round(v) for v in f.b[:4])}")
     _mark(f)

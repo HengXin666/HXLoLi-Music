@@ -44,7 +44,7 @@ hx-karaoke fetch_anime_bg.py --project proj --anime "<番名>" --bgm-id <id>
 | `anime.elements.md` | **带来源计数的条目 ≥4**(门禁按表形状数: 元素名用 `**粗体**`、来源数紧随其后; 写法见 `impl/elements-table.md`) |
 
 语义质量不做机械 FAIL(判"答得好不好"不可证伪, 硬设只会催生空标题)
-**答得对不对由第 11 步设计表反向追责**: 设计表里每句配色若指不到 notes 的情绪曲线, 就是 notes 没写到位.
+**答得对不对由 `42-text-main` 的设计表反向追责**: 设计表里每句配色若指不到 notes 的情绪曲线, 就是 notes 没写到位.
 
 ## 10e 接着填 `song-brief.md`(本步的第二件产物)
 
@@ -61,3 +61,7 @@ hx-karaoke fetch_anime_bg.py --project proj --anime "<番名>" --bgm-id <id>
 
 两件事的差就是判断"这首歌是不是围绕某个角色写的"  它决定绘图元素与风格取谁的.
 门禁 `check_gates.py --stage design` 的 `song-brief.md` 一项强制这一节必须点名真实角色.
+
+## 10f 接着做第 11 步
+
+元素表是人读的. 第 11 步把它整理成 `bible/` 下的结构化圣经 (来源分型, 专属度, 逐句对位), 第 39 步据此发散整曲方向. 见 `../11-design-bible/index.md`.

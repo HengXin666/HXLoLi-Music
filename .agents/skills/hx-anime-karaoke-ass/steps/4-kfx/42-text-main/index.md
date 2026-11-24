@@ -57,6 +57,16 @@ f.burst(t_break+0.35, ...)              # 碎开
 
 band **只有 758×242**(1080p, 歌词块外扩 5%): 单个图形 **30~70px**, 精细图形(网络 SVG 的 3000+ 字符路径)缩到 40~70px 用. 要"铺满"靠 **`drift` + `burst` 的数量**, 不靠单个图形的大小. **背景层也只在这个 band 内**(见 `45-bg`)
 
-## 过关条件
+## 命令
+
+本步无专用脚本, 设计表手写. 写完跑
+
+```bash
+hx-karaoke check_gates.py --project proj --stage design --strict-design
+```
+
+## 产物与过关条件
+
+产物: `proj/review/design-table.md` 的主文本五列 (`主·*`)
 
 `hx-karaoke check_gates.py --project proj --stage design [--strict-design]`: 元素表带来源计数的条目 ≥4、主母题能指到元素表条目、氛围句占比 ≤35%, 外加 15 格设计表的五条判据(见 `impl/design-table.md`)

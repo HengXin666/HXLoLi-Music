@@ -15,7 +15,8 @@ export interface TrackDef {
 }
 
 /**
- * FX 层的职责 (assfx 的 "三明治" 层序, base/core.py TEXT_LIFT=0 时; オンリー 工程即此):
+ * FX 层的职责 (assfx 的 "三明治" 层序). FX 事件的层号与 TEXT_LIFT 无关 (只抬 ly: 事件), 字层按样式归轨,
+ * 所以 TEXT_LIFT=0 (字夹在 FX 中间) 与缺省 20 (字在 FX 之上) 的工程都按下面的层义读:
  *   0 字后 (氛围床 bg_drift/bg_frames, 母题底光, 逐字字后光晕 anim.py ev(0))
  *   1-2 与字底/字身同层 (JP/RB/CN 的描边与正文在 1-2), 3 跳字 (anim.py 逐字 pop ev(3)), 4 逐字辉光 (anim.py ev(4) blur 光)
  *   5 近字母题粒子 (deco/motifs layer=5), 6 迸散 (motifs burst layer=6), 7 前景主体 (母题主图形, 条数最多), 8 最上闪光 (fx.py sparkle layer=8)
@@ -83,6 +84,10 @@ export function trackOf(style: string, layer: number, name: string): TrackId | n
   if (style === 'RB') return 'rb';
   if (style === 'CN') return 'cn';
   if (CARD_STYLES.has(style)) return 'card';
+  // 工程自定义样式 (如 NAME): 按 Name 前缀归轨, 不然眼睛 / 独显永远藏不掉它
+  if (name.startsWith('card:')) return 'card';
+  if (name.startsWith('fx:')) return FX_IDS[Math.max(0, Math.min(8, layer))];
+  if (name.startsWith('ly:')) return 'jp';
   return null;
 }
 

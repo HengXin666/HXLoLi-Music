@@ -133,3 +133,9 @@ Decision-ID: karaoke-env-single-command
 - **启动成本实测**：新脚本（`scipy`+`matplotlib`）首次 `uv run` **14.5s**、
   再次 0.0s；同脚本 `hx-karaoke` **0.0s**。
 - `node .agents/skills/hx-agent-notes/scripts/cli/verify-all.ts` → all gates passed。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/setup/ 修复 setup_env.py 的导入与 env.py 缺 shutil (bug-fix/2026-11-20-karaoke-setup-env-imports.md).

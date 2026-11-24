@@ -16,12 +16,18 @@
 
 关键纪律: 这个脚本只出候选表 + 打分，不做最终决定。全部不达标就反问用户要链接，
 不许自己挑一个凑合  素材不行，后面 11 步全白做。
+
+退出码: 0 = 有达标候选; 1 = 一条候选都没搜到 (失败, 先换词重搜);
+2 = 用法错误; 3 = 有候选但都不达标, 要停下反问用户 (硬规则第 1 条的介入点).
+3 不是失败. 一键流程在这里停下是正确行为, 不记一键失败.
 """
 
 import argparse, json, os, re, subprocess, sys, urllib.parse
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 BILI_COOKIE = "/tmp/bili_cookie.txt"
+PASS_SCORE = 40
+EXIT_ASK = 3
 
 
 def _curl(args, timeout=40):
@@ -139,6 +145,9 @@ def score(c, target):
 
 
 def main():
+    """Agent Notes
+    .agents/notes/implemented/process/2026-11-16-karaoke-ask-is-not-failure.md
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("query")
     ap.add_argument("--target", type=float, required=True, help="官方完整版时长(秒)")
@@ -166,26 +175,33 @@ def main():
         scored.append((s, why, c))
     scored.sort(key=lambda x: -x[0])
 
+    if not scored:
+        print("没搜到任何候选. 这是失败, 不是介入点: 按 source-search.md 换词重搜.", file=sys.stderr)
+        return 1
+    best = scored[0][0]
+    ask = best < PASS_SCORE
+    if ask:
+        print("ASK\thard-rules#1\t最高分 %d < %d, 停下反问用户要链接" % (best, PASS_SCORE), file=sys.stderr)
+
     if a.json:
         print(json.dumps([dict(score=s, why=w, **c) for s, w, c in scored], ensure_ascii=False, indent=1))
-        return 0
+        return EXIT_ASK if ask else 0
 
     print("查询: %s   目标时长: %ss   候选 %d 条" % (a.query, a.target, len(scored)))
     print("")
     for s, why, c in scored:
         res = "%sx%s" % (c.get("w"), c.get("h")) if c.get("h") else "分辨率未测"
-        flag = "OK " if s >= 40 else ("?? " if s >= 0 else "XX ")
+        flag = "OK " if s >= PASS_SCORE else ("?? " if s >= 0 else "XX ")
         print("%s%5d  %-8s %7ss  %-11s %s" % (flag, s, c["source"], str(c.get("dur")), res, c["url"]))
         print("         " + c["title"][:70])
         if why:
             print("         理由: " + why)
-    best = scored[0][0] if scored else -999
-    if best < 40:
+    if ask:
         print("")
-        print(">>> 没有候选达标（最高分 <40）。不要凑合，反问用户要链接或确认用哪个。")
-        return 2
+        print(">>> 没有候选达标（最高分 <%d）。不要凑合，反问用户要链接或确认用哪个。" % PASS_SCORE)
+        print(">>> 这是硬规则要求的介入点, 不是失败 (退出码 %d)." % EXIT_ASK)
+        return EXIT_ASK
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

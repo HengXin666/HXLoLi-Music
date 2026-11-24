@@ -1,0 +1,893 @@
+{
+ "format": "assfx-ir",
+ "version": 1,
+ "song": "無職転生 ED1 オンリー (大原ゆい子)",
+ "doc": "定稿快照的设计语言. 全部句子走逃生口 (专属函数, 定稿视觉逐字节不变), 母题/时钟/色相/句间关系按 judge/arc.json + hue.json 登记; 新歌从这里换词汇表与组合法.",
+ "motifs": {
+  "snow": {
+   "shape": "kit:snowflake",
+   "role": "main",
+   "grammar": "fall",
+   "color": "pale",
+   "size": 10,
+   "why": "元素表: 雪 (ED1 s03 雪景), 学了也像没学会被雪盖住"
+  },
+  "snow_gust": {
+   "shape": "kit:snowflake",
+   "role": "main",
+   "grammar": "trail",
+   "color": "pale",
+   "size": 6,
+   "why": "第 12 句: 一阵横风把细雪往右扫, 字嘴硬地站直"
+  },
+  "thaw": {
+   "shape": "kit:sakura",
+   "role": "main",
+   "grammar": "halo",
+   "color": "glow",
+   "size": 40,
+   "why": "h1 化雪透出春山青, 与 ED 同一刀转季"
+  },
+  "chorus_band": {
+   "shape": "kit:rect:4",
+   "role": "main",
+   "grammar": "trail",
+   "color": "glow",
+   "size": 30,
+   "why": "和声: 另一个声音浮在一条细光带上"
+  },
+  "crack": {
+   "shape": "kit:streak:3",
+   "role": "main",
+   "grammar": "stamp",
+   "color": "dark",
+   "size": 40,
+   "why": "壊したい 的预告裂纹, 赭红不碎"
+  },
+  "sword_cross": {
+   "shape": "kit:sword",
+   "role": "main",
+   "grammar": "frame",
+   "color": "#C8102E",
+   "size": 60,
+   "why": "第 30 句 矛盾: 交叉剑 (艾莉丝剑神流)"
+  },
+  "guard_ring": {
+   "shape": "kit:ring",
+   "role": "main",
+   "grammar": "halo",
+   "color": "glow",
+   "size": 70,
+   "why": "守りたい: 裂纹换成守护光环 + 地面魔法阵"
+  },
+  "palm": {
+   "shape": "kit:healing_cross",
+   "role": "main",
+   "grammar": "halo",
+   "color": "pale",
+   "size": 60,
+   "why": "h2 托着的手, 粉霞光从掌心升起"
+  },
+  "reach": {
+   "shape": "kit:sparkle",
+   "role": "main",
+   "grammar": "halo",
+   "color": "pale",
+   "size": 60,
+   "why": "h2 白闪, 只剩伸向光的手"
+  },
+  "veil": {
+   "shape": "kit:veil:150",
+   "role": "main",
+   "grammar": "frame",
+   "color": "dark",
+   "size": 70,
+   "why": "隠したい: 光环翻成往里收的暗幕"
+  },
+  "tear": {
+   "shape": "kit:teardrop",
+   "role": "main",
+   "grammar": "rise",
+   "color": "pale",
+   "size": 14,
+   "why": "涙だけ: 对位第 9 句, 一滴光滑下"
+  },
+  "mana_burst": {
+   "shape": "kit:magic_circle",
+   "role": "main",
+   "grammar": "halo",
+   "color": "glow",
+   "size": 80,
+   "why": "h3 菲托亚领魔力灾害: 光从裂缝喷出"
+  },
+  "chain": {
+   "shape": "kit:chain_link",
+   "role": "main",
+   "grammar": "trail",
+   "color": "#7D8C9C",
+   "size": 30,
+   "why": "h4 逃げない: 铁链 (不逃), 2026-11-12 删旧剑斩"
+  },
+  "water_orb": {
+   "shape": "kit:circle",
+   "role": "main",
+   "grammar": "halo",
+   "color": "glow",
+   "size": 80,
+   "why": "h5 无咏唱魔术: 洛琪希蓝水球随句长大"
+  },
+  "hat_star": {
+   "shape": "kit:witch_hat",
+   "role": "main",
+   "grammar": "stamp",
+   "color": "pale",
+   "size": 40,
+   "why": "末句 貴方: 洛琪希的帽子 + 星"
+  }
+ },
+ "phrases": [
+  {
+   "i": 0,
+   "lines": [
+    0
+   ],
+   "label": "L00 snow_write",
+   "role": "carrier",
+   "main": "snow",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 17,
+    "sat": 0.52
+   },
+   "relation": "none",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_snow_write",
+   "bed": "carrier"
+  },
+  {
+   "i": 1,
+   "lines": [
+    1
+   ],
+   "label": "L01 snow_write",
+   "role": "carrier",
+   "main": "snow",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 28,
+    "sat": 0.75
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_snow_write",
+   "bed": "carrier"
+  },
+  {
+   "i": 2,
+   "lines": [
+    2
+   ],
+   "label": "L02 thaw_bloom",
+   "role": "high",
+   "main": "thaw",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 30,
+    "sat": 0.74
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "rise",
+    "ext": "wind",
+    "hl": "bloom"
+   },
+   "escape": "fx_high:fx_thaw_bloom",
+   "bed": "high"
+  },
+  {
+   "i": 3,
+   "lines": [
+    3
+   ],
+   "label": "L03 chorus_float",
+   "role": "carrier",
+   "main": "chorus_band",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 5,
+    "sat": 0.75
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "flipx",
+    "ext": "flipx",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_chorus_float",
+   "bed": "carrier"
+  },
+  {
+   "i": 4,
+   "lines": [
+    4
+   ],
+   "label": "L04 chorus_float",
+   "role": "carrier",
+   "main": "chorus_band",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 354,
+    "sat": 0.75
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "flipx",
+    "ext": "flipx",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_chorus_float",
+   "bed": "carrier"
+  },
+  {
+   "i": 5,
+   "lines": [
+    5
+   ],
+   "label": "L05 crack_hint",
+   "role": "carrier",
+   "main": "crack",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 351,
+    "sat": 0.75
+   },
+   "relation": "cut",
+   "text": {
+    "ent": "glitch",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_carry:fx_crack_hint",
+   "bed": "carrier"
+  },
+  {
+   "i": 6,
+   "lines": [
+    6
+   ],
+   "label": "L06 crack_hint",
+   "role": "carrier",
+   "main": "crack",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 274,
+    "sat": 0.7
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "glitch",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_carry:fx_crack_hint",
+   "bed": "carrier"
+  },
+  {
+   "i": 7,
+   "lines": [
+    7
+   ],
+   "label": "L07 ring_guard",
+   "role": "carrier",
+   "main": "guard_ring",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 209,
+    "sat": 0.75
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "spin",
+    "ext": "wind",
+    "hl": "bloom"
+   },
+   "escape": "fx_carry:fx_ring_guard",
+   "bed": "carrier"
+  },
+  {
+   "i": 8,
+   "lines": [
+    8
+   ],
+   "label": "L08 palm_cradle",
+   "role": "high",
+   "main": "palm",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 24,
+    "sat": 0.75
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "rise",
+    "ext": "rise",
+    "hl": "bloom"
+   },
+   "escape": "fx_high:fx_palm_cradle",
+   "bed": "high"
+  },
+  {
+   "i": 9,
+   "lines": [
+    9
+   ],
+   "label": "L09 whiteout_reach",
+   "role": "high",
+   "main": "reach",
+   "aux": [],
+   "clock": "shot",
+   "color": {
+    "hue": 23,
+    "sat": 0.63
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "fade",
+    "ext": "rise",
+    "hl": "bloom",
+    "din": 0.8,
+    "dout": 1.0
+   },
+   "escape": "fx_high:fx_whiteout_reach",
+   "bed": "high"
+  },
+  {
+   "i": 10,
+   "lines": [
+    10
+   ],
+   "label": "L10 snow_plain",
+   "role": "carrier",
+   "main": "snow",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 216,
+    "sat": 0.5
+   },
+   "relation": "cut",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_snow_plain",
+   "bed": "carrier"
+  },
+  {
+   "i": 11,
+   "lines": [
+    11
+   ],
+   "label": "L11 snow_plain",
+   "role": "carrier",
+   "main": "snow",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 203,
+    "sat": 0.57
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_snow_plain",
+   "bed": "carrier"
+  },
+  {
+   "i": 12,
+   "lines": [
+    12
+   ],
+   "label": "L12 snow_gust",
+   "role": "carrier",
+   "main": "snow_gust",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 215,
+    "sat": 0.51
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_snow_gust",
+   "bed": "carrier"
+  },
+  {
+   "i": 13,
+   "lines": [
+    13
+   ],
+   "label": "L13 chorus_beat",
+   "role": "carrier",
+   "main": "chorus_band",
+   "aux": [],
+   "clock": "beat",
+   "color": {
+    "hue": 33,
+    "sat": 0.51
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "flipx",
+    "ext": "flipx",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_chorus_beat",
+   "bed": "carrier"
+  },
+  {
+   "i": 14,
+   "lines": [
+    14
+   ],
+   "label": "L14 chorus_float",
+   "role": "carrier",
+   "main": "chorus_band",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 223,
+    "sat": 0.71
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "flipx",
+    "ext": "flipx",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_chorus_float",
+   "bed": "carrier"
+  },
+  {
+   "i": 15,
+   "lines": [
+    15
+   ],
+   "label": "L15 crack_hint",
+   "role": "carrier",
+   "main": "crack",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 38,
+    "sat": 0.75
+   },
+   "relation": "cut",
+   "text": {
+    "ent": "glitch",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_carry:fx_crack_hint",
+   "bed": "carrier"
+  },
+  {
+   "i": 16,
+   "lines": [
+    16
+   ],
+   "label": "L16 crack_hint",
+   "role": "carrier",
+   "main": "crack",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 173,
+    "sat": 0.75
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "glitch",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_carry:fx_crack_hint",
+   "bed": "carrier"
+  },
+  {
+   "i": 17,
+   "lines": [
+    17
+   ],
+   "label": "L17 veil_hide",
+   "role": "carrier",
+   "main": "veil",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 233,
+    "sat": 0.65
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "fade",
+    "ext": "sink",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_veil_hide",
+   "bed": "carrier"
+  },
+  {
+   "i": 18,
+   "lines": [
+    18
+   ],
+   "label": "L18 veil_hide",
+   "role": "carrier",
+   "main": "veil",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 191,
+    "sat": 0.75
+   },
+   "relation": "echo",
+   "text": {
+    "ent": "fade",
+    "ext": "sink",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_veil_hide",
+   "bed": "carrier"
+  },
+  {
+   "i": 19,
+   "lines": [
+    19
+   ],
+   "label": "L19 tear_drop",
+   "role": "carrier",
+   "main": "tear",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 191,
+    "sat": 0.75
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "fade",
+    "ext": "sink",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_tear_drop",
+   "bed": "carrier"
+  },
+  {
+   "i": 20,
+   "lines": [
+    20
+   ],
+   "label": "L20 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 204,
+    "sat": 0.45
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 21,
+   "lines": [
+    21
+   ],
+   "label": "L21 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 329,
+    "sat": 0.65
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 22,
+   "lines": [
+    22
+   ],
+   "label": "L22 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 329,
+    "sat": 0.65
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 23,
+   "lines": [
+    23
+   ],
+   "label": "L23 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 26,
+    "sat": 0.71
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 24,
+   "lines": [
+    24
+   ],
+   "label": "L24 mana_crack",
+   "role": "high",
+   "main": "mana_burst",
+   "aux": [],
+   "clock": "beat",
+   "color": {
+    "hue": 200,
+    "sat": 0.75
+   },
+   "relation": "cut",
+   "text": {
+    "ent": "zoom",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_high:fx_mana_crack",
+   "bed": "high"
+  },
+  {
+   "i": 25,
+   "lines": [
+    25
+   ],
+   "label": "L25 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 200,
+    "sat": 0.75
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 26,
+   "lines": [
+    26
+   ],
+   "label": "L26 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 345,
+    "sat": 0.52
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 27,
+   "lines": [
+    27
+   ],
+   "label": "L27 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 141,
+    "sat": 0.45
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 28,
+   "lines": [
+    28
+   ],
+   "label": "L28 quiet",
+   "role": "rest",
+   "main": null,
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 36,
+    "sat": 0.75
+   },
+   "relation": "rest",
+   "text": {
+    "ent": "fade",
+    "ext": "wind",
+    "hl": "wipe"
+   },
+   "escape": "fx_carry:fx_quiet",
+   "bed": "none"
+  },
+  {
+   "i": 29,
+   "lines": [
+    29
+   ],
+   "label": "L29 sword_cut",
+   "role": "high",
+   "main": "chain",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 247,
+    "sat": 0.45
+   },
+   "relation": "cut",
+   "text": {
+    "ent": "slide",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_high:fx_sword_cut",
+   "bed": "high"
+  },
+  {
+   "i": 30,
+   "lines": [
+    30
+   ],
+   "label": "L30 crack_hint",
+   "role": "carrier",
+   "main": "sword_cross",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 174,
+    "sat": 0.75
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "glitch",
+    "ext": "scatter",
+    "hl": "shake"
+   },
+   "escape": "fx_carry:fx_crack_hint",
+   "bed": "carrier"
+  },
+  {
+   "i": 31,
+   "lines": [
+    31
+   ],
+   "label": "L31 water_orb",
+   "role": "high",
+   "main": "water_orb",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 211,
+    "sat": 0.71
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "rise",
+    "ext": "rise",
+    "hl": "bloom"
+   },
+   "escape": "fx_high:fx_water_orb",
+   "bed": "high"
+  },
+  {
+   "i": 32,
+   "lines": [
+    32
+   ],
+   "label": "L32 echo_reach",
+   "role": "carrier",
+   "main": "hat_star",
+   "aux": [],
+   "clock": "voice",
+   "color": {
+    "hue": 221,
+    "sat": 0.56
+   },
+   "relation": "carry",
+   "text": {
+    "ent": "fade",
+    "ext": "rise",
+    "hl": "bloom",
+    "din": 0.8,
+    "dout": 1.2
+   },
+   "escape": "fx_carry:fx_echo_reach",
+   "bed": "carrier"
+  }
+ ]
+}

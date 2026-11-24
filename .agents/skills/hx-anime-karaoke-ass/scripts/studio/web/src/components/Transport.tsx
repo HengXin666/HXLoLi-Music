@@ -21,6 +21,8 @@ export default function Transport() {
   const abShow = useStore((x) => x.abShow);
   const hasSel = useStore((x) => x.ranges.length > 0);
   const hasRef = useStore((x) => !!x.project?.ref_ass);
+  // 对比对象的叫法: 参考 / 上一版 / 候选 X (无参考的新歌退化为上一版或候选)
+  const cw = useStore((x) => (x.project?.cmp && x.project.cmp.kind !== 'ref' && x.project.cmp.kind !== 'none' ? x.project.cmp.label : '参考'));
   const tRef = useRef<HTMLSpanElement>(null);
   useEffect(() => clock.subscribe((t) => { if (tRef.current) tRef.current.textContent = fmtTime(t); }), []);
   return (
@@ -36,14 +38,14 @@ export default function Transport() {
       {compare !== 'ab' ? (
         <button className={s.wide} disabled={!hasRef} data-testid="ab-btn"
           title={hasRef ? AB_TIP : noRefTip} onClick={() => setCompare('ab')}>
-          对比: 成品 / 参考
+          对比: 成品 / {cw}
         </button>
       ) : (
         <span className={s.seg} data-testid="ab-btn" title={AB_TIP}>
           <button className={s.segb} data-on={abShow === 'out' || undefined} data-testid="ab-out"
             onClick={() => { if (abShow !== 'out') setCompare('ab'); }}>成品</button>
           <button className={s.segb} data-on={abShow === 'ref' || undefined} data-testid="ab-ref"
-            onClick={() => { if (abShow !== 'ref') setCompare('ab'); }}>参考</button>
+            onClick={() => { if (abShow !== 'ref') setCompare('ab'); }}>{cw}</button>
           <button className={s.segx} title="关闭对比, 回到只看成品" data-testid="ab-close"
             onClick={() => useStore.setState({ compare: 'off', abShow: 'out' })}>×</button>
         </span>

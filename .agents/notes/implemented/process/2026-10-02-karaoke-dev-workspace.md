@@ -94,3 +94,9 @@ ass 与音频**必须同名同目录**（`find_matching_ass` 按 `audio_path.ste
   `title=トコハナ (常花)` / `artist=やなぎなぎ`；起服务实测
   `audioUrl` 200/5259618B、`assUrl` 200/3323020B、`static/info/216f6d500c45.json` 200。
 - `node .agents/skills/hx-agent-notes/scripts/cli/verify-all.ts` 全绿。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- examples/mushoku_ed1 的 make_ass.py 改为组合式接线 (逐句设计搬进 design.ir.json, 成品逐字节不变), fx_main.py / motif_img.py 加 @main_motif 来源标记与可读下限; 见 architecture/2026-11-17-karaoke-compositional-generator.md. 本 skill 的金样现在是 examples/mushoku_ed1/kfx/ (kfx_test.py).

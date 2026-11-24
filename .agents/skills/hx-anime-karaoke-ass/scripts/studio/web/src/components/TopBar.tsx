@@ -2,6 +2,7 @@ import { sync, useStore } from '../lib/store';
 import { baseName, REF_SRC } from '../lib/actions';
 import PlacementPanel from './PlacementPanel';
 import RefPanel from './RefPanel';
+import LoopPanel from './LoopPanel';
 import s from './Bars.module.css';
 
 // 门禁没有阈值时写明为什么 (三种不同: 根本没有 / 有几份没定 / 来源出错)
@@ -23,6 +24,9 @@ export default function TopBar() {
   const place = useStore((x) => x.place);
   const placeOpen = useStore((x) => x.placeOpen);
   const refOpen = useStore((x) => x.refOpen);
+  const loopOpen = useStore((x) => x.loopOpen);
+  const loopSt = useStore((x) => x.loopState);
+  const pending = loopSt ? loopSt.reviews.filter((r) => !['done', 'dropped', 'noted'].includes(r.status)).length : 0;
   const set = useStore((x) => x.set);
   const live = useStore((x) => x.live);
   const syncErr = useStore((x) => x.syncErr);
@@ -85,10 +89,15 @@ export default function TopBar() {
           onClick={() => set({ refOpen: !refOpen, placeOpen: false })}>
           {p.ref.source === 'ambiguous' ? `参考 ASS 未定 · ${p.ref.candidates.length} 份候选`
             : p.ref.source === 'error' ? '参考 ASS 出错 · 未选'
-            : p.ref.source === 'none' ? '无参考 ASS · 目录里没有同名 .ass'
+            : p.ref.source === 'none' ? `无参考 ASS${p.cmp && (p.cmp.kind === 'prev' || p.cmp.kind === 'cand') ? ` · 对比${p.cmp.label}` : ' · 目录里没有同名 .ass'}`
             : `参考 ${baseName(p.ref_path)} · ${REF_SRC[p.ref.source]}`}
         </button>
       )}
+      <button className={s.chip} data-testid="loop-chip" aria-expanded={loopOpen} data-state={loopSt?.job.running ? 'busy' : pending ? 'warn' : undefined}
+        onClick={() => set({ loopOpen: !loopOpen, refOpen: false, placeOpen: false })}
+        title="看, 挑, 改, 证: 每条标注的处理状态, 换一个构想的候选 (看 / 冻结), 对比对象">
+        闭环{loopSt?.job.running ? ' · 运行中' : ` · ${pending} 未结`}
+      </button>
       <button className={s.chip} data-testid="place-btn" aria-expanded={placeOpen} data-state={place?.job.running ? 'busy' : undefined}
         onClick={() => set({ placeOpen: !placeOpen, refOpen: false })} title="歌词位置预设">
         位置{place?.job.running ? ' · 生成中' : ''}
@@ -104,6 +113,7 @@ export default function TopBar() {
       )}
       <PlacementPanel />
       <RefPanel />
+      <LoopPanel />
     </header>
   );
 }

@@ -73,3 +73,10 @@ Decision-ID: karaoke-layout-consolidation
   该步的 `index.md` 已把搜索范围写成"skill 的 `examples/` + 工程区 `static/music/<番名>/`"，
   不会因为搬家而漏查。
 - 2026-11-09: `templates/make_ass_template.py` 改为接入预览台清单 (`register_theme`/`@recipe`/`G.segment`), 卡点/背景/图片层按段取参数并按 key 重播种子; 目录布局约定本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- examples/mushoku_ed1 的 make_ass.py 改为组合式接线 (逐句设计搬进 design.ir.json, 成品逐字节不变), fx_main.py / motif_img.py 加 @main_motif 来源标记与可读下限; 见 architecture/2026-11-17-karaoke-compositional-generator.md. 本 skill 的金样现在是 examples/mushoku_ed1/kfx/ (kfx_test.py).
+- templates/motif_img.py 贴图前检查具象素材可读下限 (assfx/draw/legible.below_floor, known-gaps #12); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

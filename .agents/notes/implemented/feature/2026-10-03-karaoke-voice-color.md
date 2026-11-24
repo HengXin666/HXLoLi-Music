@@ -89,3 +89,9 @@ Decision-ID: karaoke-voice-color
 ## 追加: 2026-11-10 歌词位置预设
 
 - `assfx/text` 本轮改动是位置预设 (`placement.py` 新增, `layout.py` 行起点/墨迹上下沿按预设算), `color.py` 的配色判据未改; `kfx/voices.py` 本轮未改.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/kfx/ 新增 kfx 唯一生成器 (kfx_*.py, fingerprint.py), 决策见 architecture/2026-11-22-karaoke-kfx-single-generator.md, architecture/2026-11-23-kfx-manifest-for-studio.md, architecture/2026-11-23-kfx-motifs-beats-sync.md, feature/2026-11-24-kfx-guilty-crown-verbs.md. 本决策的 music_events.py / voices.py 没有改, 仍然有效.

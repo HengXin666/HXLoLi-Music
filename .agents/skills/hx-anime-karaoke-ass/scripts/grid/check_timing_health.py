@@ -20,7 +20,7 @@
   hx-karaoke check_timing_health.py --vocals stems/vocals16k.wav --timing timing.json \
        [--grid grid.json] --report review/health.txt [--fixes-out review/suggest.json]
 """
-import argparse, bisect, json, wave
+import argparse, bisect, hashlib, json, sys, wave
 import numpy as np
 from scipy.signal import stft
 
@@ -141,6 +141,8 @@ w(f"{miss} 行匹配率 <60%")
 w("")
 w(f"## 判定")
 w(f"CTC塌缩 {n_col} 处 / 句内间奏 {n_in} 处（两者都应为 0）")
+# 绑定被体检的那份 timing.json: 门禁比对 sha256, 体检后再改时间轴, 旧报告不作数.
+w(f"timing sha256: {hashlib.sha256(open(a.timing, 'rb').read()).hexdigest()}")
 if a.max_collapse is not None:
     w(f"门禁：塌缩 <= {a.max_collapse}、句内间奏 <= {a.max_inner_silence}")
 txt = "\n".join(L)

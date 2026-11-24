@@ -31,6 +31,10 @@ Decision-ID: karaoke-hard-gates-script
 - `offset.json` 存在，且 `verdict` 不得是「离散度过大」（语音校准测出的时间轴差量，见歌词来源那篇 note）。
 - `fixes.json` 存在；0 条修正时必须写 `_why`（表示「这轮结论是没问题」而不是「没看」）。
 - `calib.json` 存在（注音高度必须实测）。
+- 时间轴证据要咬住**当前**终稿, 不只是文件在 (2026-11-16 补):
+  - `fixes.json` 的每条修正必须已在 `timing.json` 生效 (容差 1.5ms, 键写法与 `apply_fixes.py` 相同). 改了 fixes 没重跑 apply_fixes 时判 FAIL.
+  - `review/health.txt` 必须带 `timing sha256:` 行且等于当前 `timing.json` 的 sha256. 不等判 FAIL; 旧版报告没有这一行时判 WARN.
+  - `timing.json` 与 `timing_auto.json` 起点逐拍全等时判 WARN. 未在一批真实工程上测过区分力 (硬规则 10b), 所以不写 FAIL.
 
 分两级：`--stage design` 只查 8b 设计之前该有的三份，`--stage render` 追加语音校准、时间轴与排版。
 
@@ -53,3 +57,4 @@ Decision-ID: karaoke-hard-gates-script
 - 已存在的旧工程是历史产物，缺证据文件时会被判 FAIL；补证据走 `find_lyrics.py --adopt` 与
   `fetch_anime_bg.py --register`，两者都强制写 why，不提供静默放行。
 - 门禁不认识 `timing_grid.json` 这条可选路径的中间产物，只认最终 `timing.json`。
+- 2026-11-16 时间轴证据绑定: 补之前三种情况会静默 PASS: 改了 fixes 没重跑 apply_fixes; 体检后又改 timing.json; 终稿就是 timing_auto.json 原样. 正例 `examples/mushoku_ed1` 71 条修正全部判生效, 无误杀. 反例 (改一条 fixes 不重跑, 写错键, 体检后改一拍) 都判 FAIL. 存量工程的 health.txt 没有 sha 行, 重跑一次体检即可从 WARN 变 PASS.

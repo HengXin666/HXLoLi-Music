@@ -11,6 +11,8 @@ from assfx.base import geom  # noqa: E402  只 import (库已冻结)
 
 TAG = re.compile(r"\{[^}]*\}")
 POS = re.compile(r"\\(?:pos|move)\(\s*([-\d.]+)\s*,\s*([-\d.]+)")
+# \move 的终点 (lyric_extra 只在某句没有 \pos 事件时用)
+MOVE_END = re.compile(r"\\move\(\s*[-\d.]+\s*,\s*[-\d.]+\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)")
 TEXT_STYLES = {"JP": "jp", "RB": "rb", "CN": "cn", "LAT": "jp"}
 CARD_STYLES = {"CARD", "CARDCN", "TITLE", "TLAT", "PRO", "PROCN"}
 FX_LAYERS = list(range(9))
@@ -53,7 +55,7 @@ class Analysis:
 
     # ---------- 基础数据
     def manifest(self):
-        return self.P.json(self.P.p("out.manifest.json")) or {}
+        return self.P.man()
 
     def units(self):
         return {u["name"]: u for u in self.manifest().get("units", [])}
@@ -74,7 +76,7 @@ class Analysis:
         return {}
 
     def ass_lines(self, which):
-        path = self.P.p("out.ass") if which == "out" else self.P.ref_ass()
+        path = self.P.out() if which == "out" else self.P.cmp_ass()
         if not path:
             return []
         return self.P.cached("lines:" + path, path, lambda p: self.P.text(p).splitlines())
@@ -105,21 +107,30 @@ class Analysis:
     def lyric_extra(self, lines):
         P = self.P
         ev = P.events("out") or []
-        st = styles(P.text(P.p("out.ass")))
+        st = styles(P.text(P.out()))
         timing = P.json(P.p("timing.json")) or []
-        rb, jpy = {}, {}
+        # 位置只认静止的 \pos 事件 (字停在那儿的样子); 入场 / 退场动画的 \move 起止点会偏开, 按它们算会把
+        # 一个振假名重复记到相邻字上. 某句完全没有 \pos (全程在动) 才退回 \move 的终点.
+        rb, jpy, rbm, jpym = {}, {}, {}, {}
+        body = P.body_layer()
         for e in ev:
-            if e["layer"] != 2 or not e["name"].startswith("ly:"):
+            if e["layer"] != body or not e["name"].startswith("ly:"):
                 continue
-            m = POS.search(e["text"])
+            mv = MOVE_END.search(e["text"])
+            m = mv or POS.search(e["text"])
             if not m:
                 continue
             nm = e["name"][3:]
             x, y = float(m.group(1)), float(m.group(2))
+            R, J = (rbm, jpym) if mv else (rb, jpy)
             if e["style"] == "RB":
-                rb.setdefault(nm, {}).setdefault((round(x, 1), TAG.sub("", e["text"])), (x, y, e["t0"]))
+                R.setdefault(nm, {}).setdefault((round(x, 1), TAG.sub("", e["text"])), (x, y, e["t0"]))
             elif e["style"] == "JP":
-                jpy.setdefault(nm, []).append(y)
+                J.setdefault(nm, []).append(y)
+        for k, v in rbm.items():
+            rb.setdefault(k, v)
+        for k, v in jpym.items():
+            jpy.setdefault(k, v)
         refpf = P.profile("ref") or {}
         rper = refpf.get("per_line", {})
         fs_jp = st.get("JP", {}).get("fs", 84)
@@ -182,7 +193,7 @@ class Analysis:
                 out.append(c)
             out.sort(key=lambda c: (c["track"], c["t0"]))
             return out
-        return P.cached("clips", P.p("out.ass"), build)
+        return P.cached("clips", P.out(), build)
 
     def beats(self):
         m = self.music()
@@ -263,7 +274,7 @@ class Analysis:
     def hit(self, t, x, y):
         P = self.P
         ev = P.events("out") or []
-        st = styles(P.text(P.p("out.ass")))
+        st = styles(P.text(P.out()))
         res = []
         for e in ev:
             if not (e["t0"] <= t < e["t1"]):

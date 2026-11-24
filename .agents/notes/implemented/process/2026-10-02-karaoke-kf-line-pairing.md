@@ -67,3 +67,9 @@ Decision-ID: karaoke-kf-line-pairing
 - `shape_quality` 是**判据**不是阈值调参：把它调低会让拉丁行重新塌掉（实测 <0.5 时 line 27
   的形状质量 0.14），调高会让正常行无谓回退。0.5 这个数取自「一半以上的音拍间隔 >40ms」
   40ms 是 16 分音符在 150BPM 下的间隔量级，低于它就不是"音拍边界"。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/kf/kf_timing.py 在 uv 内联依赖里补齐网络歌词源要的包 (diskcache httpx h2 brotli pyaes jaconv).

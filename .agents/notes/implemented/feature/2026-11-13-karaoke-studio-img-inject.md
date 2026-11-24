@@ -35,3 +35,9 @@ Decision-ID: karaoke-studio-img-inject
 - 2026-11-13 实测 (オンリー 212.0s, 关掉 MV 只看字幕): 修复前左下区域白像素 1320, 修复后 1. 变异: 拦截所有 `/api/img/` 请求, 白框重现 (1320); 恢复后 1.
 - 第 2 层变异 (只让 `hand_palm_01` 返回 404): 两张剑图照常注入 (200), 199.2s 剑区红像素 95, 与正常组相同; 顶栏显示"libass 缺图 1 张", 颜色 rgb(239,107,107); `octo=partial`. 正常组显示"libass 就绪", 颜色 rgb(89,195,138). 截图在工程 `review/vis/l2_*` (dev 下, 不入库).
 - 还没做: `validate_ass` / render 遇到找不到的 `\1img` 图报 E 的门禁 (另做).
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/studio/web/src/lib/ 多工程前缀 base.ts, 暂停时视频同步 clock.ts (bug-fix/2026-11-19-studio-pause-video-sync.md), octopus.ts 字体编号不再撞名, api/actions/store/tracks 接设计稿面板与闭环面板 (feature/2026-11-24-karaoke-studio-multi.md, feature/2026-11-17-karaoke-station-loop.md).

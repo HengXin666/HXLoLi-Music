@@ -4,6 +4,15 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #   "numpy",
+#   "diskcache",
+#   "httpx",
+#   "h2",
+#   "brotli",
+#   "pyaes",
+#   "jaconv",
+#   "pykakasi",
+#   "mutagen",
+#   "pyside6-essentials",
 # ]
 # ///
 """逐字权威时间轴(kf): 用 LDDC 抓网络逐字歌词, 与本地音频的行首锚点融合, 产出音拍级 timing.

@@ -52,3 +52,10 @@ logits 最大绝对差 0.048，**逐帧 argmax 一致率 100.0000%**，贪心解
 - 短片段上 CUDA 因上下文初始化可能反而更慢（实测 12s 片段 cuda 8.1s vs cpu 3.1s）
   这条已写进 `steps/00-setup/index.md`，避免有人用片段耗时否定整曲收益。
 - 想复现历史工程：`ASSFX_DEVICE=cpu` 跑一次即可；`device_check.py` 能给出那次复现是否必要的证据。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/setup/ 修复 setup_env.py 的导入与 env.py 缺 shutil (bug-fix/2026-11-20-karaoke-setup-env-imports.md).
+- scripts/grid/check_timing_health.py 报告里写入被体检的 timing.json 的 sha256, 体检后再改时间轴旧报告不作数.

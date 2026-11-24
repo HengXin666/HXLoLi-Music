@@ -58,6 +58,10 @@ for P, ph in zip(PHRASES, phs):
 
 **`boost` 存在的意义**: 意象承接 ≠ 意象重复  加一级是承接, 原样再来一遍是偷懒.
 
+## 命令
+
+本步无专用脚本, 写设计表的两列. 判据由 `hx-karaoke check_gates.py --project proj --stage design --strict-design` 查
+
 ## 状态表(产物)
 
 `proj/review/design-table.md` 里的 `承上` / `启下` 两列, 每句各一格

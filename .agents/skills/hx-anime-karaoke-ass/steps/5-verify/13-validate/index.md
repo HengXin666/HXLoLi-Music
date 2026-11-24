@@ -7,7 +7,7 @@
 ## 13a 强制门禁(`--stage render`)
 
 ```bash
-hx-karaoke check_gates.py --project proj --stage design                  # 进第 11 步设计之前
+hx-karaoke check_gates.py --project proj --stage design                  # 进 4-kfx 设计之前
 hx-karaoke check_gates.py --project proj --stage design --strict-design  # 新工程: 15 格缺项也 FAIL
 hx-karaoke check_gates.py --project proj --stage render                  # 出片之前（追加时间轴/排版）
 ```

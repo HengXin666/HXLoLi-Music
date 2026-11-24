@@ -2,6 +2,7 @@
 """出片前门禁(lyrics / timing / offset / coverage / health / calib): 追加时间轴与排版判据."""
 
 
+import hashlib
 import json
 import os
 import re
@@ -32,7 +33,7 @@ def check_timing(proj, res, expect_mora):
     p, pa = os.path.join(proj, "timing.json"), os.path.join(proj, "timing_auto.json")
     d = load(p)
     if not d:
-        res.append((BAD, "timing.json", "缺失  人工校时（第 6 步）没做"))
+        res.append((BAD, "timing.json", "缺失  人工校时（第 08 步）没做"))
         return
     if expect_mora and len(d) != expect_mora:
         res.append((BAD, "timing.json", "音拍数 %d ≠ lyrics.txt 的 %d  用了别的歌词或漏了行" % (len(d), expect_mora)))
@@ -48,6 +49,59 @@ def check_timing(proj, res, expect_mora):
             res.append((WARN, "fixes.json", "0 条修正且没写 _why  要么是确实没问题（写一句），要么是没看频谱"))
         else:
             res.append((OK, "fixes.json", "%d 条修正%s" % (n, "，已注明: " + str(why)[:40] if why else "")))
+        check_fixes_applied(fx, d, res)
+    check_auto_changed(proj, d, res)
+
+
+def sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for blk in iter(lambda: f.read(1 << 16), b""):
+            h.update(blk)
+    return h.hexdigest()
+
+
+def check_fixes_applied(fx, d, res):
+    """fixes.json 的每条修正必须已在 timing.json 生效.
+
+    旧判据只数 fixes 的条数. 改了 fixes 但没重跑 apply_fixes.py 时, 门禁照样 PASS,
+    成片用的仍是改前的起点. 键的写法与 apply_fixes.py 相同, 它认不出的键也算没生效.
+    """
+    if not isinstance(fx, dict):
+        return
+    idx = {"%s,%s,%s" % (m["line"], m["unit"], m["mora"]): m for m in d}
+    bad = []
+    for k, v in fx.items():
+        if k.startswith("_"):
+            continue
+        m = idx.get(k)
+        if m is None:
+            bad.append("%s 在 timing.json 里没有这个音拍" % k)
+        elif abs(float(m["s"]) - float(v)) > 0.0015:
+            bad.append("%s 修正 %.3f, timing.json 是 %.3f" % (k, float(v), float(m["s"])))
+    for li, e in (fx.get("_end") or {}).items():
+        ms = [m for m in d if str(m["line"]) == str(li) and not m.get("call")]
+        if ms and abs(float(max(ms, key=lambda m: m["s"])["e"]) - float(e)) > 0.0015:
+            bad.append("_end 第 %s 行 %.3f 没生效" % (li, float(e)))
+    if bad:
+        res.append((BAD, "fixes.json -> timing.json", "%d 处修正没生效 (改了 fixes 没重跑 apply_fixes.py?): %s"
+                    % (len(bad), "; ".join(bad[:3]))))
+    else:
+        res.append((OK, "fixes.json -> timing.json", "修正全部生效"))
+
+
+def check_auto_changed(proj, d, res):
+    """timing.json 与 timing_auto.json 的起点逐拍全等, 说明逐字融合/吸附/人工校时都没生效.
+
+    阈值未在一批真实工程上测过区分力 (硬规则 10b), 所以只报 WARN.
+    """
+    auto = load(os.path.join(proj, "timing_auto.json"))
+    if not isinstance(auto, list) or len(auto) != len(d):
+        return
+    key = lambda m: (m["line"], m["unit"], m["mora"])
+    a = {key(m): round(float(m["s"]), 3) for m in auto}
+    if all(a.get(key(m)) == round(float(m["s"]), 3) for m in d):
+        res.append((WARN, "timing.json", "起点与 timing_auto.json 逐拍全等: 06-08 步的修正都没进终稿"))
 
 
 def check_offset(proj, res):
@@ -111,6 +165,14 @@ def check_health(proj, res):
         res.append((BAD, "review/health.txt", "没有判定行  报告是旧版脚本产的，重跑 check_timing_health.py"))
         return
     col, inn = int(m1.group(1)), int(m2.group(1))
+    # 报告必须是对当前 timing.json 跑的. 体检后又改 timing.json 时, 旧报告的 0 处不能作数.
+    m4 = re.search(r"timing sha256:\s*([0-9a-f]{64})", txt)
+    tp = os.path.join(proj, "timing.json")
+    if not m4:
+        res.append((WARN, "review/health.txt", "报告没绑定 timing.json 的 sha256 (旧版脚本), 重跑 check_timing_health.py"))
+    elif os.path.exists(tp) and m4.group(1) != sha256_file(tp):
+        res.append((BAD, "review/health.txt", "报告不是对当前 timing.json 跑的 (sha256 不符), 重跑 check_timing_health.py"))
+        return
     if col or inn:
         res.append((BAD, "review/health.txt",
                     "CTC塌缩 %d 处 / 句内间奏 %d 处（都应为 0） 长音与间奏被算进了歌词，字幕会慢几秒" % (col, inn)))

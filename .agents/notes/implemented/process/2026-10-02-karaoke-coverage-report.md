@@ -68,3 +68,9 @@ Decision-ID: karaoke-coverage-report
   以及 `--report` 指向别处时同样只在跑完审计后才写。
 - 已知边界：判据是"stdout 里有结论行"，所以**改结论行的措辞就必须同步改这个判据**
   （两处字符串在 `main_reporting()` 里）。换来的是"usage 文本永远不会被当成审计证据"。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.

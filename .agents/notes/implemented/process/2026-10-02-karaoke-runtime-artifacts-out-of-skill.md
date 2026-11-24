@@ -82,3 +82,9 @@ skill 目录里长出了**一次具体制作的产物**，而且不止一处：
   保留的 `examples/mushoku_ed1` 才是"给模型看的样子"。
 - `.gitignore` 的 6 条规则与被删除的 50 个 SVG 同一次提交：`git status` 在提交后干净。
 - 2026-11-09: `scripts/assfx/base/core.py` 写 ASS 时在同目录另写 `<out>.manifest.json` (产物仍落工程目录, 不进 skill), 加代码追踪钩子 `on_ev`, `TEXT_LIFT` 改为可按工程设置 (缺省 20 不变); 新增 `base/seeding.py`. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/qa/ 新增 calib_vector_gap.py: 矢量件压字门禁的标定 (硬规则 10b, shared/calibration.md); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

@@ -85,7 +85,7 @@ def check_notes(proj, res):
     设计取舍：**语义质量不做 FAIL 判据**。判"内核/主题/与原作的关系答得好不好"要么靠人读、
     要么靠模型判，都不是可证伪的机械检查；硬设成 FAIL 只会催生"为了过门禁而写的空标题"。
     所以这里只查**能机械证伪的三件事**：文件在不在、是不是占位、有没有留出处。
-    缺哪一节用 WARN 点名，交给人工与第 8b 步设计去追。
+    缺哪一节用 WARN 点名，交给人工与 42-text-main 的设计表去追。
     """
     p = os.path.join(proj, "anime.notes.md")
     if not os.path.exists(p):

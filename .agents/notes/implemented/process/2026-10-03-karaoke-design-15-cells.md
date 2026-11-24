@@ -83,3 +83,9 @@ Decision-ID: karaoke-design-15-cells
   先选对象与阶段, 再决定层级.
 - 已知边界: `承上`/`启下` 的"同名变量"只做词元交集, 不理解语义 
   两行都写"留一条向右的动量"会判通过. 这是可证伪下限, 不是质量上限.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.

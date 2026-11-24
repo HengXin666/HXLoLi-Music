@@ -1,0 +1,921 @@
+{
+ "song": {
+  "title": "無職転生 ED1「オンリー」中日双语卡拉OK特效字幕",
+  "artist": "大原ゆい子",
+  "anime": "無職転生 ～異世界行ったら本気だす～",
+  "why": "MV (PCS Studio 剪辑, 本地 base.mp4) 是鲁迪成长的回忆蒙太奇: 冬 -> 风 -> 夕阳 -> 副歌红 -> 洛琪希魔法 -> 秋 -> 舞会 -> 天空 -> 火 -> 冰 -> 金光 -> 花原 -> 白场. 每段配色/母题跟这条时间线走; 告白对象\"貴方\"用一根红线贯穿."
+ },
+ "seed": "mushoku-only-ed1",
+ "fonts": {
+  "jp": {
+   "name": "Shippori Mincho B1",
+   "file": "../../../../static/music/无职转生/fonts/ShipporiMinchoB1-Bold.ttf",
+   "bold": true
+  },
+  "ruby": {
+   "name": "Shippori Mincho B1",
+   "file": "../../../../static/music/无职转生/fonts/ShipporiMinchoB1-Bold.ttf",
+   "bold": true
+  },
+  "zh": {
+   "name": "LXGW WenKai Medium",
+   "file": "../../../../static/music/无职转生/fonts/LXGWWenKai-Medium.ttf"
+  },
+  "lat": {
+   "name": "Cormorant Garamond Light",
+   "file": "../../../../static/music/无职转生/fonts/CormorantGaramond-Light.ttf"
+  }
+ },
+ "geometry": {
+  "jp_y": 838,
+  "jp_fs": 76,
+  "ruby_fs": 30,
+  "zh_fs": 44,
+  "lat_fs": 68,
+  "ruby_gap": 54,
+  "zh_gap": 72
+ },
+ "final_hold": 220.5,
+ "title_card": {
+  "t0": 1.0,
+  "t1": 10.6,
+  "jp": "オンリー",
+  "latin": "Only",
+  "credit": "TVアニメ『無職転生 ～異世界行ったら本気だす～』 エンディングテーマ　歌・大原ゆい子",
+  "zh": "唯一",
+  "why": "MV 0-12s 是窗边夕阳与幼年鲁迪的背影, 先给曲名与番剧, 金色",
+  "palette": {
+   "base": "#FFE4A6",
+   "sung": "#FFFAEE",
+   "outline": "#3A2A08",
+   "glow": "#FFD066",
+   "halo": "#1E1504",
+   "zh": "#FFEDC5",
+   "zh_sung": "#FFFAEE"
+  }
+ },
+ "sections": [
+  {
+   "id": "A1-snow",
+   "lines": [
+    0,
+    2
+   ],
+   "palette": {
+    "base": "#C6E1FF",
+    "sung": "#FFFFFF",
+    "outline": "#13233A",
+    "glow": "#9CCBFF",
+    "halo": "#0A1626",
+    "zh": "#D9EBFF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 25-38s: 雪中披毛领的幼年鲁迪 -> 夜晚森林里闪烁的光点",
+   "why": "主歌开头是\"学了爱的入门却握不住\": 孤独, 冷, 还没有找到人. 冷蓝白 + 落雪, 字像墨在雪上洇开 (ink 进场), 唱完化开 (dissolve) 像呼出的白气",
+   "enter": "ink",
+   "exit": "dissolve",
+   "particles": {
+    "motif": "snow",
+    "flow": "fall",
+    "per_unit": 0.7,
+    "ambient": 1.4,
+    "size": [
+     9,
+     14
+    ],
+    "colors": [
+     "#FFFFFF",
+     "#DDEEFF",
+     "#B9D9FF"
+    ]
+   }
+  },
+  {
+   "id": "A2-wind",
+   "lines": [
+    3,
+    3
+   ],
+   "palette": {
+    "base": "#C5EDCB",
+    "sung": "#FFFFFF",
+    "outline": "#16301F",
+    "glow": "#9BE0A6",
+    "halo": "#0D1E14",
+    "zh": "#D9F3DD",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 36-45s: 大草原远景 -> 希露菲 (绿发精灵耳) 在晴空下回头",
+   "why": "\"If you do 什么都不怕\": 第一次走出家门, 风是希露菲的颜色 (风魔法/幼驯染). 绿叶顺风横吹, 字从左随风吹入, 再被风带走",
+   "enter": "wind",
+   "exit": "wind",
+   "particles": {
+    "motif": "leaf",
+    "flow": "wind",
+    "per_unit": 0.8,
+    "ambient": 0.8,
+    "size": [
+     9,
+     13
+    ],
+    "colors": [
+     "#BFF0B8",
+     "#8ED69A",
+     "#F2FFE8"
+    ]
+   }
+  },
+  {
+   "id": "A3-dusk",
+   "lines": [
+    4,
+    4
+   ],
+   "palette": {
+    "base": "#FFD4A6",
+    "sung": "#FFF8EE",
+    "outline": "#3A1E0C",
+    "glow": "#FFB566",
+    "halo": "#1E0F06",
+    "zh": "#FFE3C5",
+    "zh_sung": "#FFF8EE"
+   },
+   "scene": "MV 45-51s: 夕阳里的城镇屋顶, 少女在橙色光里奔跑",
+   "why": "\"把后背交给我\": 信任与同行, 暖橙. 金色光尘向上飘, 字平稳上浮, 不加冲击",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "mote",
+    "flow": "rise",
+    "per_unit": 1.0,
+    "ambient": 1.2,
+    "size": [
+     8,
+     12
+    ],
+    "colors": [
+     "#FFE2A8",
+     "#FFC27A",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "B1-crimson",
+   "lines": [
+    5,
+    6
+   ],
+   "palette": {
+    "base": "#FF9797",
+    "sung": "#FFFFFF",
+    "outline": "#3A0A10",
+    "glow": "#FF4B4B",
+    "halo": "#1E0508",
+    "zh": "#FFBBBB",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 51-63s: 宁静的草原远景 -> 艾莉丝的红发特写",
+   "why": "第一次副歌, 情绪爆点 \"想要破坏\". 画面先静后红 (艾莉丝: 红发, 剑, 狂犬). 情绪压过画面: 字以闪光砸入 (flash), 壊字处玻璃裂开, 唱完整句碎落 (shatter), 火星四溅",
+   "enter": "flash",
+   "exit": "shatter",
+   "particles": {
+    "motif": "ember",
+    "flow": "burst",
+    "per_unit": 1.1,
+    "ambient": 0.6,
+    "size": [
+     8,
+     13
+    ],
+    "colors": [
+     "#FF5A3C",
+     "#FFB070",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "B2-roxy",
+   "lines": [
+    7,
+    8
+   ],
+   "palette": {
+    "base": "#A2D5FF",
+    "sung": "#FFFFFF",
+    "outline": "#0C1F3E",
+    "glow": "#5EB6FF",
+    "halo": "#071226",
+    "zh": "#C2E3FF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 63-75s: 握剑的手 -> 洛琪希在雪中举杖施放水魔法 (蓝发麻花辫, 魔女帽)",
+   "why": "\"想要守护的是 教会我一切的人\": 洛琪希是鲁迪的师父, 也是第一个带他走出家门的人. 地面浮起她的水系魔法阵, 水滴与光点向上升",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "droplet",
+    "flow": "rise",
+    "per_unit": 0.7,
+    "ambient": 0.8,
+    "size": [
+     8,
+     12
+    ],
+    "colors": [
+     "#BFE3FF",
+     "#7CC4FF",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "B3-only",
+   "lines": [
+    9,
+    9
+   ],
+   "palette": {
+    "base": "#FFA9B2",
+    "sung": "#FFFFFF",
+    "outline": "#2A1218",
+    "glow": "#FF6B7A",
+    "halo": "#14080C",
+    "zh": "#FFC7CC",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 75-80s: 魔法漩涡 (暗蓝), 间奏前最后一句",
+   "why": "\"唯有你\": 曲名本身. 全曲的收束符号是一根红线, 第一次在这里画出来, 随唱的进度从左拉到右",
+   "enter": "ink",
+   "exit": "dissolve",
+   "particles": {
+    "motif": "mote",
+    "flow": "rise",
+    "per_unit": 0.6,
+    "ambient": 0.8,
+    "size": [
+     7,
+     10
+    ],
+    "colors": [
+     "#FFD6DC",
+     "#FFFFFF"
+    ]
+   },
+   "scale": 1.32
+  },
+  {
+   "id": "C2-garden",
+   "lines": [
+    10,
+    12
+   ],
+   "palette": {
+    "base": "#FFC6DC",
+    "sung": "#FFFFFF",
+    "outline": "#3A1426",
+    "glow": "#FF9CC2",
+    "halo": "#1E0A14",
+    "zh": "#FFD9E8",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 90-102s: 石墙下的花园, 鲜花与阳光, 鲁迪坐在花丛里读书",
+   "why": "第二段主歌 \"以眼还眼也传达不出去 / 悲伤的脸就算输\": 画面是安静的花园日常, 情绪是倔强的委屈. 粉色花瓣轻落, 字从上方落下 (drop), 不加冲击",
+   "enter": "drop",
+   "exit": "rise",
+   "particles": {
+    "motif": "petal",
+    "flow": "fall",
+    "per_unit": 0.8,
+    "ambient": 1.2,
+    "size": [
+     8,
+     12
+    ],
+    "colors": [
+     "#FFC1D6",
+     "#FF9CC2",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "C3-path",
+   "lines": [
+    13,
+    13
+   ],
+   "palette": {
+    "base": "#FFCD98",
+    "sung": "#FFF6E6",
+    "outline": "#3A2410",
+    "glow": "#FFA94D",
+    "halo": "#1F1208",
+    "zh": "#FFDEBB",
+    "zh_sung": "#FFF6E6"
+   },
+   "scene": "MV 102-108s: 两人走在落叶的小路上, 叶子被风吹过画面",
+   "why": "\"If you do 就算失去也无所谓的未来\": 风把落叶横着吹过, 字随风进出",
+   "enter": "wind",
+   "exit": "wind",
+   "particles": {
+    "motif": "leaf",
+    "flow": "wind",
+    "per_unit": 0.9,
+    "ambient": 1.0,
+    "size": [
+     9,
+     14
+    ],
+    "colors": [
+     "#FFB45A",
+     "#E9772E",
+     "#FFD38A"
+    ]
+   }
+  },
+  {
+   "id": "C4-night",
+   "lines": [
+    14,
+    14
+   ],
+   "palette": {
+    "base": "#ABC5ED",
+    "sung": "#FFFFFF",
+    "outline": "#0A1424",
+    "glow": "#6F9BE0",
+    "halo": "#050A14",
+    "zh": "#C8D9F3",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 108-115s: 暗蓝窗帘后的人影 -> 夜里的草丛",
+   "why": "\"If you will 从一开始就没放在眼里\": 画面转暗转冷, 克制. 只有很少的冷光点慢慢上浮, 唱完像夜雾化开",
+   "enter": "ink",
+   "exit": "dissolve",
+   "particles": {
+    "motif": "mote",
+    "flow": "rise",
+    "per_unit": 0.4,
+    "ambient": 0.9,
+    "size": [
+     6,
+     9
+    ],
+    "colors": [
+     "#9FC0F0",
+     "#DDE8FF"
+    ]
+   }
+  },
+  {
+   "id": "D1-dance",
+   "lines": [
+    15,
+    16
+   ],
+   "palette": {
+    "base": "#FFA1B2",
+    "sung": "#FFFFFF",
+    "outline": "#3A0C18",
+    "glow": "#FF5D7A",
+    "halo": "#1E060C",
+    "zh": "#FFC1CC",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 115-127s: 夜色下的麦草 -> 艾莉丝与鲁迪面对面 (舞会/争执)",
+   "why": "第二次副歌, 同一骨架 (闪光进, 裂纹, 碎落), 但材质换成舞会的玫红与花瓣: 观众要认出\"又是这句, 但不一样了\"",
+   "enter": "flash",
+   "exit": "shatter",
+   "particles": {
+    "motif": "petal",
+    "flow": "burst",
+    "per_unit": 1.0,
+    "ambient": 0.6,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FF8FA6",
+     "#FF5D7A",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "D2-hide",
+   "lines": [
+    17,
+    19
+   ],
+   "palette": {
+    "base": "#D4C3FF",
+    "sung": "#FFFFFF",
+    "outline": "#20163A",
+    "glow": "#B497FF",
+    "halo": "#100A1E",
+    "zh": "#E2D7FF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 127-140s: 粉色云海 -> 戴魔女帽的洛琪希回头 -> 远处的背影",
+   "why": "\"想要隐藏的是 决心背负的泪水\": 藏起来的东西. 雾幕扫过已唱的字 (veil), 泪字落下水滴, 退场像被雾吞掉",
+   "enter": "ink",
+   "exit": "veil",
+   "particles": {
+    "motif": "sparkle",
+    "flow": "fall",
+    "per_unit": 0.6,
+    "ambient": 0.8,
+    "size": [
+     6,
+     10
+    ],
+    "colors": [
+     "#D9CCFF",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "E1-sky",
+   "lines": [
+    20,
+    22
+   ],
+   "palette": {
+    "base": "#BEE8FF",
+    "sung": "#FFFFFF",
+    "outline": "#0E2A40",
+    "glow": "#8FD8FF",
+    "halo": "#061624",
+    "zh": "#D4F0FF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 140-153s: 仰望晴空的鲁迪 (闭眼) -> 粉色光里交握的手",
+   "why": "桥段 \"踮起脚尖望见的世界 / 为了你? 为了自己\": 天光从上方落下, 问句的问号像歪头",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "mote",
+    "flow": "rise",
+    "per_unit": 0.6,
+    "ambient": 1.0,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FFFFFF",
+     "#CDEBFF"
+    ]
+   }
+  },
+  {
+   "id": "E2-fire",
+   "lines": [
+    23,
+    23
+   ],
+   "palette": {
+    "base": "#FFB286",
+    "sung": "#FFF6EC",
+    "outline": "#2E1004",
+    "glow": "#FF7A2E",
+    "halo": "#170802",
+    "zh": "#FFCCB0",
+    "zh_sung": "#FFF6EC"
+   },
+   "scene": "MV 153-163s: 交握的手与脸的特写 (暖红) -> 燃烧的木柴",
+   "why": "\"还不明白 感情的另一面\": 情绪在暗处烧. 火星上升, 裏側二字在唱时翻面 (fry 360) 露出背面",
+   "enter": "ink",
+   "exit": "dissolve",
+   "particles": {
+    "motif": "ember",
+    "flow": "rise",
+    "per_unit": 1.0,
+    "ambient": 1.4,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FF8A3A",
+     "#FFC070",
+     "#FFE6B0"
+    ]
+   }
+  },
+  {
+   "id": "F1-ice",
+   "lines": [
+    24,
+    25
+   ],
+   "palette": {
+    "base": "#B5F2FF",
+    "sung": "#FFFFFF",
+    "outline": "#08242E",
+    "glow": "#7FE8FF",
+    "halo": "#041218",
+    "zh": "#CEF6FF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 163-169s: 冰像碎裂, 冰晶四散",
+   "why": "最终副歌 \"想要破坏\": 画面里是冰碎, 所以第三次的裂纹换成冰蓝, 碎片是冰片",
+   "enter": "flash",
+   "exit": "shatter",
+   "particles": {
+    "motif": "shard",
+    "flow": "burst",
+    "per_unit": 1.2,
+    "ambient": 0.5,
+    "size": [
+     6,
+     11
+    ],
+    "colors": [
+     "#BFF4FF",
+     "#7FE8FF",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "F2-embrace",
+   "lines": [
+    26,
+    26
+   ],
+   "palette": {
+    "base": "#FFE4A6",
+    "sung": "#FFFAEE",
+    "outline": "#3A2A08",
+    "glow": "#FFD066",
+    "halo": "#1E1504",
+    "zh": "#FFEDC5",
+    "zh_sung": "#FFFAEE"
+   },
+   "scene": "MV 169-175s: 逆光的金色阳光里伸出的手",
+   "why": "\"就更想紧紧地拥抱\": 最温暖的一句, 金色光束落在字上, 光尘缓缓上升",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "mote",
+    "flow": "rise",
+    "per_unit": 0.9,
+    "ambient": 1.2,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FFE7A8",
+     "#FFD066",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "F3-candle",
+   "lines": [
+    27,
+    27
+   ],
+   "palette": {
+    "base": "#FFE4A6",
+    "sung": "#FFFAEE",
+    "outline": "#3A2A08",
+    "glow": "#FFD066",
+    "halo": "#1E1504",
+    "zh": "#FFEDC5",
+    "zh_sung": "#FFFAEE"
+   },
+   "scene": "MV 175-181s: 烛台下低头的鲁迪 (室内暗处)",
+   "why": "\"就算抹去那份温柔\": 唱完整句从左到右被擦掉 (erase), 只留烛光色的余烬",
+   "enter": "ink",
+   "exit": "erase",
+   "particles": {
+    "motif": "ember",
+    "flow": "rise",
+    "per_unit": 0.5,
+    "ambient": 0.6,
+    "size": [
+     5,
+     8
+    ],
+    "colors": [
+     "#FFD27A",
+     "#FFB050"
+    ]
+   }
+  },
+  {
+   "id": "F4-overflow",
+   "lines": [
+    28,
+    28
+   ],
+   "palette": {
+    "base": "#FFE4A6",
+    "sung": "#FFFAEE",
+    "outline": "#3A2A08",
+    "glow": "#FFD066",
+    "halo": "#1E1504",
+    "zh": "#FFEDC5",
+    "zh_sung": "#FFFAEE"
+   },
+   "scene": "MV 181-189s: 木屋里的鲁迪特写, 琥珀色室内光",
+   "why": "\"悲伤到满溢而出的思念\": 溢出 = 向上冒的水滴, 越唱越多",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "droplet",
+    "flow": "rise",
+    "per_unit": 1.1,
+    "ambient": 1.0,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FFE2A0",
+     "#FFC870",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "F5-field",
+   "lines": [
+    29,
+    29
+   ],
+   "palette": {
+    "base": "#FFA2AB",
+    "sung": "#FFFFFF",
+    "outline": "#3A0C12",
+    "glow": "#FF5E6E",
+    "halo": "#1E060A",
+    "zh": "#FFC2C8",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 189-195s: 粉紫色光斑 (bokeh) 的逆光画面",
+   "why": "\"不逃避这进退两难\": 光斑里吹起的花瓣, 横向, 情绪在最终副歌里被推着走",
+   "enter": "wind",
+   "exit": "wind",
+   "particles": {
+    "motif": "petal",
+    "flow": "wind",
+    "per_unit": 1.0,
+    "ambient": 1.4,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FF5E6E",
+     "#FF9AA6",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "F5b-wheat",
+   "lines": [
+    30,
+    30
+   ],
+   "palette": {
+    "base": "#FFB286",
+    "sung": "#FFF6EC",
+    "outline": "#2E1004",
+    "glow": "#FF7A2E",
+    "halo": "#170802",
+    "zh": "#FFCCB0",
+    "zh_sung": "#FFF6EC"
+   },
+   "scene": "MV 195-201s: 夕阳下的金色麦田",
+   "why": "第三次\"不顺也好矛盾也罢\": 同一骨架 (闪光进, 碎落), 材质换成麦田的金与火星, 呼应 B1 与 D1",
+   "enter": "flash",
+   "exit": "shatter",
+   "particles": {
+    "motif": "ember",
+    "flow": "burst",
+    "per_unit": 1.0,
+    "ambient": 0.6,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FFC070",
+     "#FF8A3A",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "F6-promise",
+   "lines": [
+    31,
+    31
+   ],
+   "palette": {
+    "base": "#A2D5FF",
+    "sung": "#FFFFFF",
+    "outline": "#0C1F3E",
+    "glow": "#5EB6FF",
+    "halo": "#071226",
+    "zh": "#C2E3FF",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 201-211s: 艾莉丝与鲁迪在风中并肩 (红发飞扬)",
+   "why": "\"想要守护的 是教会我一切的人\": 与 B2 同一句的回归, 魔法阵再次出现, 但这次是全曲最长的一句, 光点更密",
+   "enter": "drift",
+   "exit": "rise",
+   "particles": {
+    "motif": "sparkle",
+    "flow": "rise",
+    "per_unit": 0.9,
+    "ambient": 1.0,
+    "size": [
+     6,
+     10
+    ],
+    "colors": [
+     "#BFE3FF",
+     "#FFFFFF"
+    ]
+   }
+  },
+  {
+   "id": "G-only",
+   "lines": [
+    32,
+    32
+   ],
+   "palette": {
+    "base": "#FFA9B2",
+    "sung": "#FFFFFF",
+    "outline": "#2A1218",
+    "glow": "#FF6B7A",
+    "halo": "#14080C",
+    "zh": "#FFC7CC",
+    "zh_sung": "#FFFFFF"
+   },
+   "scene": "MV 211-221s: 全白画面 -> 红色常春藤墙前挥手的鲁迪",
+   "why": "最后的\"唯有你\": 红线第二次出现并拉满, 背后泛起白光, 字最后变白消失, 与 MV 的白场同步",
+   "enter": "ink",
+   "exit": "white",
+   "particles": {
+    "motif": "petal",
+    "flow": "fall",
+    "per_unit": 0.6,
+    "ambient": 1.2,
+    "size": [
+     7,
+     11
+    ],
+    "colors": [
+     "#FF8FA0",
+     "#FFFFFF"
+    ]
+   },
+   "scale": 1.32
+  }
+ ],
+ "moments": [
+  {
+   "line": 2,
+   "kind": "red_thread",
+   "why": "第一次唱到\"貴方が欲しい\": 红线先只露一次, 为全曲伏笔"
+  },
+  {
+   "line": 5,
+   "kind": "cracks",
+   "units": [
+    0,
+    4
+   ],
+   "why": "壊: 第一次副歌的两个\"壊\", 玻璃从字处裂开"
+  },
+  {
+   "line": 7,
+   "kind": "magic_circle",
+   "why": "守りたい: 洛琪希的水系魔法阵护住整句"
+  },
+  {
+   "line": 8,
+   "kind": "magic_circle",
+   "why": "教えてくれた: 魔法阵延续, 她是\"教会我的人\""
+  },
+  {
+   "line": 9,
+   "kind": "red_thread",
+   "why": "貴方だけ: 曲名, 红线完整拉出"
+  },
+  {
+   "line": 15,
+   "kind": "cracks",
+   "units": [
+    0,
+    4
+   ],
+   "color": "#FF5D7A",
+   "why": "第二次\"壊したい\": 同一裂纹, 换舞会玫红"
+  },
+  {
+   "line": 17,
+   "kind": "veil",
+   "why": "隠したい: 雾幕盖过刚唱完的字"
+  },
+  {
+   "line": 19,
+   "kind": "tear",
+   "units": [
+    0
+   ],
+   "why": "涙だけ: 泪字落下三滴"
+  },
+  {
+   "line": 20,
+   "kind": "rays",
+   "color": "#FFF2D0",
+   "why": "背伸びして見える世界: 天光落下, 对应仰望天空的镜头"
+  },
+  {
+   "line": 21,
+   "kind": "tilt",
+   "units": [
+    3
+   ],
+   "why": "貴方のため？: 问号所在的字歪头"
+  },
+  {
+   "line": 23,
+   "kind": "flip",
+   "units": [
+    9
+   ],
+   "why": "裏側: 翻到背面"
+  },
+  {
+   "line": 24,
+   "kind": "cracks",
+   "units": [
+    0,
+    4
+   ],
+   "color": "#9FEFFF",
+   "why": "第三次\"壊したい\": 画面是冰像碎裂, 裂纹换冰蓝"
+  },
+  {
+   "line": 26,
+   "kind": "rays",
+   "why": "抱きしめていたい: 逆光金色阳光"
+  },
+  {
+   "line": 31,
+   "kind": "magic_circle",
+   "why": "守りたい (终): 魔法阵回归"
+  },
+  {
+   "line": 32,
+   "kind": "red_thread",
+   "why": "貴方だけ (终): 红线拉满"
+  },
+  {
+   "line": 32,
+   "kind": "whiteout",
+   "why": "MV 211s 全白: 背后泛白光"
+  }
+ ],
+ "words": [
+  {
+   "jp": "貴方",
+   "zh": "你",
+   "color": "#FF8A98",
+   "why": "全曲告白对象, 与红线同色系; 中文\"你\"同色"
+  },
+  {
+   "jp": "壊",
+   "zh": "破坏",
+   "color": "#FF6A5A",
+   "why": "破坏欲, 艾莉丝的红"
+  },
+  {
+   "jp": "守",
+   "zh": "守护",
+   "color": "#8CD0FF",
+   "why": "守护, 洛琪希水魔法的蓝; 与\"壊\"同骨架反材质"
+  },
+  {
+   "jp": "涙",
+   "zh": "泪水",
+   "color": "#B8E4FF",
+   "why": "泪"
+  }
+ ]
+}

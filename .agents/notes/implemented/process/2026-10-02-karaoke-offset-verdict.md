@@ -72,3 +72,9 @@ Decision-ID: karaoke-offset-verdict
   下一个人能看出"是凭什么放行的"，而不是只看到一个 PASS。
 - 已知边界：`step_jump` 需要足够行数（`2*half+1 = 17` 行起），
   短歌或行数少的工程会返回 0.0 而落到稳健离散度那条通道上  这是有意为之（宁可退回保守判据）。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.

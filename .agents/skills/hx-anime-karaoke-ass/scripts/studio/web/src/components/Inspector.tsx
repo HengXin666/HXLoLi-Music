@@ -45,7 +45,9 @@ function plain(it: ExplainItem): string[] {
   if (role || a.technique || a.idea) out.push(`这句在全曲弧线里是${role ?? '—'}${a.technique ? `, 手法 ${a.technique}` : ''}${a.idea ? `, 构想 "${a.idea}"` : ''}.`);
   if (a.why || a.section_why) out.push(`为什么: ${a.why ?? a.section_why}`);
   const rf = it.ref.window;
-  out.push(`参考 ASS 同一时段 ${rf} 条, 成品 ${it.n} 条${rf ? ` (${(it.n / rf).toFixed(2)} 倍)` : ''}.`);
+  const cmp = useStore.getState().project?.cmp;
+  const cw = cmp && cmp.kind !== 'ref' && cmp.kind !== 'none' ? cmp.label : '参考 ASS';
+  if (!cmp || cmp.kind !== 'none') out.push(`${cw} 同一时段 ${rf} 条, 成品 ${it.n} 条${rf ? ` (${(it.n / rf).toFixed(2)} 倍)` : ''}.`);
   return out;
 }
 

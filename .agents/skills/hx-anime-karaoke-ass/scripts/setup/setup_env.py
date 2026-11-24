@@ -30,12 +30,11 @@
     `uv run` 仍可用 (实测它会把脚本目录放进 sys.path[0], 跨脚本 import 也通),
     只是新脚本首跑要等装包。
 
-用法:
-  uv run scripts/setup.py            # 需要 uv 在 PATH; 但本脚本只用标准库
-  python3 scripts/setup.py           # 等价
-  python3 scripts/setup.py --check   # 只体检不装 (缺什么报什么, 退出码非 0)
-  python3 scripts/setup.py --recreate # 删掉重建
-  python3 scripts/setup.py --no-fonts # 跳过字体下载 (52MB)
+用法 (平时不用手动跑: bin/hx-karaoke 发现没有环境会自动调它):
+  python3 scripts/setup/setup_env.py             # 只用标准库; 建环境本身需要 uv 在 PATH
+  python3 scripts/setup/setup_env.py --check     # 只体检不装 (缺什么报什么, 退出码非 0)
+  python3 scripts/setup/setup_env.py --recreate  # 删掉重建
+  python3 scripts/setup/setup_env.py --no-fonts  # 跳过字体下载 (52MB)
 """
 from __future__ import annotations
 
@@ -45,7 +44,15 @@ import shutil
 import subprocess
 import sys
 
-from setup.env import FONTS, SCRIPTS, STATE, VENV, installed, missing, run, script_deps, wanted, write_req
+# Agent Notes: 卡拉OK setup_env 补齐 have_uv/HERE 导入, 修复 hx-karaoke 首次建环境
+# .agents/notes/implemented/bug-fix/2026-11-20-karaoke-setup-env-imports.md
+# scripts/ 是 setup.env 的包根. bin/hx-karaoke 会设 PYTHONPATH, 但直接
+# `python3 scripts/setup/setup_env.py` 时 sys.path[0] 是 scripts/setup, 找不到 setup 包.
+_SCRIPTS_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SCRIPTS_ROOT not in sys.path:
+    sys.path.insert(0, _SCRIPTS_ROOT)
+
+from setup.env import HERE, SCRIPTS, STATE, VENV, have_uv, missing, run, script_deps, wanted, write_req
 from setup.fonts_check import check_fonts
 
 def fetch_fonts() -> int:
@@ -115,7 +122,7 @@ sys.exit(1 if bad else 0)
 
 
 def install_command() -> tuple[bool, str]:
-    """把 bin/hx-karaoke 接到 PATH 上 (~/.local/bin)。返回 (是否可用, 说明)."""
+    """把 bin/hx-karaoke 接到 PATH 上 (~/.local/bin)。返回 (是否可用, 说明); 只有接不上才算不可用."""
     src = os.path.join(HERE, "bin", "hx-karaoke")
     if not os.path.exists(src):
         return False, f"缺少 {src}"
@@ -131,8 +138,10 @@ def install_command() -> tuple[bool, str]:
         if os.path.lexists(dst):
             os.remove(dst)
         os.symlink(src, dst)
+    # 不在 PATH 上只是提醒: 环境已就绪, bin/hx-karaoke 按全路径照样能跑。
+    # 若当成失败, 首次经 bin/hx-karaoke 自动建环境时 set -e 会在建完后中止, 脚本根本不跑。
     on_path = bindir in os.environ.get("PATH", "").split(os.pathsep)
-    return on_path, (dst if on_path else f"{dst} (不在 PATH 上, 请把 {bindir} 加进 PATH)")
+    return True, (dst if on_path else f"{dst} (提醒: 不在 PATH 上, 把 {bindir} 加进 PATH 后可直接敲 hx-karaoke)")
 
 
 def main() -> int:
@@ -201,7 +210,7 @@ def main() -> int:
     if not ok:
         return 1
 
-    print(f"\n[setup] 就绪。跑脚本一律用:\n    hx-karaoke <脚本> [参数...]")
+    print("\n[setup] 就绪。跑脚本一律用:\n    hx-karaoke <脚本> [参数...]")
     print(f"    (即 {VENV}/bin/python; 不要再 uv run, 也不要另建 .venv)")
     return 0
 

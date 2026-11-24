@@ -15,6 +15,7 @@ from __future__ import annotations
 import glob
 import os
 import re
+import shutil
 import subprocess
 
 # Agent Notes: 卡拉OK skill 的环境收敛为一条命令 + 仓库外的单一共享 venv

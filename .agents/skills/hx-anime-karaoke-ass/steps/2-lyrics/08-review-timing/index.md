@@ -49,8 +49,11 @@ echo $?     # 非 0 = 有 CTC 塌缩或句内间奏，不许进下一步
 
 为什么它现在会拦截: 历史版本只打印报告、退出码恒为 0. 实测某工程里它正确报出 2 处塌缩, 但因为没人读报告, 错误一路进了成片, 那句歌词比声音晚了 20 秒. `--max-collapse -1` 可显式放行(等于书面声明"我看过且认可")
 
+报告的判定段带 `timing sha256:` 一行, 绑定被体检的 `timing.json`. 体检后又改了 timing.json (含重跑 apply_fixes), 必须重跑体检, 否则门禁判 FAIL. 门禁同时核对 `fixes.json` 的每条修正已在 `timing.json` 生效
+
 ## 产物与过关条件
 
 - `proj/timing.json`(终稿, 音拍数 = `lyrics.txt` 的音拍数)、`proj/fixes.json`(含 `_why`)
 - `proj/review/health.txt` 判定行: **CTC塌缩 = 0、句内间奏 = 0**. 非 0 不许往下走
+- `proj/review/coverage.txt`: 本步定稿后跑 `check_lyrics_coverage.py` 写出, 判定行为 `PASSED`. 命令见 `steps/5-verify/13-validate/index.md`
 - `check_sync.py` 的 `!!` 逐条有结论(真问题进 fixes, 误报记原因)

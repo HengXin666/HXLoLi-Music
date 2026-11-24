@@ -108,6 +108,7 @@ class Registry:
         self.units, self.themes, self.motions, self.recipes, self.families = [], {}, {}, {}, {}
         self.inputs = {}
         self._keys = set()
+        self.meta = {}       # 工程级元数据 (Generator 写): text_lift = 字层抬高量 (Doc.TEXT_LIFT), 台子据此认字身层
 
     def add(self, unit):
         if unit["key"] in self._keys:
@@ -129,6 +130,10 @@ class Registry:
         self.inputs[name] = file_sha(path)
 
     def doc(self):
+        """清单正文. meta.text_lift 供验收台认字身层 (不再假设 TEXT_LIFT=0).
+
+        Agent Notes: .agents/notes/implemented/feature/2026-11-17-karaoke-station-loop.md
+        """
         presets = dict(themes=self.themes, motions=self.motions, families=self.families,
                        recipes={k: {kk: vv for kk, vv in v.items() if kk != "fn"} for k, v in self.recipes.items()})
         tr = TR.doc()
@@ -143,6 +148,8 @@ class Registry:
                     schema=dict(phrase=PHRASE_SCHEMA, segment=SEGMENT_SCHEMA, card=CARD_SCHEMA))
         if tr:
             body["code"] = dict(fns=tr["fns"], entry=tr["entry"], data_names=tr["data_names"])
+        if self.meta:
+            body["meta"] = dict(self.meta)
         body["revision"] = sha_obj(dict(u=[(u["key"], u.get("fp")) for u in self.units], p=presets))
         return body
 

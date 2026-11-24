@@ -118,3 +118,18 @@ Decision-ID: karaoke-skill-genericize
 - 已知未做：`examples/mushoku_ed1` 的 `anime.notes.md` 里仍有 2 处作品名 
   那是**示例工程自己的内容**，不是 skill 的契约，保留是正确的。
 - 2026-11-09: `scripts/assfx/base/`, `layer/`, `text/` 与 `templates/` 加预览台参数层 (单元清单, 参数回读, 统一旋钮, 代码追踪), 种子按 key 派生 (`base/seeding.py`), `TEXT_LIFT` 与高亮描边色可按工程设置 (缺省不变), swoop 等拆到 `layer/fx_motion.py`. 本次未改 `scripts/kfx/` 与 `examples/`. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/kfx/ 新增 kfx 唯一生成器 (kfx_*.py, fingerprint.py), 决策见 architecture/2026-11-22-karaoke-kfx-single-generator.md, architecture/2026-11-23-kfx-manifest-for-studio.md, architecture/2026-11-23-kfx-motifs-beats-sync.md, feature/2026-11-24-kfx-guilty-crown-verbs.md. 本决策的 music_events.py / voices.py 没有改, 仍然有效.
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.
+- examples/mushoku_ed1 的 make_ass.py 改为组合式接线 (逐句设计搬进 design.ir.json, 成品逐字节不变), fx_main.py / motif_img.py 加 @main_motif 来源标记与可读下限; 见 architecture/2026-11-17-karaoke-compositional-generator.md. 本 skill 的金样现在是 examples/mushoku_ed1/kfx/ (kfx_test.py).
+- templates/motif_img.py 贴图前检查具象素材可读下限 (assfx/draw/legible.below_floor, known-gaps #12); 见 architecture/2026-11-17-karaoke-compositional-generator.md.
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.
+- scripts/setup/ 修复 setup_env.py 的导入与 env.py 缺 shutil (bug-fix/2026-11-20-karaoke-setup-env-imports.md).
+- scripts/grid/check_timing_health.py 报告里写入被体检的 timing.json 的 sha256, 体检后再改时间轴旧报告不作数.
+- scripts/kf/kf_timing.py 在 uv 内联依赖里补齐网络歌词源要的包 (diskcache httpx h2 brotli pyaes jaconv).
+- scripts/qa/ 新增 calib_vector_gap.py: 矢量件压字门禁的标定 (硬规则 10b, shared/calibration.md); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

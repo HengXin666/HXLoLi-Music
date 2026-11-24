@@ -44,8 +44,14 @@ export function imgRefs(text: string): string[] {
  * .agents/notes/implemented/feature/2026-11-13-karaoke-studio-img-inject.md
  */
 async function injectImages(o: OctopusInstance, subUrl: string): Promise<{ written: number; missing: string[] }> {
-  const text = await (await fetch(subUrl)).text();
-  const refs = imgRefs(text);
+  // 先要一份小清单 (服务端扫好的), 没有贴图就不再整份下载 ASS; 老服务没有这个接口时退回自己扫
+  let refs: string[];
+  let text: string | null = null;
+  const which = subUrl.endsWith('/api/ass/ref') ? 'ref' : 'out';
+  const lr = await fetch(subUrl.replace(/\/api\/ass\/(out|ref)$/, `/api/imgrefs?which=${which}`)).catch(() => null);
+  if (lr && lr.ok) refs = ((await lr.json()) as { refs: string[] }).refs;
+  else { text = await (await fetch(subUrl)).text(); refs = imgRefs(text); }
+  if (!refs.length) return { written: 0, missing: [] };
   const base = subUrl.replace('/api/ass/', '/api/img/') + '/';
   const missing: string[] = [];
   let written = 0;
@@ -60,7 +66,7 @@ async function injectImages(o: OctopusInstance, subUrl: string): Promise<{ writt
       missing.push(`${rel} (${String((e as Error)?.message ?? e)})`);
     }
   }));
-  if (written) o.setTrack(text);
+  if (written) o.setTrack(text ?? await (await fetch(subUrl)).text());
   return { written, missing };
 }
 
@@ -169,7 +175,11 @@ export async function createOctopus(
     workerUrl: `${base}subtitles-octopus-worker.js`,
     legacyWorkerUrl: `${base}subtitles-octopus-worker-legacy.js`,
     fonts: p.fonts.map((f) => f.url),
-    availableFonts: avail,
+    // availableFonts 传空: 字体已经整批预载. worker 预载用 'font<i>-文件名', 按名懒加载用 'font<自增>-文件名', 两套编号撞名时
+    // 写同一个文件 -> FS error, worker 崩 (罪恶王冠: Lolita 先懒加载占 font0, Cormorant Light 懒加载成 font1-CormorantGaramond-Light.ttf,
+    // 与预载的 font1 同名). libass 从 /fonts 目录按族名找字, 不需要这张索引. avail 仍算出来只为打同名日志.
+    availableFonts: {},
+    ...(p.fallback_font ? { fallbackFont: p.fallback_font } : {}),
     onReady: () => { void ready(); },
     onError: (e: unknown) => {
       const msg = String((e as ErrorEvent)?.message ?? (e as Error)?.message ?? e);

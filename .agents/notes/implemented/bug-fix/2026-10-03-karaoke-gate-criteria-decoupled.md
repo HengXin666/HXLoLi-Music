@@ -80,3 +80,10 @@ Decision-ID: karaoke-gate-criteria-decoupled
 - 已知边界: `check_fx_visible.py --renderer octopus` 每次启动一个 chromium, 慢得多;
   它与 `render_octopus.py` 共用 `/tmp/hxocto-work`, **并发跑会互相删除工作区**
   (实测并发时报 `ENOENT: .../frame036.png` 与 `mkdtemp` 失败)。并发时用 `TMPDIR` 隔离。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.
+- scripts/qa/ 新增 calib_vector_gap.py: 矢量件压字门禁的标定 (硬规则 10b, shared/calibration.md); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

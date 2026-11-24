@@ -128,3 +128,11 @@ Decision-ID: karaoke-beat-layer
   换歌要重调; 判据是"任一时刻存活条数"而不是总事件数。
 - `image.py` 的 `a_peak` 是 **alpha 值**(0=不透明, 255=全透明), 图片默认 8。
   (踩过: 传 255 得到全透明, 渲染空白。)
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/kfx/ 新增 kfx 唯一生成器 (kfx_*.py, fingerprint.py), 决策见 architecture/2026-11-22-karaoke-kfx-single-generator.md, architecture/2026-11-23-kfx-manifest-for-studio.md, architecture/2026-11-23-kfx-motifs-beats-sync.md, feature/2026-11-24-kfx-guilty-crown-verbs.md. 本决策的 music_events.py / voices.py 没有改, 仍然有效.
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.

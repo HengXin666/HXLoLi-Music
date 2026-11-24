@@ -2,15 +2,18 @@
 
 ## 只做这一件事
 
-把前面九步(40~48)的结论翻译成生成器, 跑出 `proj/out.ass`. 出入场规划、band 登记、卡片都由库负责
+把前面九步(40~48)的结论写进设计稿 `proj/design.md`, 用 kfx 跑出 `proj/out.kfx.ass`
 
 ## 命令
 
+唯一做法: 写 `proj/design.md`, 用 kfx 出片. 格式, 动作表, 踩过的坑见 `scripts/kfx/kfx_README.md`
+
 ```bash
-cp <skill>/templates/make_ass_template.py proj/make_ass.py
-# 改：ASSFX 路径、字体、JP_Y、PHRASES、fx_xxx 函数
-hx-karaoke proj/make_ass.py proj/out.ass
+hx-karaoke kfx/kfx_build.py proj                       # -> proj/out.kfx.ass
+hx-karaoke kfx/kfx_check.py proj/out.kfx.ass --fonts <字体目录>
 ```
+
+不许另写生成器. 下面「五层的调度」以后的内容是旧逐句 fx 流程 (`make_ass.py`) 的说明, 只在维护旧工程时读
 
 ## 五层的调度(本步的核心)
 
@@ -72,6 +75,13 @@ G.card("title", 1.0, 6.0, items, fx)  # 卡片 band 自动 = 文字墨迹 + 5%
 ## 产物与过关条件
 
 `proj/out.ass` 与 `proj/out.manifest.json`; 每句的 band 已登记、事件 Name 标注 `ly:<band>` / `fx:<band>` / `card:<name>`; `clamp` 计数逐句过一眼
+
+生成器写完后登记 `proj/bible/landing.json`: 每个专属符号落在哪个 fx 函数, 哪几句, 函数体里哪段字面量画它. 至少 3 个专属符号要走通追溯链 (格式见 `../../3-anime-bg/11-design-bible/impl/formats.md`):
+
+```bash
+hx-karaoke judge/check_bible.py --project proj --stage landing   # 追溯链 + 盲审认出率
+hx-karaoke judge/check_bible.py --project proj --trace           # 打印 符号 -> 来源 -> fx -> 句
+```
 
 ## 模板与参考工程
 

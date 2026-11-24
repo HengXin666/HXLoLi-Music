@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { reloadRef, shortcut } from '../lib/actions';
+import { reloadLoop, reloadRef, shortcut } from '../lib/actions';
 import { api, watch } from '../lib/api';
 import { clock } from '../lib/clock';
 import { lineAt, sync, syncFail, syncOk, useStore } from '../lib/store';
 import { onPlacementChanged, refreshPlacement } from '../lib/placement';
 import ContextMenu from './ContextMenu';
+import DesignPanel from './DesignPanel';
 import Inspector from './Inspector';
 import LyricsPanel from './LyricsPanel';
 import Monitor from './Monitor';
@@ -16,6 +17,7 @@ import s from './App.module.css';
 
 const LS_TL = 'hxstudio.tlH';
 const LS_SIDE = 'hxstudio.sideW';
+const LS_TAB = 'hxstudio.sideTab';
 
 function useSplit(key: string, def: number, min: number, max: () => number, axis: 'x' | 'y', invert: boolean) {
   const [v, setV] = useState(() => Number(localStorage.getItem(key)) || def);
@@ -57,6 +59,8 @@ export default function App() {
   const maxSide = useCallback(() => Math.max(260, Math.min(640, window.innerWidth * 0.45)), []);
   const [tlH, onTl] = useSplit(LS_TL, Math.round(window.innerHeight * 0.42), 120, maxTl, 'y', true);
 
+  const [tab, setTab] = useState<'lyrics' | 'design'>(() => (localStorage.getItem(LS_TAB) === 'design' ? 'design' : 'lyrics'));
+  const pickTab = (t: 'lyrics' | 'design') => { setTab(t); localStorage.setItem(LS_TAB, t); };
   const [sideW, onSide] = useSplit(LS_SIDE, Math.round(Math.min(420, window.innerWidth * 0.26)), 240, maxSide, 'x', true);
 
   // 数据
@@ -67,13 +71,14 @@ export default function App() {
       if (!live) return;
       clock.setSrc(p.audio[0]);
       set({ project: p, edl: p.edl, duration: p.duration, view: { v0: 0, v1: p.duration || 1 }, fontsMissing: p.fonts_missing ?? [], fontsUnparsed: p.fonts_unparsed ?? [] });
-      const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]);
+      const [lines, out] = await Promise.all([api.lyrics(), api.profile('out').catch(() => null)]);
       if (!live) return;
       set({ lines, out });
       api.profile('ref').then((ref) => live && set({ ref })).catch(() => undefined);
       api.peaks().then((peaks) => live && set({ peaks })).catch(() => undefined);
       api.clips().then((r) => live && set({ clips: r.clips, beats: r.beats })).catch(() => undefined);
       api.reviews().then((reviews) => live && set({ reviews })).catch(() => undefined);
+      reloadLoop().catch(() => undefined);
       refreshPlacement().catch(() => undefined);
       document.body.dataset.ready = '1';
     })().catch((e) => { document.body.dataset.ready = 'error'; console.error(e); });
@@ -85,15 +90,17 @@ export default function App() {
       // 监视器只依赖 out.ass 本身: 先发 assRev, 不等 lyrics/profile (它们 500 时原来会把监视器卡在旧 out.ass)
       if (what.includes('out')) set({ assRev: useStore.getState().assRev + 1 });
       if (what.includes('out') || what.includes('manifest')) {
-        await step('data', async () => { const [lines, out] = await Promise.all([api.lyrics(), api.profile('out')]); set({ lines, out }); });
+        await step('data', async () => { const [lines, out] = await Promise.all([api.lyrics(), api.profile('out').catch(() => null)]); set({ lines, out }); });
         api.clips().then((r) => set({ clips: r.clips, beats: r.beats })).catch(() => undefined);
         // out.ass 换了 \fn 字体也会变: 只刷字体标签, 不换 project (换 project 会重建 libass 实例)
         api.project().then((p) => set({ fontsMissing: p.fonts_missing ?? [], fontsUnparsed: p.fonts_unparsed ?? [] })).catch(() => undefined);
       }
+      if (what.includes('design')) window.dispatchEvent(new Event('hx-design'));
       if (what.includes('review')) await step('review', async () => set({ reviews: await api.reviews() }));
       if (what.includes('edl')) await step('edl', async () => set({ edl: await api.edl() }));
       if (what.includes('job') || what.includes('placement')) await step('place', onPlacementChanged);
-      if (what.includes('ref') || what.includes('playlist')) await step('ref', reloadRef);
+      if (what.includes('ref') || what.includes('playlist') || what.includes('cmp') || what.includes('prev')) await step('ref', reloadRef);
+      if (what.some((w) => ['accept', 'review', 'cmp', 'job', 'prev'].includes(w))) reloadLoop().catch(() => undefined);
     };
     sync.retry = () => { void refresh(['out', 'manifest', 'review', 'edl', 'placement', 'ref']); };
     const off = watch((what) => { void refresh(what); }, (up) => set({ live: up ? 'up' : 'down' }));
@@ -103,7 +110,7 @@ export default function App() {
   // 播放状态, 当前句, 播放选区到点停, 循环
   useEffect(() => {
     const a = clock.audio;
-    const sync = () => set({ playing: !a.paused, duration: clock.duration || useStore.getState().duration });
+    const sync = () => set({ playing: clock.playing, duration: clock.duration || useStore.getState().duration });
     a.addEventListener('play', sync);
     a.addEventListener('pause', sync);
     a.addEventListener('loadedmetadata', sync);
@@ -142,7 +149,13 @@ export default function App() {
           </div>
           <div className={s.vsplit} onPointerDown={onSide} role="separator" aria-orientation="vertical" />
           <div className={s.side} data-ins={inspector || undefined}>
-            <LyricsPanel />
+            <div className={s.sideTop}>
+              <div className={s.tabs} role="tablist">
+                <button role="tab" aria-selected={tab === 'lyrics'} data-on={tab === 'lyrics' || undefined} onClick={() => pickTab('lyrics')}>歌词</button>
+                <button role="tab" aria-selected={tab === 'design'} data-on={tab === 'design' || undefined} onClick={() => pickTab('design')} data-testid="tab-design">设计稿</button>
+              </div>
+              {tab === 'lyrics' ? <LyricsPanel /> : <DesignPanel />}
+            </div>
             {inspector && <Inspector />}
           </div>
         </div>

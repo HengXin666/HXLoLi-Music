@@ -63,3 +63,10 @@ Decision-ID: karaoke-motif-text-gap
   - 缺字分档: 白名单 7 段按 1em 报 W, 分别是拉丁 0020-024F、通用标点 2000-206F、CJK 2E80-9FFF (含全角标点和假名)、谚文 AC00-D7AF、兼容汉字 F900-FAFF、竖排标点 FE30-FE4F、全角半角 FF00-FFEF. 白名单之外一律报 E (默认档), 包括制表符、几何符号、⸺、私用区、emoji 和组合字符. 缺字不论分在哪一档都要出框, 分档只决定报 W 还是报 E, 没有"分不进就跳过"这条路. 缺的空白字符原来按 0.6em 前进而且不出框, 这是同一类出口, 也一起堵了.
   - 零宽字符 (200B-200F、2060-2064、FEFF) 缺字时同样按 1em 算. 用户 2026-11-11 定: 误报看一眼就能排除, 漏判是静默放行. 报错里会写明"含零宽字符, 已按 1em 保守估算".
   - 自检的边界 (给后来的人): 防"误差上限算小" (M1 上限减半) 原先只有解析 V 形一个用例撑着. 随机 300 例在 M1 下不变红, 因为随机曲线的最小值很少正好落在两次采样中点. 现在补了随机 V 形族 (最坏相位 0.5), 成为第二个独立来源. 以后改 `sweep_gap`, 两者都必须在 M1 下变红.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.
+- scripts/qa/ 新增 calib_vector_gap.py: 矢量件压字门禁的标定 (硬规则 10b, shared/calibration.md); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

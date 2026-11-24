@@ -56,7 +56,9 @@ hx-karaoke render_octopus.py proj/out.ass --out proj/review/beat/ --times 60,120
 
 **不要用 ffmpeg 截**  本机 ffmpeg 的 libass 不支持 VSFilterMod 标签, 判定"图片/纹理能不能用"会得到完全错误的结论(实测渲染成纯色白块)
 
-## 过关条件
+## 产物与过关条件
+
+产物: 生成器里的卡点层调用 (`49-generate` 出 `out.ass`), 与真渲染抽帧 `proj/review/beat/`
 
 - `hx-karaoke check_fx_visible.py` 在卡点密集处的亮像素达标(整帧 ≥2000, 良好值 2 万~3 万)
 - **任一时刻存活条数 ≥40**(参考 64; 低于 40 画面读起来是"稀稀拉拉几个图形")

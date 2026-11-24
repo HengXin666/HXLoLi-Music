@@ -32,7 +32,10 @@ hx-karaoke music_events.py --inst proj/stems/inst.wav --out proj/review/music-ev
 
 `strength` 是每个起音的归一化强度, 生成器按它决定**单次群发条数**
 
-## 过关条件
+## 产物与过关条件
+
+产物: `proj/review/music-events.json`
+
 
 - `--verify` 输出里 **起音与歌词音拍(±40ms)的重合率应显著低于 100%**. 实测 79/665 = **11.9%**(人声分离干净的正常值). 若显著偏离, 先怀疑人声分离质量. 重合率过高(>60%)说明**伴奏轨里还有人声泄漏**  回 `04-vocals` 重分, 不要往下做
 - BPM 必须能与 `07-grid` 的 `grid.json` 对上(实测两处独立算出都是 **84.5**). 对不上说明起音抽错了, 不要往下做

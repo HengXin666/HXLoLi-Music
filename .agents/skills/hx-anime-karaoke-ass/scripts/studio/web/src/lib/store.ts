@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Beats, Clip, Edl, ExplainItem, FontMissing, HitEvent, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review, ReviewBadLine } from './api';
+import type { Beats, Clip, Edl, ExplainItem, FontMissing, HitEvent, LoopState, LyricLine, Peaks, PlaceLine, PlacementRes, Preset, Project, ProfileRes, Review, ReviewBadLine } from './api';
 import { buildIndex, type Index, type Range } from './sel';
 import { defaultVis, type VisMap } from './tracks';
 
@@ -76,6 +76,9 @@ interface S {
   place: PlacementRes | null;
   placeOpen: boolean;
   refOpen: boolean;
+  /** 看, 挑, 改, 证: 标注状态 + 候选 + 对比对象 (服务端 /api/loop). loopOpen = 顶栏 "闭环" 面板 */
+  loopState: LoopState | null;
+  loopOpen: boolean;
   placeCand: Preset | null;
   placeLines: PlaceLine[] | null;
   toast: string;
@@ -137,6 +140,8 @@ export const useStore = create<S>((set) => ({
   place: null,
   placeOpen: false,
   refOpen: false,
+  loopState: null,
+  loopOpen: false,
   placeCand: null,
   placeLines: null,
   toast: '',

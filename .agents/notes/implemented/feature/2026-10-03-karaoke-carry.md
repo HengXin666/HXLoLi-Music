@@ -90,3 +90,9 @@ Decision-ID: karaoke-carry
 ## 追加: 2026-11-10 歌词位置预设
 
 - `layer/gen.py` 清单每句新增 `rows` 字段 (日文/中文行宽记账, 来自 `layout.py`), 供预览台算换预设后的平移; `carry.py` 未改.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.

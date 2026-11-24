@@ -112,3 +112,16 @@ Decision-ID: karaoke-scripts-grouping
   本 skill 是 Python 工具链，`references/code-quality.md` 的 `SOURCE_SUFFIXES` 本身就认 `.py`。
   这次没有 `.js`/`.mjs`/`.cjs` 需要处理。
 - 2026-11-09: `scripts/assfx/base/` 新增 `seeding.py`, `layer/` 新增 `fx_motion.py`, `manifest.py`, `overrides.py`, `trace.py`, 另新增 `scripts/assfx/presets/` 与 `scripts/assfx/tests/`; 分组结构本次未改. 改动的决策见 `.agents/notes/implemented/feature/2026-11-09-karaoke-fx-gate-studio.md`.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/kfx/ 新增 kfx 唯一生成器 (kfx_*.py, fingerprint.py), 决策见 architecture/2026-11-22-karaoke-kfx-single-generator.md, architecture/2026-11-23-kfx-manifest-for-studio.md, architecture/2026-11-23-kfx-motifs-beats-sync.md, feature/2026-11-24-kfx-guilty-crown-verbs.md. 本决策的 music_events.py / voices.py 没有改, 仍然有效.
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.
+- scripts/setup/ 修复 setup_env.py 的导入与 env.py 缺 shutil (bug-fix/2026-11-20-karaoke-setup-env-imports.md).
+- scripts/grid/check_timing_health.py 报告里写入被体检的 timing.json 的 sha256, 体检后再改时间轴旧报告不作数.
+- scripts/kf/kf_timing.py 在 uv 内联依赖里补齐网络歌词源要的包 (diskcache httpx h2 brotli pyaes jaconv).
+- scripts/qa/ 新增 calib_vector_gap.py: 矢量件压字门禁的标定 (硬规则 10b, shared/calibration.md); 见 architecture/2026-11-17-karaoke-compositional-generator.md.

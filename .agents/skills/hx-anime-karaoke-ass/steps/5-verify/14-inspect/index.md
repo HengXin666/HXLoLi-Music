@@ -70,4 +70,4 @@ hx-karaoke still_compare.py --ref review/still/ref --new review/still/new \
 
 ## 产物与过关条件
 
-`proj/review/*.jpg` 拼图; 上面每一条都有结论(通过 / 已修 / 明确接受). 发现问题回到第 11–12 步改, 改完**重跑第 13 步门禁**
+`proj/review/*.jpg` 拼图; 上面每一条都有结论(通过 / 已修 / 明确接受). 发现问题回到 `49-generate` 或 `12-station` 改, 改完**重跑第 13 步门禁**

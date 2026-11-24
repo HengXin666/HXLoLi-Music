@@ -25,7 +25,8 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   await p.goto(cfg.url, { waitUntil: 'load' });
   await p.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 30000 });
   await p.waitForFunction(() => window.__hx.store.getState().octo === 'ready', null, { timeout: 40000 });
-  await p.waitForFunction(() => window.__hx.store.getState().clips.length > 0 && window.__hx.store.getState().ref, null, { timeout: 30000 });
+  // 参考 profile 只在有对比对象时才有 (没有参考 ASS 的新歌: 对比上一版 / 候选, 都没有就是 null)
+  await p.waitForFunction(() => { const s = window.__hx.store.getState(); return s.clips.length > 0 && (!s.project.ref_ass || s.ref); }, null, { timeout: 30000 });
   await sleep(500);
 
   const st = (fn) => p.evaluate(fn);
@@ -89,9 +90,11 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
       const q = l.slice(9).split(',', 5);
       const lay = parseInt(q[0], 10), sty = q[3].trim(), nm = q[4].trim();
       const card = CARD.has(sty) || (sty === 'FX' && (nm.startsWith('card:') || ['fx:title', 'fx:pro', 'fx:mid', 'fx:out'].includes(nm)));
-      if (card) c.card++;
-      else if (sty === 'FX') { c.fx++; if (lay === 7) c.l7++; }
-      else if (['JP', 'RB', 'CN', 'LAT'].includes(sty)) { c.text++; if (sty === 'JP' || sty === 'LAT') c.jp++; }
+      const known = sty === 'FX' || ['JP', 'RB', 'CN', 'LAT'].includes(sty) || CARD.has(sty);
+      // 不认识的样式 (如工程自定义的 NAME) 按 Name 前缀归轨, 与 tracks.ts trackOf 同一规则
+      if (card || (!known && nm.startsWith('card:'))) c.card++;
+      else if (sty === 'FX' || (!known && nm.startsWith('fx:'))) { c.fx++; if (lay === 7) c.l7++; }
+      else if (['JP', 'RB', 'CN', 'LAT'].includes(sty) || (!known && nm.startsWith('ly:'))) { c.text++; if (sty === 'JP' || sty === 'LAT' || !known) c.jp++; }
     }
     return c;
   });
@@ -104,7 +107,22 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     try { await reset(); await fn(); results.push({ id, row, ok: true, ms: Date.now() - t0 }); }
     catch (e) { results.push({ id, row, ok: false, err: String(e.message || e).slice(0, 300), ms: Date.now() - t0 }); }
   }
-  const LI = 3; // p03 (If you do) なんだって怖くないから: 有振假名
+  // 测试句按工程数据挑, 不写死某首歌: 第一句 >= 10 字且有振假名 (整首没有振假名就只要 >= 10 字), 下一句 >= 3 字
+  const LI = await S(`(() => { const ok = (i) => i >= 1 && s.lines[i].chars.length >= 10 && s.lines[i + 1] && s.lines[i + 1].chars.length >= 3;
+    let i = s.lines.findIndex((l, i) => ok(i) && l.chars.some((c) => c.ruby)); if (i < 0) i = s.lines.findIndex((l, i) => ok(i)); return i; })()`);
+  if (LI < 0) throw new Error('找不到 >= 10 字的句做测试');
+  const LNO = (li) => S(`'L' + String(s.lines[${li}].line ?? ${li}).padStart(2, '0')`);
+  const LL = await LNO(LI);
+  const LL2 = await LNO(LI + 1);
+  const NAME = await S(`s.lines[${LI}].name`);
+  const RUBY = await S(`(s.lines[${LI}].chars.find((c) => c.ruby) || {}).ruby || ''`);
+  const HAS_RUBY = await S('s.lines.some((l) => l.chars.some((c) => c.ruby))');
+  const C68 = await S(`s.lines[${LI}].chars.slice(6, 9).map((c) => c.ch).join('')`);
+  const ARC = await p.evaluate(async () => (await (await fetch('/api/lyrics')).json()).lines.some((l) => l.role));
+  const VIDEO = await S('!!s.project.video');
+  // 对比对象叫法: 有参考 ASS = 参考; 没有 = 上一版 / 候选 X (12-station 对比按钮)
+  const CMPW = await S("(s.project.cmp && s.project.cmp.kind !== 'ref' && s.project.cmp.kind !== 'none') ? s.project.cmp.label : '参考'");
+  console.log(`PROBE LI=${LI} ${LL} name=${NAME} ruby=${RUBY} arc=${ARC} video=${VIDEO} ref=${await S('s.project.cmp && s.project.cmp.kind')}`);
   // ======================= 字体 (后备字体提示) =======================
   await test('FN1', '缺字体只提示 "字形可能不对": 顶栏 font-chip 与 /api/project.fonts_missing 一致 (空则不出现), 不影响 octo 状态', async () => {
     const pj = await (await p.request.get(cfg.url + 'api/project')).json();
@@ -123,12 +141,13 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     console.log('PROBE FN1 fonts_missing=' + JSON.stringify(pj.fonts_missing) + ' unparsed=' + JSON.stringify(pj.fonts_unparsed));
   });
 
-  const L2 = 4;
+  const L2 = LI + 1;
 
   // ======================= 3.5 显示 =======================
   await test('U9', '轨高: FX 组默认折叠 (组行 18-20px, 写明 9 层); 点开后 9 条 FX 原高 26px, 时间线总高与监视器画面都不变, 放不下就在时间线内纵向滚动 (自绘细条), 页面零滚动条', async () => {
     const tlh = () => p.evaluate(() => document.querySelector('[data-testid=timeline]').clientHeight);
-    const vid = () => p.evaluate(() => { const b = document.querySelector('[data-testid=monitor] video').getBoundingClientRect(); return `${Math.round(b.width)}x${Math.round(b.height)}`; });
+    // 没有片源的工程 (studio.json / base.mp4 都没有) 监视器里没有 video: 量画框
+    const vid = () => p.evaluate(() => { const b = (document.querySelector('[data-testid=monitor] video') || document.querySelector('[data-testid=frame-out]')).getBoundingClientRect(); return `${Math.round(b.width)}x${Math.round(b.height)}`; });
     const fxrows = async () => (await p.getAttribute('[data-testid=timeline]', 'data-fxrows')).split(' ').filter(Boolean).map((x) => +x.split(':')[1]);
     const fxwin = async () => { const a = await p.getAttribute('[data-testid=timeline]', 'data-fxwin'); if (!a) return null; const [y, h, content, scroll] = a.split(':').map(Number); return { y, h, content, scroll }; };
     // 默认态在全新页面里看 (主页面已被 reset 展开过)
@@ -177,17 +196,21 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     assert(await p.locator('[data-testid=lineno]').count() === n, '行号数 != 句数');
     const rt = await p.locator('[data-testid=lyrics] rt').count();
     const want = await S('s.lines.reduce((a, l) => a + l.chars.filter((c) => c.ruby).length, 0)');
-    assert(rt === want && rt > 0, `ruby ${rt} != ${want}`);
-    const ruby = await p.locator(`[data-i="${LI}"] rt`).first().textContent();
-    assert(ruby === 'こわ', `L03 振假名 ${ruby}`);
+    assert(rt === want && (rt > 0 || !HAS_RUBY), `ruby ${rt} != ${want}`);
+    if (RUBY) {
+      const ruby = await p.locator(`[data-i="${LI}"] rt`).first().textContent();
+      assert(ruby === RUBY, `${LL} 振假名 ${ruby} != ${RUBY}`);
+    }
     const cn = await p.locator(`[data-i="${LI}"] [class*=cn]`).first().textContent();
     assert(cn && cn.length > 2, 'CN 缺');
   });
   await test('D2', '3.5 句右侧徽标: 角色 / FX 条数 / 迷你密度条 (out 对参考)', async () => {
     const n = await S('s.lines.length');
     assert(await p.locator('[data-testid=lyrics] svg[aria-label^="out"]').count() === n, '迷你密度条数');
-    const role = await p.locator(`[data-i="${LI}"] [class*=role]`).textContent();
-    assert(['高光', '承载', '留白'].includes(role), `角色 ${role}`);
+    // 角色来自剧本 (judge/arc.json); 没有剧本的工程不出角色徽标
+    const nRole = await p.locator(`[data-i="${LI}"] [class*=role]`).count();
+    if (ARC) assert(['高光', '承载', '留白'].includes(await p.locator(`[data-i="${LI}"] [class*=role]`).textContent()), '角色');
+    else assert(nRole === 0, '没有剧本却出了角色徽标');
     const fx = await p.locator(`[data-i="${LI}"] [class*=fx]`).first().textContent();
     assert(fx === `FX ${await S(`s.lines[${LI}].fx`)}`, `FX 徽标 ${fx}`);
   });
@@ -319,7 +342,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     const r = await S('s.ranges');
     assert(r.length === 1 && r[0][0] === a && r[0][1] === bg, `ranges ${JSON.stringify(r)}`);
     await sleep(300);
-    assert(/L03-L04/.test(await p.textContent('[data-testid=status-sel]')), '状态栏跨句');
+    assert((await p.textContent('[data-testid=status-sel]')).includes(`${LL}-${LL2}`), '状态栏跨句');
   });
   await test('S3', '3.5 Shift+单击: 从光标扩展到该字', async () => {
     await showLine(LI);
@@ -443,7 +466,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await clickChar(g + 8, { modifiers: ['Shift'] });
     await p.waitForFunction(() => /涉及 FX/.test(document.querySelector('[data-testid=status-sel]')?.textContent || ''), null, { timeout: 3000 });
     const t = await p.textContent('[data-testid=status-sel]');
-    assert(/^3 字 L03 \d+\.\d\d-\d+\.\d\ds, 涉及 FX \d+ \/ JP \d+$/.test(t), t);
+    assert(new RegExp(`^3 字 ${LL} \\d+\\.\\d\\d-\\d+\\.\\d\\ds, 涉及 FX \\d+ \\/ JP \\d+$`).test(t), t);
   });
 
   // ======================= 3.6 右键菜单 =======================
@@ -454,7 +477,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await clickChar(g + 8, { modifiers: ['Shift'] });
     await openMenuOnChar(g + 7);
     const h = await p.textContent('[data-testid=ctx-header]');
-    assert(/^3 字 · L03 怖くな · \d+\.\d\d-\d+\.\d\ds$/.test(h), h);
+    assert(h.startsWith(`3 字 · ${LL} ${C68} · `) && /\d+\.\d\d-\d+\.\d\ds$/.test(h), h);
   });
   await test('M2', '3.6 入口 2: 时间线片段右键 (选中该片段的句)', async () => {
     const t = await S(`(s.lines[${LI}].t[0] + s.lines[${LI}].t[1]) / 2`);
@@ -464,7 +487,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     const g = await g0(LI), n = await S(`s.lines[${LI}].chars.length`);
     const r = await S('s.ranges');
     assert(r.length === 1 && r[0][0] === g && r[0][1] === g + n - 1, JSON.stringify(r));
-    assert((await p.textContent('[data-testid=ctx-header]')).includes('L03'), 'header');
+    assert((await p.textContent('[data-testid=ctx-header]')).includes(LL), 'header');
   });
   await test('M3', '3.6 入口 3: 监视器画面右键, 按包围盒命中, 显示 "此处 N 个事件"', async () => {
     const c = await S(`s.lines[${LI}].chars[6]`);
@@ -584,9 +607,12 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await item('explain').click();
     await p.waitForSelector('[data-testid=inspector] [data-testid=ins-groups]', { timeout: 5000 });
     const groups = await p.textContent('[data-testid=ins-groups]');
-    assert(/fx_bed\.py:\d+/.test(groups) && /hits/.test(groups), 'fx 函数/源码位置');
-    const arc = await p.textContent('[data-testid=ins-arc]');
-    assert(arc.includes('carrier') && arc.includes('chorus-float'), 'arc');
+    assert(/[\w.]+\.py:\d+/.test(groups), 'fx 函数/源码位置: ' + groups.slice(0, 200));
+    if (ARC) {
+      const arc = await p.textContent('[data-testid=ins-arc]');
+      const want = await p.evaluate(async (li) => (await (await fetch('/api/lyrics')).json()).lines[li], LI);
+      assert(arc.includes(want.role) && (!want.technique || arc.includes(want.technique)), 'arc');
+    }
     const mu = await p.textContent('[data-testid=ins-music]');
     assert(/节拍 \d+ 拍/.test(mu) && /起音 \d+/.test(mu), 'music');
     const rf = await p.textContent('[data-testid=ins-ref]');
@@ -610,7 +636,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await p.keyboard.press('Enter');
     await sleep(300);
     const r = await lastReview();
-    assert((await reviewsCount()) === n0 + 1 && r.kind === 'note' && r.text === '这里字太挤' && r.sel[0].line === 3, JSON.stringify(r));
+    assert((await reviewsCount()) === n0 + 1 && r.kind === 'note' && r.text === '这里字太挤' && r.sel[0].line === (await S(`s.lines[${LI}].line ?? ${LI}`)), JSON.stringify(r));
   });
   await test('M12', '3.6 不行 > 看不清 / 太吵 / 太素 / 出戏 / 卡点不准 / 盖字', async () => {
     await showLine(LI);
@@ -734,7 +760,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await pick('only:card'); // 再点取消
     assert(await waitKept(counts.all) === counts.all, '取消只看');
     await pick('only:line');
-    const want = await p.evaluate(async () => { const t = await (await fetch('/api/ass/out')).text(); return t.split(/\r?\n/).filter((l) => l.startsWith('Dialogue:') && /,(ly|fx):p03,/.test(l)).length; });
+    const want = await p.evaluate(async (name) => { const t = await (await fetch('/api/ass/out')).text(); return t.split(/\r?\n/).filter((l) => l.startsWith('Dialogue:') && new RegExp(`,(ly|fx):${name},`).test(l)).length; }, NAME);
     assert(await waitKept(want) === want, `本句 ${await kept()} != ${want}`);
   });
   await test('M20', '3.6 在时间线中定位 F', async () => {
@@ -882,15 +908,23 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     const r = await rows();
     for (const id of ['mv', 'wave', 'beat', 'jp', 'rb', 'cn', 'fx0', 'fx1', 'fx2', 'fx3', 'fx4', 'fx5', 'fx6', 'fx7', 'fx8', 'card', 'density']) assert(r[id], `缺轨 ${id}`);
     const t = await S(`(s.lines[${LI}].t[0] + s.lines[${LI}].t[1]) / 2`);
-    const { x, y } = await laneXY(t, 'fx7');
+    // 这一句在哪条 FX 轨上有片段: 从 /api/clips 取 (不写死层号与 fx 函数名)
+    const cl = await S(`s.clips.find((c) => c.unit === '${NAME}' && /^fx\\d$/.test(c.track) && c.t0 <= ${t} && c.t1 >= ${t})`);
+    assert(cl, `${NAME} 在 ${t.toFixed(2)}s 没有 FX 片段`);
+    const L = +cl.track.slice(2);
+    const { x, y } = await laneXY(t, cl.track);
     await p.mouse.move(x, y);
     await p.waitForSelector('[data-testid=clip-tip]');
     const tip = await p.textContent('[data-testid=clip-tip]');
-    assert(/^p03 · fx7 · \d+ 条 · 层 7/.test(tip) && tip.includes('hits'), tip);
-    const c = await laneXY(3, 'card');
-    await p.mouse.move(c.x, c.y);
-    await p.waitForSelector('[data-testid=clip-tip]');
-    assert((await p.textContent('[data-testid=clip-tip]')).startsWith('title · card'), '卡片轨');
+    assert(tip.startsWith(`${NAME} · ${cl.track} · `) && new RegExp(`· \\d+ 条 · 层 [-\\d,]*\\b${L}\\b`).test(tip) && /\S+×\d+/.test(tip), tip);
+    const cc = await S(`s.clips.find((c) => c.track === 'card')`);
+    if (cc) {
+      const c = await laneXY((cc.t0 + cc.t1) / 2, 'card');
+      await p.mouse.move(c.x, c.y);
+      await p.waitForSelector('[data-testid=clip-tip]');
+      const ct = await p.textContent('[data-testid=clip-tip]');
+      assert(ct.includes(' · card'), '卡片轨: ' + ct);
+    }
   });
   await test('T2', '3.7 轨头眼睛: 隐藏该轨 (监视器不渲染)', async () => {
     assert(await waitKept(counts.all) === counts.all, '初始');
@@ -1044,12 +1078,12 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
   await test('U5', 'A/B 按钮自解释: "对比: 成品 / 参考", hover 说明两边各是什么; 点开后是 成品|参考 两段 + 关闭', async () => {
     const t = (await p.textContent('[data-testid=ab-btn]')).trim();
     const tip = await p.getAttribute('[data-testid=ab-btn]', 'title');
-    assert(t === '对比: 成品 / 参考', t);
+    assert(t === `对比: 成品 / ${CMPW}`, t);
     assert(tip.includes('成品 = 本工程生成的 out.ass') && tip.includes('参考 = ') && tip.includes('.ass'), tip);
     await p.click('[data-testid=ab-btn]');
     await p.waitForSelector('[data-testid=ab-ref][data-on]');
     assert(await p.getAttribute('[data-testid=monitor]', 'data-ab') === 'ref', '没切到参考');
-    assert((await p.textContent('[data-testid=ab-badge]')).includes('参考'), '角标');
+    assert((await p.textContent('[data-testid=ab-badge]')).includes(CMPW), '角标');
     await p.click('[data-testid=ab-out]');
     assert(await p.getAttribute('[data-testid=monitor]', 'data-ab') === 'out', '没切回成品');
     assert((await p.textContent('[data-testid=ab-badge]')).includes('成品'), '角标成品');
@@ -1071,7 +1105,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
     await item('explain').click();
     await p.waitForSelector('[data-testid=ins-plain]', { timeout: 5000 });
     const t = await p.textContent('[data-testid=ins-plain]');
-    assert(/共 \d+ 条事件: 字层 \d+ 条, 特效 \d+ 条/.test(t) && /按层: .*(字后底光|前景主体|近字粒子)/.test(t) && /特效主要出自 fx_/.test(t) && /参考 ASS 同一时段 \d+ 条/.test(t), t.slice(0, 300));
+    assert(/共 \d+ 条事件: 字层 \d+ 条, 特效 \d+ 条/.test(t) && /按层: .*(字后底光|前景主体|近字粒子)/.test(t) && /特效主要出自 \S+ ×\d+/.test(t) && new RegExp(`${CMPW === '参考' ? '参考 ASS' : CMPW} 同一时段 \\d+ 条`).test(t), t.slice(0, 300));
     const rv = await p.textContent('[data-testid=ins-reviews]');
     assert(/这里的标注 [1-9]\d* 条/.test(rv) && rv.includes('盖字'), rv.slice(0, 200));
   });
@@ -1085,11 +1119,12 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
       const t = window.__hx.clock.t();
       const segs = (st.edl?.segments || []).filter((g) => t >= g.t0 && (g.t1 == null || t < g.t1)).length;
       const vids = [...document.querySelectorAll('video')].map((v) => ({ paused: v.paused, muted: v.muted, vol: v.volume, rate: v.playbackRate }));
-      return { segs, vids, arate: window.__hx.clock.audio.playbackRate, aPaused: window.__hx.clock.audio.paused };
+      return { segs, vids, arate: window.__hx.clock.audio.playbackRate, aPaused: !window.__hx.clock.playing };
     });
     await p.keyboard.press('Space');
     const loud = r.vids.filter((v) => !v.paused && (!v.muted || v.vol > 0));
-    assert(!r.aPaused && r.segs === 1 && !loud.length && r.vids.every((v) => v.rate === r.arate), JSON.stringify(r));
+    // 有片源: EDL 同刻 1 段; 没有片源 (EDL 空): 0 段, 页面里也没有 video
+    assert(!r.aPaused && r.segs === (VIDEO ? 1 : 0) && (VIDEO || r.vids.length === 0) && !loud.length && r.vids.every((v) => v.rate === r.arate), JSON.stringify(r));
   });
 
   await test('U8', '轨高: 1920x1080 下 FX 每条原高 26 (放不下就滚动, 不压); 字层 JP >= 24, 密度 28-80; 拖矮时间线时 FX 不变, 先少的是密度/波形和 FX 窗口', async () => {
@@ -1228,7 +1263,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
       const real = await (await r.fetch()).json();
       const pick = state.pick;
       Object.assign(real, state.mode === 'none'
-        ? { ref_ass: null, ref_path: null, ref: { source: 'none', error: null, set_at: null, candidates: [] } }
+        ? { ref_ass: null, ref_path: null, cmp: undefined, ref: { source: 'none', error: null, set_at: null, candidates: [] } }
         : state.mode === 'refjson'   // RF6/RF7: 错误文字故意不以 "ref.json" 开头, 证明按 err_kind 而不是文字判断
         ? { ref_ass: null, ref_path: null, ref: { source: 'error', err_kind: 'ref_json', error: '手动指定的文件不存在: static/music/番/gone.ass', set_at: null, candidates: cands } }
         : state.mode === 'error'

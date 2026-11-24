@@ -31,6 +31,6 @@
 
 写这首歌用什么策略, 并指到具体条目:
 
-- 指向 `anime.elements.md` 的条目(母题从哪来)
+- 指向 `anime.elements.md` 的条目(母题从哪来), 以及 `bible/directions.json` 选定方向的 id
 - 指向 `review/design-table.md` 的句(哪几段是重点)
 - 覆盖到段级: 高潮段 / 吟唱段 / 间奏 各怎么处理, 而不只是逐句

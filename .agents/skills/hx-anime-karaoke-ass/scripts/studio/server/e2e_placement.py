@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """歌词位置预设 (PlacementPanel / 监视器近似预览 / POST /api/placement) 的交互验收, 真 chromium + playwright.
 
-  python3 scripts/studio/server/e2e_placement.py --project dev/无职转生/オンリー --gen-python "uv run -q --with fonttools --with pillow --with numpy python" [--json out.json]
+  python3 scripts/studio/server/e2e_placement.py --project dev/<番>/<歌> --gen-python "uv run -q --with fonttools --with pillow --with numpy python" [--json out.json]
 
 会重跑生成器, 所以不在工程里跑: 先把工程的生成器输入 + out.ass/清单 + song.mp3 + judge/ 拷到临时目录,
 服务指向这份拷贝 (工程的 out.ass / placement.json 全程不碰, 结束时核对 sha). 用例在 e2e_placement.js.

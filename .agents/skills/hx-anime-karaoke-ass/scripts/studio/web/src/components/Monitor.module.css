@@ -29,3 +29,7 @@
 .stale { position: absolute; left: 8px; top: 8px; z-index: 2; font-size: 11px; padding: 1px 7px; border-radius: 3px;
   background: rgba(0, 0, 0, 0.7); color: var(--warn); white-space: nowrap; pointer-events: none; }
 .stale[data-below] { top: 28px; }
+
+/* 没有片源: 中性暗底 (不是纯黑, 深色描边的字也看得见) + 角标说明, 字幕照常渲染 */
+.noVideo { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 30%, #3a4250 0%, #262c36 55%, #1c2129 100%); }
+.noVideo span { position: absolute; right: 8px; top: 8px; font-size: 11px; padding: 1px 7px; border-radius: 3px; background: rgba(0, 0, 0, 0.45); color: #c9d2dc; }

@@ -14,7 +14,8 @@
 - `sels`: 只在多段选区时有 (台子上 Ctrl 加段). `sel` = 第一段. 读的时候用 `Issues.sels(it)`
 - `action`: `bad` 不行, `good` 好 (同时冻结), `another` 换一个, `pick` 选 A/B/C (`choice`), `accept` 收下, `reject` 再驳回. 后三个用 `of` 指向被回应的问题
 - `tag`: 只有 `bad` 能带. 描述症状, 不写做法
-- `status`: `open` `fixing` `proposed` (等用户收下或驳回) `done` `need-human` `dropped`
+- `status`: `open` `fixing` `proposed` (等用户收下或驳回) `done` `need-human` `dropped`. 有 `review` (标注 id) 的问题, 状态与 history 由 accept 回写到 `review.jsonl` 那一行的 `status` / `changes` (见 `../index.md` "标注记到哪里")
+- `review`: 来自哪条标注 (`accept.py intake` 写); `picked`: 选中的候选 (`accept.py pick` 写, 流程见 `cands.md`)
 - `history`: 每次 resolve 一项: 诊断一句, 改了什么一句, 候选, 是否分叉, 声明的全局影响集
 
 ## 标签 -> 根因层

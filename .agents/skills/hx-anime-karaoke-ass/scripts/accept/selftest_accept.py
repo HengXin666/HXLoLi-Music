@@ -48,7 +48,7 @@ def ck(ok, name, detail=""):
 
 def run(cmd, P, **kw):
     d = dict.fromkeys(("unit", "chars", "t", "layer", "issue", "note", "action", "tag", "say", "choice", "of", "scope",
-                       "declare", "why", "diag", "change", "candidates", "grep", "frame", "id"))
+                       "declare", "why", "diag", "change", "candidates", "grep", "frame", "id", "n"))
     d.update(status="proposed", open=False, gen="make_ass.py", raw="out.raw.ass", out="out.ass")
     d.update(kw)
     a = argparse.Namespace(**d)
@@ -238,12 +238,122 @@ def main():
     c3, o3 = run("issue", P, unit=u_other, action="pick", choice="B", of=it["id"])
     ck(c == 0 and c2 == 1 and c3 == 0 and P.issues().get(it["id"])["picked"] == "B", "候选有文件才收; 只能选列出的候选", (o, o2, o3))
 
+    # 8. 看, 挑, 改, 证: 候选 (只重跑单元) -> 挑选 -> 冻结 -> G2 + 隔离核对; 标注状态回写 review.jsonl
+    loop_tests(P, proj, tmp)
+
     print("\n%d/%d PASS" % (R["n"] - len(R["bad"]), R["n"]))
     if keep:
         print("保留在", tmp)
     else:
         shutil.rmtree(tmp)
     sys.exit(1 if R["bad"] else 0)
+
+
+def loop_tests(P, proj, tmp):
+    from accept import cands as C, reviewlog as RL, sel as SL
+    from assdoc.assdoc import AssDoc
+    from assdoc.spec import load_manifest
+    from assfx.layer.gen import phrase_keys
+    man = P.man()
+    gl = {g["sel"]["unit"] for g in P.goods().items}
+    phr = [u for u in man["units"] if u["kind"] == "phrase"]
+    free = [u for u in phr if u["key"] not in gl and u.get("lines")]
+    k, k2 = free[0]["key"], free[1]["key"]
+    raw = AssDoc.load(P.raw)
+    # 只重跑单元 = 整首里这个单元 (逐行)
+    env = dict(os.environ, ASSFX_ONLY=k)
+    env.pop("ASSFX_OVERRIDES", None); env.pop("ASSFX_TRACE", None)
+    only = os.path.join(tmp, "only.ass")
+    t0 = time.time()
+    subprocess.run([sys.executable, os.path.join(proj, "make_ass.py"), only], cwd=proj, env=env, capture_output=True)
+    t_only = time.time() - t0
+    od = AssDoc.load(only)
+    om = load_manifest(only)
+    ck(SL.lines(SL.pick(od, om, dict(unit=k))[0]) == SL.lines(SL.pick(raw, man, dict(unit=k))[0]) and
+       len(od.events) < len(raw.events), "ASSFX_ONLY: 只重跑单元的输出 = 整首里这个单元, 其它句不出事件",
+       (len(od.events), len(raw.events)))
+    print("     耗时: 只重跑单元 %.1fs" % t_only)
+    # 重复歌词: 同文字的句 key 不同 (#0/#1), siblings 能找到对方
+    ks = phrase_keys([dict(lines=[1], key="同じ"), dict(lines=[2], key="別"), dict(lines=[3], key="同じ")])
+    fake = dict(units=[dict(key=x, kind="phrase") for x in ks])
+    ck(ks[0] != ks[2] and ks[0].split("#")[0] == ks[2].split("#")[0] and C.siblings(fake, ks[2]) == [ks[0]],
+       "重复歌词: 同文字两句 key 不同 (#0/#1), 候选记下兄弟单元", ks)
+    # review.jsonl -> intake -> issue (带 status / changes); 坏行字节不动; 老记录补 status
+    u = free[0]
+    rv = os.path.join(proj, "review.jsonl")
+    recs = [dict(id="r1", sel=[{"line": u["lines"][0], "from": 0, "to": len(u["chars"]) - 1}], t0=u["t"][0], t1=u["t"][1],
+                 kind="redo", tags=[], text="", created="x"),
+            dict(id="r2", sel=[{"line": u["lines"][0], "from": 0, "to": 0}], t0=u["t"][0], t1=u["t"][1], kind="note", tags=[], text="n", created="x")]
+    badline = b'{"broken": '
+    with open(rv, "wb") as fh:
+        fh.write((json.dumps(recs[0], ensure_ascii=False) + "\n").encode() + badline + b"\n" + (json.dumps(recs[1], ensure_ascii=False) + "\n").encode())
+    c, o = run("intake", P)
+    rr = {r["id"]: r for r in RL.records(rv)}
+    iid = rr.get("r1", {}).get("issue")
+    ck(c == 0 and iid and rr["r1"]["status"] == "open" and rr["r2"]["status"] == "noted" and badline in open(rv, "rb").read(),
+       "intake: 标注 -> issue, 回写 status/issue (批注 noted), 坏行原样", (o, rr))
+    # 候选
+    c, o = run("cands", P, id=iid, n="3")
+    rec = C.load(P, iid) if c == 0 else {}
+    d = P.issues().cand_dir(iid)
+    ck(c == 0 and 2 <= len(rec["items"]) <= 3 and all(os.path.exists(os.path.join(d, x["id"] + f)) for x in rec["items"] for f in (".ass", ".unit.ass"))
+       and rec["only_unit"] and len({x["sha"] for x in rec["items"]}) == len(rec["items"]) and rec["base_sha"] not in {x["sha"] for x in rec["items"]},
+       "cands: 2-3 个互不相同且不同于当前的候选, 每个有整首预览与单元快照", o)
+    ck(RL.records(rv)[0]["status"] == "proposed" and RL.records(rv)[0]["changes"][-1].get("candidates"),
+       "有候选后标注状态 proposed, changes 带候选", RL.records(rv)[0])
+    seen = {json.dumps(x["params"], sort_keys=True) for x in rec["items"]}
+    ck(not any(json.dumps(p, sort_keys=True) in seen for p, _ in C.proposals(man, k, {}, seen)), "提案跳过已出过的参数 (构想不重复)")
+    # 隔离核对能抓到: 改坏候选的单元快照 -> pick 不放行, picks/raw 恢复
+    pa = os.path.join(d, "A.unit.ass")
+    keep_a = open(pa, "rb").read()
+    doc = AssDoc.load(pa)
+    doc.events = doc.events[:-1]
+    doc.write(pa)
+    raw_sha = sha(P.raw)
+    c, o = run("pick", P, id=iid, choice="A")
+    ck(c == 1 and "隔离核对" in o and sha(P.raw) == raw_sha and not os.path.exists(C.picks_path(P.dir)),
+       "隔离核对: 整首重跑与只重跑单元不同 -> 不放行, raw 与 picks 恢复", o[-600:])
+    open(pa, "wb").write(keep_a)
+    ck(P.issues().get(iid)["status"] == "need-human" and RL.records(rv)[0]["status"] == "need-human", "pick 失败: 状态 need-human 回写到标注")
+    # 单元已有 "好": pick 拒绝 (A 条)
+    c0, _ = run("good", P, unit=k)
+    gid = next(g["id"] for g in P.goods().items if g["sel"]["unit"] == k)
+    c, o = run("pick", P, id=iid, choice="B")
+    ck(c == 1 and "已有" in o, "单元已有 \"好\": pick 拒绝, 要先撤", o[-300:])
+    c, o = run("unfreeze", P, id=gid)
+    ck(c == 0 and not P.goods().units_hit([k]), "unfreeze 撤掉 \"好\"", o)
+    # pick 成功
+    before = AssDoc.load(P.p("out.ass"))
+    c, o = run("pick", P, id=iid, choice="B")
+    it = P.issues().get(iid)
+    h = it["history"][-1]
+    after, man2 = AssDoc.load(P.p("out.ass")), P.man()
+    st = P.goods().status(AssDoc.load(P.raw), man2)
+    ch = sorted(set(SL.lines(before.events)) ^ set(SL.lines(after.events)))
+    cl = SL.SP.claims(man2)
+    own = {SL.SP.owner_of(cl, e) for e in after.events if SL.lines([e])[0] in set(ch)}
+    ck(c == 0 and "PICK OK" in o and it["status"] == "done" and h.get("g2", {}).get("ok") and h["g2"]["isolation"] == "ok"
+       and h["g2"]["changed"] == [k], "pick: G2 通过 + 隔离核对, 实际只变本单元", o[-800:])
+    ck(own <= {k}, "out.ass 前后差异只在本单元", own)
+    gk = [g["id"] for g in P.goods().items if g["sel"]["unit"] == k]
+    ck(gk and all(st[g][0] == "ok" for g in gk) and not any(v[0] == "touched" for v in st.values()),
+       "选中者冻结为 \"好\" (ok), 别的 \"好\" 没被碰到 (前面改时间留下的 stale 不算)", st)
+    ck(C.load_picks(P.dir)["units"][k]["params"] == next(x["params"] for x in rec["items"] if x["id"] == "B"), "picks.json 记下选中参数 (生成器真输入)")
+    ids = [x["cand"] for x in C.ideas(P.dir, k)]
+    ck(sorted(ids) == sorted(x["id"] for x in rec["items"] if x["id"] != "B") and all(os.path.exists(os.path.join(P.dir, x["file"])) for x in C.ideas(P.dir, k)),
+       "未选的候选进构想记录 (参数 + 单元快照)", ids)
+    r1 = RL.records(rv)[0]
+    ck(r1["status"] == "done" and r1["changes"][-1].get("picked") == "B" and r1["changes"][-1].get("g2", {}).get("ok"),
+       "review.jsonl: 标注状态 done, changes 写明选了哪个 + G2", r1)
+    ck(os.path.exists(os.path.join(P.dir, "prev.ass")), "build 留下上一版 prev.ass (无参考时的对比对象)")
+    # 再跑一次生成器 (带 picks) 输出不变: 选中者是生成器真输出, 不是贴上去的
+    c, o = run("verify", P, scope=k)
+    ck(c == 0, "picks 生效后再 verify: 无改动通过 (A/B/C 三条)", o[-400:])
+    # pick 过期: fp 对不上 (歌词改了 / 重复歌词次序挪位) 要报出来
+    pk = C.load_picks(P.dir)
+    pk["units"][k]["fp"] = "x"
+    C.save_picks(P.dir, pk)
+    ck([x for x, _ in C.stale_picks(P.dir, man2)] == [k], "picks 指纹对不上: 报 pick 过期, 不静默套用")
 
 
 if __name__ == "__main__":

@@ -39,3 +39,10 @@
   padding: 6px 14px; border-radius: 16px; background: rgba(20, 22, 28, 0.95); border: 1px solid var(--line); font-size: 12px;
   max-width: 80vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* 侧栏: 歌词 / 设计稿 两个标签 */
+.sideTop { display: grid; grid-template-rows: 24px minmax(0, 1fr); min-height: 0; overflow: hidden; }
+.sideTop > * { min-height: 0; min-width: 0; overflow: hidden; }
+.tabs { display: flex; gap: 2px; padding: 2px 8px 0; background: var(--bg-0); border-bottom: 1px solid var(--line); }
+.tabs > button { border: 0; border-radius: 4px 4px 0 0; padding: 0 12px; background: var(--bg-2); color: var(--fg-2); cursor: pointer; font-size: 11px; }
+.tabs > button[data-on] { background: var(--bg-1); color: var(--fg-0); }

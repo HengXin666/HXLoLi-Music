@@ -7,6 +7,7 @@
   2. 影响集 = deps.code 含改动函数的单元
              + entry 函数改了: 它名下的单元; 名下没有单元就是全部
              + 单元数据常量 (如 PHRASES) 改了: 列表字面量逐项比, 改了第 i 项就是第 i 个句单元; 长度变了就是全部句单元
+             + review/accept/picks.json (台上选中的候选参数) 与基准里的那份逐单元比, 变了的单元
              + 以上句单元的 deps.window (出入场规划牵动下一句)
 核对 (重跑生成器之后), 三条都是硬条件:
   A. "好" 的状态不许是 touched (goods.py). 不能被声明豁免.
@@ -14,6 +15,7 @@
   C. 实际变了的单元 <= 预测影响集 + 输入变了的单元. 否则是追踪漏了依赖: 报错, 修追踪, 不许放行.
 """
 import ast
+import json
 import os
 
 from accept import sel as S
@@ -58,8 +60,22 @@ def data_changes(man, base_src, proj):
     return out, why
 
 
-def predict(man, base_src, proj):
-    """返回 dict(fns, units, why). units 已含 window 牵动."""
+def picks_changes(base_dir, adir):
+    """picks.json 与基准 (accept begin 时存的那份) 逐单元比参数. 返回 (单元集合, 说明列表)."""
+    def ld(p):
+        if not p or not os.path.exists(p):
+            return {}
+        d = json.load(open(p, encoding="utf-8"))
+        return {k: v.get("params") or {} for k, v in (d.get("units") or {}).items()}
+    if not base_dir or not adir:
+        return set(), []
+    a, b = ld(os.path.join(base_dir, "picks.json")), ld(os.path.join(adir, "picks.json"))
+    ch = {k for k in set(a) | set(b) if a.get(k) != b.get(k)}
+    return ch, ["picks.json: %s 的参数变了" % k for k in sorted(ch)]
+
+
+def predict(man, base_src, proj, base_dir=None, adir=None):
+    """返回 dict(fns, units, why). units 已含 window 牵动. base_dir/adir 给了才比 picks.json."""
     us = S.units(man)
     fns = changed_fns(man, proj)
     code = man.get("code") or {}
@@ -76,6 +92,9 @@ def predict(man, base_src, proj):
     du, dw = data_changes(man, base_src, proj)
     units |= du
     why += dw
+    pu, pw = picks_changes(base_dir, adir)
+    units |= pu
+    why += pw
     for k in list(units):
         units |= set(((us.get(k) or {}).get("deps") or {}).get("window") or [])
     return dict(fns=fns, units=sorted(units, key=str), why=why)

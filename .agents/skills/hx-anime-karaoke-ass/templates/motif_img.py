@@ -52,6 +52,7 @@ slot 不存在 / enabled=false / 文件缺失 -> place() 返回 False, 调用方
 import hashlib, json, math, os, re
 
 from assfx.draw.image import put_image
+from assfx.draw.legible import below_floor
 from assfx.draw.motif_gap import MOTIF_GAP, text_ink_boxes, image_points, min_gap, estimated_fonts
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -338,6 +339,8 @@ def _room(f, boxes, cx):
     return min(f.b[2] - max(xs1), min(xs0) - f.b[0])
 
 
+# Agent Notes: 组合式生成: 具象素材可读下限 (known-gaps #12) 在贴图前守住
+# .agents/notes/implemented/architecture/2026-11-17-karaoke-compositional-generator.md
 def place(f, slot, layer, t0, t1, x, y, fade_in=0.6, fade_out=0.6, extra="", x1=None, y1=None,
           hue=None, init="", anim=None, t_move=None):
     if not os.path.exists(CFG):
@@ -382,6 +385,10 @@ def place(f, slot, layer, t0, t1, x, y, fade_in=0.6, fade_out=0.6, extra="", x1=
                 ok = _layout(_scaled_fit(s, r), x, y, prescale, hue)
                 rel, w, h, k, baked, cx, cy = ok
                 print("[motif_img] slot %s %s %g→%g (band 余 %.0fpx)" % (slot, name, v0, round(v0 * r, 2), _room(f, boxes, cx)))
+    why = below_floor(s, w * k, h * k)                    # 具象素材可读下限 (known-gaps #12): 低于下限换母题形式
+    if why:
+        print("[motif_img] slot %s 不贴图: %s" % (slot, why))
+        return False
     ex = ("\\fscx%.2f\\fscy%.2f" % (100 * k, 100 * k)) if k != 1.0 else ""
     for t in ("frz", "frx", "fry"):                      # frx/fry 透视时锚点只近似钉住
         if s.get(t) and not (t == "frz" and baked):

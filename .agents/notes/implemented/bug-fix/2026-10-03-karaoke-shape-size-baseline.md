@@ -116,3 +116,9 @@ Decision-ID: karaoke-shape-size-baseline
 
 - `gen.py` 清单每句加 `rows` 字段; `anim.py` 新增 `keep_in_band`: 中文在上 (order=cn_top) 时日文在最下层, 下坠退场的 dy 按 `geom.event_extent` 收进 band 下沿.
 - 只改 dy、不动 rng, 默认 jp_top 不进该分支, 输出逐字节不变; `music/beat.py` 本轮未改.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/assfx/ 新增组合式生成器 (layer/compose.py grammar.py ir.py provenance.py, draw/frames.py glyph.py legible.py resolve.py), gen.py / manifest.py 记录每句主母题来源; 决策见 architecture/2026-11-17-karaoke-compositional-generator.md. 新歌出片已改用 kfx (2026-11-22), assfx 只给旧流程与验收台库用.

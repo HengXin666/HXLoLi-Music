@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """阶段 E 交互验收: plan 3.5 (歌词面板) / 3.6 (右键菜单) / 3.7 (时间线轨) 的每一行操作, 真 chromium + playwright.
 
-  python3 scripts/studio/server/e2e_ui.py --project dev/无职转生/オンリー [--json out.json]
+  python3 scripts/studio/server/e2e_ui.py --project dev/<番>/<歌> [--json out.json]
 
 服务在本进程内起 (线程), 批注写到临时文件 (不碰工程的 review.jsonl), 跑完即停. 用例在 e2e_ui.js.
 """

@@ -8,7 +8,7 @@
 
 为什么必须做: 只看 MV 画面 + 简单搜索就下结论，特效只能做到"好看但空洞"  同一部番的
 OP/ED，懂设定的人能画出角色专属的符号(魔女帽 / 缺一只就飞不动的单翼)，不懂的人只能画通用星星。
-skill 把"读原作设定"定成第 1 步的必做项，产物就是本脚本写的 anime.background.json。
+skill 把"读原作设定"定成第 10 步 (3-anime-bg) 的必做项，产物就是本脚本写的 anime.background.json。
 
 数据源（都是实测可用的公开端点，无需 key；不给 key 时只列角色名，有 key 时输出中文简介）:
   bgm.tv   api.bgm.tv/v0/subjects/{id}/characters  角色 + 人物简介（BGM 是中文条目，最全）

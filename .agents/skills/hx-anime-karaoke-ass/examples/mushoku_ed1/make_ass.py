@@ -11,7 +11,7 @@ import os, sys
 sys.dont_write_bytecode = True
 from scene import HERE, doc, G, TH  # noqa: E402
 from cards import title, prologue, interlude, outro  # noqa: E402
-import fx_carry, fx_high, fx_bed  # noqa: E402
+import fx_bed  # noqa: E402
 
 SEED = 100
 
@@ -56,59 +56,25 @@ def C(i):
     return th
 
 
-Q = dict(ent="fade", ext="wind", hl="wipe")          # 留白句: 字走得慢, 退场随风斜飘 (\\frz), B 阶段改
-P = lambda i, fx, **o: dict(label="L%02d %s" % (i, fx), lines=[i], th=C(i), o=dict(dict(ent="rise", ext="rise", hl="wipe"), **o), fx=fx)  # noqa: E731
+# 2026-11-17 组合式生成: 逐句设计 (母题 / 时钟 / 色相 / 句间关系 / 字层预设) 搬进 design.ir.json, 本文件只接线.
+# 定稿视觉不动: 每句走逃生口 (escape = fx_carry / fx_high 里原来的专属函数), 输出与旧 PHRASES 写法逐字节相同.
+# 承载句与高光句在主函数之后铺氛围床 + 逐字命中 (IR 的 bed 字段); 留白句 quiet 在 fx_carry.fx_quiet 里自己铺 rest 强度.
+from assfx.layer.compose import Composer  # noqa: E402
 
-# C 阶段: 和声句 burst=False 撤回 (逐字闪光是跟手的来源, 关掉=少了逐字响应).
-# 字层预设 (B 阶段, plan.md 2 漏点 8): 雪/留白句退场 wind (\\frz 斜飘), 裂纹句 glitch 入场 (\\fax 斜切) + scatter 退场
-# + shake 高亮 (\\frz 抖), 和声句 flipx 进出 (\\frx 3D 翻), 守护句 spin 入场. 参考 JP 层 \\frz 858, \\fax+\\frx 240.
-# Agent Notes: 卡拉OK skill 按步骤重构成 steps/NN-<key>/ 的契约 + impl 结构
+
+# Agent Notes: 卡拉OK skill 按步骤重构成 steps/NN-<key>/ 的契约 + impl 结构; 卡拉OK skill 通用化; 组合式生成
 # .agents/notes/implemented/process/2026-10-02-karaoke-steps-restructure.md
-PHRASES = [
-    P(0, "snow_write", ent="fade", ext="wind"), P(1, "snow_write", ent="fade", ext="wind"),
-    P(2, "thaw_bloom", hl="bloom", ext="wind"),                                        # h1
-    P(3, "chorus_float", ent="flipx", ext="flipx"), P(4, "chorus_float", ent="flipx", ext="flipx"),
-    P(5, "crack_hint", ent="glitch", ext="scatter", hl="shake"), P(6, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
-    P(7, "ring_guard", ent="spin", hl="bloom", ext="wind"),
-    P(8, "palm_cradle", ent="rise", hl="bloom"),                          # h2
-    P(9, "whiteout_reach", ent="fade", hl="bloom", din=0.8, dout=1.0),    # h2
-    P(10, "snow_plain", ent="fade", ext="wind"), P(11, "snow_plain", ent="fade", ext="wind"), P(12, "snow_gust", ent="fade", ext="wind"),
-    P(13, "chorus_beat", ent="flipx", ext="flipx"), P(14, "chorus_float", ent="flipx", ext="flipx"),
-    P(15, "crack_hint", ent="glitch", ext="scatter", hl="shake"), P(16, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
-    P(17, "veil_hide", ent="fade", ext="sink"), P(18, "veil_hide", ent="fade", ext="sink"),
-    P(19, "tear_drop", ent="fade", ext="sink"),
-    P(20, "quiet", **Q), P(21, "quiet", **Q), P(22, "quiet", **Q), P(23, "quiet", **Q),
-    P(24, "mana_crack", ent="zoom", hl="shake", ext="scatter"),                           # h3
-    P(25, "quiet", **Q), P(26, "quiet", **Q), P(27, "quiet", **Q), P(28, "quiet", **Q),
-    P(29, "sword_cut", ent="slide", hl="shake", ext="scatter"),                          # h4
-    P(30, "crack_hint", ent="glitch", ext="scatter", hl="shake"),
-    P(31, "water_orb", ent="rise", hl="bloom"),                           # h5
-    P(32, "echo_reach", ent="fade", hl="bloom", din=0.8, dout=1.2),
-]
-
-# Agent Notes: 卡拉OK skill 通用化  去掉单次制作的事实与清单式铺陈
 # .agents/notes/implemented/process/2026-10-04-karaoke-skill-genericize.md
-FXMAP = {k[3:]: v for m in (fx_carry, fx_high) for k, v in vars(m).items() if k.startswith("fx_")}
-
-# B 阶段 (plan.md 1.7 第 1, 2 层): 承载句与高光句在主函数之后铺氛围床 + 逐字命中.
-# 留白句 (quiet) 在 fx_carry.fx_quiet 里自己铺 rest 强度. 高光句强度最高, 保留 "高光往上拔" 的对比.
-HIGH = {"thaw_bloom", "palm_cradle", "whiteout_reach", "mana_crack", "sword_cut", "water_orb"}
-
-
-def _bedded(name, fn):
-    if name == "quiet":
-        return fn
-
-    def run(f, ph, k):
-        fn(f, ph, k)
-        fx_bed.apply(f, ph, k, name, "high" if name in HIGH else "carrier")
-    run.__name__ = fn.__name__
-    run.__doc__ = fn.__doc__
-    run.__wrapped__ = fn
-    return run
+# .agents/notes/implemented/architecture/2026-11-17-karaoke-compositional-generator.md
+def _bed(f, ph, k, p):
+    if p.get("bed", "carrier") == "none":
+        return
+    fx_bed.apply(f, ph, k, p["escape"].split(":")[1][3:], p["bed"])
 
 
-FXMAP = {n: _bedded(n, fn) for n, fn in FXMAP.items()}
+COMPOSER = Composer(os.path.join(HERE, "design.ir.json"), HERE, theme=lambda p: C(p["i"]), post=_bed)
+PHRASES, FXMAP = COMPOSER.build()
+
 
 def phrases():
     return PHRASES
@@ -126,6 +92,7 @@ def main(out):
     print("events:", n)
     import motif_img
     motif_img.report(out)          # 缺件回退汇总 + 旁证文件 (完整版不留旁证)
+    COMPOSER.finish(out)           # 母题来源旁证 <out>.motifs.json (gate/check_motif_mono.py 读)
 
 
 if __name__ == "__main__":

@@ -33,3 +33,4 @@ Decision-ID: karaoke-studio-track-visibility
 - 2026-11-11 实测 (1920x1080, 70.5s): MV 关掉后监视器 99.6% 像素变化 (平均亮度 1.6), 再打开与关前逐像素一致; jp/cn/fx0/fx7 眼睛照旧生效 (保留条数 10208 -> 6806 / 7922 / 8833 / 9443); wave/beat/density/review/ruler/overview 眼睛按钮 0 个. 对照图在工程 `review/vis/` (dev 下, 不入库).
 - studio e2e_ui 68/68, e2e_placement 13/13, 九视口 9/9 零滚动条, 均不退.
 - 以后新增轨: 对监视器没作用就不要给 `filter` 或 `eye`.
+- 2026-11-18: 工程自定义样式 (如 比翼の羽根 的 `NAME`) 原来 `trackOf` 返回 null, 眼睛 / 独显永远藏不掉它 (e2e 字层 8644 != 8642); 改为按 Name 前缀 `ly:/fx:/card:` 归轨. 无音频工程的时钟改走墙钟 (`lib/clock.ts`), 见 `.agents/notes/implemented/feature/2026-11-17-karaoke-station-loop.md`.

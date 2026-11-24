@@ -94,7 +94,7 @@ hx-karaoke scripts/qa/still_compare.py --ref 原版帧 --new 我的帧 --out 对
 - 规格表能重新量一遍，数字对得上
 - 含随机的部分：说明它的分布，并声明"按分布等价，不按值"
 
-## 交付物
+## 产物(交付物)
 
 ```
 proj/reverse/

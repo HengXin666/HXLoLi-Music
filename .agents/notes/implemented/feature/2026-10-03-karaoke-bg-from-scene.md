@@ -74,3 +74,9 @@ A 段画面 rgb `[0,49,110]`(冷蓝)、B 段 `[215,0,3]`(橙红)。
 - 量"同向率"时有个必须避开的坑: ASS 颜色是 `&HBBGGRR&`, 要按 BGR 解析再转 HSV;
   且正则该写成 `\\1c&H([0-9A-F]{6})&`  **不要写 `&H00` 前缀**,
   实测颜色是 `&HD1854F&` 这种 6 位形式, 写死 `00` 会一条都匹配不到(得出 0/0 的假结果)。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.

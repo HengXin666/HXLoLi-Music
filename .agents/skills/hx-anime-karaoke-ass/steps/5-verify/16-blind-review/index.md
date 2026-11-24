@@ -68,7 +68,9 @@ hx-karaoke render_octopus.py proj/out.ass --times <句首,高潮,句尾> --out p
 禁止: 修改任何文件(除 score-blind.md 与截图目录); 不要读主代理的思考过程.
 ```
 
-## 过关条件
+## 产物与过关条件
+
+产物: 主代理自评 `proj/review/score.md`, 子代理复评 `proj/review/score-blind.md`
 
 - `review/score-blind.md` 存在, 且**子代理的总分 >= `--min-score`(默认 8.0)**
 - 若子代理分 < 门槛: **不许出片**, 按它列出的"最该先修的三条"改完再重跑 16

@@ -81,7 +81,9 @@ pop_image(f, 3, t, 700, 940, "assets/eye.png", path_dir=PROJ)                  #
 - 量不了的情形: 动画旋转、`\frx/\fry`、非 `\an5` 按静态值量并报 W.
 - 尺子的失败方向必须偏严: 量不准时把框算大、把间隙算小, 不许算小 (见 `motif_gap.py` 模块说明).
 
-## 过关条件
+## 产物与过关条件
+
+产物: `proj/assets/*.png` (可选: 本曲不用图时写明不用, 本层为空). 生成器对 `assfx/draw/image.py` 的调用
 
 - `hx-karaoke cutout.py --check-only` 全部 PASS
 - `render_octopus.py --probe` 报告 `\1img` 引用的图**全部存在**

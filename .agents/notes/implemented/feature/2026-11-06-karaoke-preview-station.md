@@ -51,3 +51,9 @@ Decision-ID: karaoke-preview-station
 - 端到端: `scripts/station/e2e.py` (+ `e2e_api.py`, `e2e_ui.js`) 用 mushoku_ed1 真生成器, 真 CLI, 真 HTTP 服务, playwright + 定制版 libass 逐项实测. 2026-11-06 实跑 75/75 PASS.
 - 2026-11-06 补: 外部改动在写锁/补丁之前检查 (409, 不落盘), 补丁参数落盘前校验, 页面加替换与起点微调, 未命中补丁标红, 伸缩框随重建刷新.
 - 2026-11-09: 用户确认删除旧前端, `scripts/station/` 整个目录已删 (未曾入库). 事件读写 (未改动事件按原串写回, 逐字节不变) 搬到 `.agents/skills/hx-anime-karaoke-ass/scripts/assdoc/assdoc.py`, 供 `scripts/accept/` 与 `scripts/selfreview/` 共用; 浏览器页面由 `scripts/studio/` 取代, 标注改走 studio 的 `POST /api/review`. 上文 station 的 selftest / e2e 随目录一并删除, 75/75 为当时的历史结果.
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/assdoc/ 新增 design.py: 验收台设计稿面板的视图, 解析与校验只用 kfx_design.py (architecture/2026-11-22-karaoke-kfx-single-generator.md).

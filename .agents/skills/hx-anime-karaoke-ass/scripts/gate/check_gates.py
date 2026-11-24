@@ -22,8 +22,10 @@
 
 以及两条**可证伪**的强度判据（不是"文件在就行"）:
   * timing.json 的音拍数 == lyrics.txt 的音拍数（对不上说明用了别的歌词）
-  * timing.json 相对 timing_auto.json 必须**发生过修正**（全等 = 没做人工校时；
-    或者按 --no-auto 声明本次跳过自动对齐、直接手工标）
+  * timing.json 相对 timing_auto.json 应**发生过修正**（逐拍全等 = 06-08 步没进终稿; 只报 WARN,
+    阈值未经 10b 校准; 没有 timing_auto.json 时不查）
+  * fixes.json 的每条修正必须已在 timing.json 生效（改了 fixes 没重跑 apply_fixes 判 FAIL）
+  * review/health.txt 的 timing sha256 必须等于当前 timing.json（体检后又改时间轴判 FAIL）
   * lyrics.txt 是否被补过注音（含 [漢|よみ] 的行占比）
 
 用法:
@@ -77,6 +79,23 @@ from gate.gates_render import (check_calib, check_coverage, check_health, check_
                               check_offset, check_timing)
 
 
+def check_bible_gate(proj, res, strict=False):
+    """Agent Notes
+    .agents/notes/implemented/feature/2026-11-17-karaoke-design-bible.md
+    设计圣经 (第 11 步) 与整曲方向 (第 39 步) 的判据并进 design 门禁. 旧工程没有 bible/ 时报 WARN,
+    --strict-design 下报 FAIL. 落地追溯与盲审在出片后单独跑 judge/check_bible.py --stage landing.
+    """
+    if not os.path.isdir(os.path.join(proj, "bible")):
+        res.append((BAD if strict else WARN, "bible/", "没有作品设计圣经 (第 11 步) 与整曲方向 (第 39 步)"))
+        return
+    from judge.check_bible import run
+    for stage in ("bible", "directions"):
+        r, _ = run(proj, stage)
+        bad = r.failed()
+        res.append((BAD if bad else OK, "bible:" + stage,
+                    "; ".join("%s %s" % (x[1], x[2]) for x in bad[:3]) if bad else "%d 项通过" % len(r.rows)))
+
+
 def main():
     """Agent Notes
     .agents/notes/implemented/process/2026-10-01-karaoke-hard-gates-script.md
@@ -111,6 +130,7 @@ def main():
         check_prose(proj, res)
         check_elements(proj, res, a.max_ambient)
         check_design(proj, res, a.strict_design)
+        check_bible_gate(proj, res, a.strict_design)
     if a.stage in ("all", "render"):
         check_offset(proj, res)
         check_timing(proj, res, mora)
@@ -125,7 +145,7 @@ def main():
           % ("FAILED" if bad else "PASSED", len([r for r in res if r[0] == OK]),
              len([r for r in res if r[0] == WARN]), len(bad), a.stage, proj))
     if bad:
-        print("\n硬性要求没满足。这些步骤不许跳：见 SKILL.md 的「强制门禁」一节。")
+        print("\n硬性要求没满足。这些步骤不许跳：见 steps/5-verify/13-validate/index.md 的判据表。")
         return 1
     return 0
 

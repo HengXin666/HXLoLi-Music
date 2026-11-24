@@ -1,3 +1,4 @@
+import { BASE } from './base';
 export interface FontInfo { file: string; url: string; families: string[]; regular?: boolean }
 /** out.ass 用到但 fonts 目录里对不上名字的字体 (服务端算, 忽略大小写比族名/全名/PostScript 名). libass 会用后备字体画: 能显示, 字形可能不对. 不是 fatal. */
 export interface FontMissing { name: string; uses: number; line: number; via: string[] }
@@ -15,7 +16,24 @@ export interface Project {
   audio: (string | null)[]; video: string | null;
   out_ass: string; ref_ass: string | null; ref_path: string | null; ref: RefInfo; audio_error?: string | null;
   fonts: FontInfo[]; fonts_missing?: FontMissing[]; fonts_unparsed?: string[]; edl: Edl; sections: Section[]; octopus: string | null;
+  /** 对比对象 (监视器 "参考" 那一路): 参考 / 上一版 / 候选. ref_ass/ref_path 指向它; 门禁阈值仍只来自参考 ASS. 旧服务端没有 */
+  cmp?: CmpInfo;
+  /** 后备字体 (ASS 用了本机没有的字体时, 用它画中日文; 不给就是 Liberation Sans, 中日文成方块) */
+  fallback_font?: string | null;
+  /** 发布库里的只读 ASS (没有工程目录 / 视频) */
+  static?: boolean;
 }
+export type CmpKind = 'ref' | 'prev' | 'cand' | 'none';
+export interface CmpOpt { kind: CmpKind; label: string; issue?: string; c?: string }
+export interface CmpInfo { kind: CmpKind; label: string; auto: boolean; path: string | null; issue?: string | null; c?: string | null; options: CmpOpt[] }
+/** 处理状态 (accept/reviewlog.py): open 提出 / fixing 在改 / proposed 有改动或候选等你看 / done 关闭 / need-human / dropped / noted 批注 */
+export type ReviewStatus = 'open' | 'fixing' | 'proposed' | 'done' | 'need-human' | 'dropped' | 'noted';
+export interface ReviewChange { at?: string; status?: string; what?: string; diag?: string; issue?: string; candidates?: string[]; picked?: string; good?: string; ideas?: string[]; g2?: { ok: boolean; changed?: string[]; fail?: string[]; isolation?: string } }
+export interface LoopReview { id: string; kind: Review['kind']; tags: string[]; text: string; t0: number; t1: number; sel: SelRange[]; status: ReviewStatus; status_src?: string | null; issue?: string | null; changes: ReviewChange[] }
+export interface CandItem { id: string; params: Record<string, unknown>; why: string; n: number; sha: string; secs: number; fx?: string; url: string }
+export interface CandSet { issue: string; unit: string; label: string; items: CandItem[]; skipped: { why: string; error: string }[]; secs: number; siblings: string[]; state: string; picked?: string | null }
+export interface LoopJob { running: boolean; kind: string | null; ok: boolean | null; error: string | null; out: string; seq: number; arg: Record<string, string> | null }
+export interface LoopState { accept: boolean; reviews: LoopReview[]; cands: Record<string, CandSet>; ideas: { issue: string; cand: string; unit: string; why: string }[]; cmp: CmpInfo; job: LoopJob }
 export interface LyricChar {
   i: number; ch: string; s: number; e: number; x: number; w: number;
   ruby: string; unit: number | null; box?: [number, number, number, number]; mora: [string, number, number][];
@@ -55,7 +73,7 @@ export interface ExplainItem {
     out_window: Record<string, number>; out_line: Record<string, number> };
 }
 export interface HitEvent { ln: number; style: string; layer: number; name: string; t0: number; t1: number; box: number[]; track: string; fns: string[] }
-export interface Review { id: string; sel: SelRange[]; t0: number; t1: number; kind: 'bad' | 'good' | 'redo' | 'note'; tags: string[]; text: string; frame?: number | null; created: string }
+export interface Review { id: string; sel: SelRange[]; t0: number; t1: number; kind: 'bad' | 'good' | 'redo' | 'note'; tags: string[]; text: string; frame?: number | null; created: string; status?: ReviewStatus; issue?: string | null; changes?: ReviewChange[] }
 /** review.jsonl 里读不出的行 (服务端逐行解析): 行号从 1 起, 原因, 开头片段. 好行照常在 items 里, 坏行不删 (留给人处理) */
 export interface ReviewBadLine { line: number; error: string; head: string }
 export interface ReviewList { items: Review[]; bad_lines: ReviewBadLine[] }
@@ -98,6 +116,13 @@ export const api = {
   /** @deprecated 丢掉 bad_lines, 只为本批过渡期 tsc 能过; App.tsx 换成 reviewList 后删 */
   reviews: () => j<{ items: Review[] }>('/api/review').then((r) => r.items),
   events: (lines: number[], raw = true) => j<{ total: number; events: RawEvent[] }>(`/api/events?lines=${lines.join(',')}&raw=${raw ? 1 : 0}&limit=20000`),
+  loop: () => j<LoopState>('/api/loop'),
+  loopPost: async (what: 'cmp' | 'cands' | 'pick', body: Record<string, unknown>) => {
+    const r = await fetch(`/api/loop/${what}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((b as { error?: string }).error || `/api/loop/${what} ${r.status}`);
+    return b as Record<string, unknown>;
+  },
   postReview: async (b: Omit<Review, 'id' | 'created'>) => {
     const r = await fetch('/api/review', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
     if (!r.ok) throw await httpErr(r, 'review');
@@ -136,7 +161,7 @@ export function watch(onChange: (what: string[]) => void, onConn?: (up: boolean)
   let last: Record<string, number> | null = null;
   const open = () => {
     if (stop || held) return;
-    const w = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/watch`);
+    const w = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${BASE}/api/watch`);
     ws = w;
     w.onopen = () => { retry = 0; onConn?.(true); };
     w.onmessage = (m) => {
@@ -164,3 +189,23 @@ export function watch(onChange: (what: string[]) => void, onConn?: (up: boolean)
   open();
   return () => { stop = true; ws?.close(); };
 }
+
+/** 设计稿 design.md (服务端 assdoc/design.py 整理, 解析与校验在 kfx/kfx_design.py). 先写设计稿再渲染, 设计稿是唯一的真相 */
+export interface DesignPatch { text: string; start: number; end: number; fx: string[] }
+export interface DesignPhrase { on: string; fx: string[]; desc: string }
+export interface DesignLine {
+  key: string; no: number; t0: number; t1: number; role: string; head: string; jp: string; cn: string;
+  patch: string; patches: DesignPatch[]; color: string | null; color_note: string;
+  entry: string; hit: string; exit: string; phrases: DesignPhrase[]; why: string; errors: string[]; raw: string;
+  yijing: string; whole: string; each: string; motifs?: string[];
+}
+export interface DesignMotif { name: string; src: string; who: string; means: string; whole: string; each: string }
+export interface Design { motifs?: DesignMotif[]; exists: boolean; path: string; raw: string; mtime?: string | number; title?: string; global: string[]; lines: DesignLine[]; errors: string[] }
+export const designApi = {
+  get: () => j<Design>('/api/design'),
+  putSection: async (key: string, body: string, mtime?: string | number) => {
+    const r = await fetch('/api/design', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, body, mtime }) });
+    if (!r.ok) throw await httpErr(r, '设计稿');
+    return r.json() as Promise<Design>;
+  },
+};

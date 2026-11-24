@@ -82,3 +82,9 @@ Decision-ID: karaoke-elements-table-gate
   会把失败的图标名逐个打出来，不静默降级成空图形。
 - `anime.elements.md` 与 `anime.notes.md` 是**两份文件而不是一份**：notes 回答"作品在讲什么"（人读），
   elements 回答"哪些符号有大众共识"（机器数来源）。合并会让门禁去解析散文。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.

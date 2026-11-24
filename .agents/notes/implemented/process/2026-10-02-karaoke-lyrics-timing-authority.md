@@ -101,3 +101,4 @@ CTW 强制对齐（`align_ctc.py`，wav2vec2 平假名 + Viterbi）在**长音�
   脚本按字符对齐后收回到音拍首字符）。所以它的价值在"句内节奏"，不是"逐音拍绝对精度"。
 - `check_gates.py --stage render` 从此会因缺 `review/health.txt` 而 FAIL 
   存量工程需要补跑一次体检（这是有意的：那份报告本来就该存在）。
+- 2026-11-16: 体检报告的判定段加一行 `timing sha256: <hex>`, 绑定被体检的那份时间轴; `check_gates.py` 比对它, 体检后改过 timing.json 时旧报告不作数. 同时补上缺失的 `import sys`: 之前判 FAIL 时以 NameError 退出, 退出码碰巧是 1, 但修法提示被异常吞掉.

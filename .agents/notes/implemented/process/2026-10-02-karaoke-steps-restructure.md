@@ -114,8 +114,9 @@ Decision-ID: karaoke-steps-restructure
   **这不是可达性问题**：逐个验证过，30 个脚本全部能从某一步的契约走到（`0 unreachable`）。
   校验器自己的注释也说明这条是软约定（`_soft()`，默认降到 WARN）；
   代价换成的是上面那条上下文收益。
-- 已知边界：步骤目录仍是**软约定**，DSH 的 loader 只强制 `SKILL.md` 存在且 frontmatter 可解析；
-  步骤结构的收益来自"读的时候知道该读哪一份"，不是来自任何机器强制。
+- 已知边界：DSH 的 loader 只强制 `SKILL.md` 存在且 frontmatter 可解析。
+  契约的固定小节, 产物登记与步骤引用自 2026-11-16 起由 `scripts/gate/check_steps.py` 核对,
+  见 [karaoke-step-contract-check](2026-11-16-karaoke-step-contract-check.md)。
 
 ## Verification
 

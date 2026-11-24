@@ -73,3 +73,10 @@ Decision-ID: karaoke-lyrics-source-ladder
   少于 3 个可信点或离散度过大时非零退出，不产出「看着能用」的结果。
 - 三个 example 工程已补齐 `lyrics.source.json` 与 `offset.json`（后者用 `--from-timing --why` 反推，
   并在 why 里写明新工程必须跑 `--vocals`）；`check_gates.py --stage render` 各 7 项全 PASS。
+
+## 后续变更 (2026-11-24)
+
+本决策覆盖的目录在 2026-11-17 到 11-24 之间有改动, 本决策本身不变:
+
+- scripts/gate/ 新增 check_steps.py (步骤契约体检, process/2026-11-16-karaoke-step-contract-check.md) 与 check_motif_mono.py (一句只许一套主母题, architecture/2026-11-17-karaoke-compositional-generator.md); check_gates.py / gates_meta.py / gates_render.py 接入它们与矢量件压字标定.
+- scripts/source/ 新增 bible_skeleton.py (作品设计圣经骨架, feature/2026-11-17-karaoke-design-bible.md); find_source.py 加退出码 3 = 有候选但不达标, 停下问用户, 不算失败 (process/2026-11-16-karaoke-ask-is-not-failure.md); fetch_anime_bg.py 一行调整.
