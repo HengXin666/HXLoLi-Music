@@ -1,8 +1,8 @@
 [
     {
         "id": "0fd07f086eeb",
-        "title": "Lia - Bravely You",
-        "artist": "Unknown",
+        "title": "Bravely You",
+        "artist": "Lia",
         "audioUrl": "/static/music/Charlotte/Lia - Bravely You.mp3",
         "anime": {
             "title": "Charlotte"
@@ -26,23 +26,9 @@
         ]
     },
     {
-        "id": "cea8f6c4f236",
-        "title": "ろりこんでよかった~ (是萝莉控真是太好了)",
-        "artist": "ちぃむdmp☆",
-        "audioUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.flac",
-        "anime": null,
-        "assUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.ass",
-        "assFonts": [
-            "Cormorant Garamond Light",
-            "Lolita",
-            "Mochiy Pop One"
-        ],
-        "coverUrl": "/static/music/ちぃむdmp☆/ちぃむdmp☆ - ろりこんでよかった~.jpg"
-    },
-    {
         "id": "fe7c6cdb20de",
-        "title": "eufonius - 比翼の羽根 (OP)",
-        "artist": "Unknown",
+        "title": "比翼の羽根 (OP)",
+        "artist": "eufonius",
         "audioUrl": "/static/music/ヨスガノソラ/eufonius - 比翼の羽根 (OP).mp3",
         "anime": {
             "title": "ヨスガノソラ"
@@ -155,22 +141,6 @@
         "coverUrl": "/static/music/天使の3P/羽ばたきのバースデイ (振翅的新生) - 大野柚布子、遠藤ゆりか、古賀葵.jpg"
     },
     {
-        "id": "e24572433e4c",
-        "title": "オンリー",
-        "artist": "大原ゆい子",
-        "audioUrl": "/static/music/无职转生/大原ゆい子 - オンリー.mp3",
-        "anime": {
-            "title": "无职转生"
-        },
-        "assUrl": "/static/music/无职转生/大原ゆい子 - オンリー.ass",
-        "assFonts": [
-            "Cormorant Garamond Light",
-            "LXGW WenKai Medium",
-            "Shippori Mincho B1"
-        ],
-        "coverUrl": "/static/music/无职转生/大原ゆい子 - オンリー.jpg"
-    },
-    {
         "id": "216f6d500c45",
         "title": "トコハナ (常花)",
         "artist": "やなぎなぎ",
@@ -202,8 +172,8 @@
     },
     {
         "id": "26b41a863d99",
-        "title": "EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2)",
-        "artist": "Unknown",
+        "title": "The Everlasting Guilty Crown (罪恶王冠 OP2)",
+        "artist": "EGOIST",
         "audioUrl": "/static/music/罪恶王冠/EGOIST - The Everlasting Guilty Crown (罪恶王冠 OP2).mp3",
         "anime": {
             "title": "罪恶王冠"
