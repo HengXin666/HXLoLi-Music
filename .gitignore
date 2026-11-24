@@ -78,3 +78,17 @@ test/dist/
 
 # hxoa 客户端本地登录态 (含明文令牌)
 .hxoa/
+
+# ============================================================
+# 2026-11-24 整理: 本地草稿与无用产物
+# ============================================================
+# agent 的本地中转目录 (截图, 临时脚本, 备份), 只在这台机器上有意义
+/.hxw/
+# 发布目录里的逐次备份 (kara1/2/3 是已删除的旧生成器的成品); 已入库的 .bak-orig 不受影响
+static/music/**/*.bak-kara*
+# 已删除的旧生成器 (kara4-12) 的对比成品, 共约 16 MB, 只作当时对照用
+.agents/skills/hx-anime-karaoke-ass/examples/*/compare.*.ass
+# 空文件占位 / 探针 (旧生成器 pvfx 与 assfx compose 删除后留下的 0 字节文件)
+.agents/skills/hx-anime-karaoke-ass/scripts/pvfx
+.agents/skills/hx-anime-karaoke-ass/scripts/assfx/compose
+.agents/skills/hx-kfx/_probe.txt
