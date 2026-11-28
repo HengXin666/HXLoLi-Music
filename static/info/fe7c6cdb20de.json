@@ -4148,10 +4148,10 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/cdn/subset/5b8d17482301/NotoSansSC-Regular.ttf",
         "/static/music/fonts/kfx-subset.ttf",
         "/static/music/ヨスガノソラ/fonts/CormorantGaramond-Light.ttf",
-        "/static/music/ヨスガノソラ/fonts/LXGWWenKai-Medium.ttf",
-        "/static/music/ヨスガノソラ/fonts/ShipporiMinchoB1-Bold.ttf"
+        "/static/cdn/subset/e3d47d6eba47/LXGWWenKai-Medium.ttf",
+        "/static/cdn/subset/b707b4529d31/ShipporiMinchoB1-Bold.ttf"
     ]
 }

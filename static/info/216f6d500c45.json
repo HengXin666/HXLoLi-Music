@@ -3459,10 +3459,10 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/cdn/subset/dabc0d16fee6/NotoSansSC-Regular.ttf",
         "/static/music/fonts/kfx-subset.ttf",
         "/static/music/漆黑子弹/fonts/CormorantGaramond-Light.ttf",
-        "/static/music/漆黑子弹/fonts/LXGWWenKai-Medium.ttf",
-        "/static/music/漆黑子弹/fonts/ShipporiMinchoB1-Bold.ttf"
+        "/static/cdn/subset/61cf1fd8136c/LXGWWenKai-Medium.ttf",
+        "/static/cdn/subset/8843dd50f1e5/ShipporiMinchoB1-Bold.ttf"
     ]
 }

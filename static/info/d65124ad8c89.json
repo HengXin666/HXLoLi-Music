@@ -2939,7 +2939,7 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/cdn/subset/5bb6814b0571/NotoSansSC-Regular.ttf",
         "/static/music/fonts/kfx-subset.ttf"
     ]
 }

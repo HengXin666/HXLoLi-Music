@@ -187,15 +187,27 @@ def _furi_lag(main_evs, furi_evs):
     """
     if not main_evs or not furi_evs:
         return 0
+    # 结果与逐对比较完全一致 (同样取重叠最多, 并列取原顺序靠前的那条),
+    # 只是先把时间解析成整数, 再按起点排序 + 二分只看可能重叠的主字.
+    # 逐对比较在 3 万多条事件的成品上要跑十几分钟 (2026-11-28 双版混合).
+    import bisect
+    mains = sorted(
+        ((_ts_to_ms(me["s"]), _ts_to_ms(me["e"]), i) for i, me in enumerate(main_evs)),
+        key=lambda t: t[0],
+    )
+    starts = [m[0] for m in mains]
+    max_dur = max((m[1] - m[0] for m in mains), default=0)
     lags = []
     for fe in furi_evs:
         fs, fend = _ts_to_ms(fe["s"]), _ts_to_ms(fe["e"])
-        best = None; best_ov = -1
-        for me in main_evs:
-            ms0, me0 = _ts_to_ms(me["s"]), _ts_to_ms(me["e"])
+        lo = bisect.bisect_left(starts, fs - max_dur)
+        hi = bisect.bisect_left(starts, fend)
+        best = None; best_ov = 0; best_i = None
+        for ms0, me0, i in mains[lo:hi]:
             ov = min(fend, me0) - max(fs, ms0)
-            if ov > best_ov:
-                best_ov = ov; best = me0
+            if ov > best_ov or (ov == best_ov and best_i is not None and i < best_i):
+                if ov > 0:
+                    best_ov = ov; best = me0; best_i = i
         if best is not None and best_ov > 0:
             lags.append(max(0, fend - best))
     # 取 95 分位而不是最大值  个别句尾的收束慢一点不代表整体脱节
@@ -365,7 +377,7 @@ def analyse(d, res, path=None):
         不是勾边, 用可读性门槛去卡它是判据用错对象。
         样式表里的 Outline 字段为 0 同理。
         """
-        for m in re.finditer(re.escape(B)+r"bord([0-9.]+)", e["text"]):
+        for m in re.finditer(re.escape(B)+r"bord([0-9]*\.?[0-9]+)", e["text"]):   # 只取第一个数, "3.6.0" 这类畸形值不再让扫描崩溃
             return float(m.group(1)) > 0
         if sv:
             try:
@@ -386,10 +398,22 @@ def analyse(d, res, path=None):
     # 为什么要成对记录: 可读性判据是 **填充 vs 描边** 的对比度, 缺任一方都算不出。
     # 同一文件里可能**两种方向并存**  实测 ときめき 多数样式是「白填充+深蓝描边」,
     # 而 JP_FX_A 是反过来的「深蓝填充+白描边」(负片风格)。按"文件级主填充"判会误伤。
+    # 填充全透明 (\1a&HFF&, 在任何 \t 之前) 的是光晕/垫底层: kfx_build 用同色 \1c\3c + 大 blur 垫在字后面,
+    # 它没有可见的字面, 跟 bord0 的发光层一样不是"文字 + 描边", 不该进可读性配对.
+    # 不排除时 kfx 成品会被 #110D28/#110D28 = 1:1 的垫底层拉到 20% 左右而误判 FAIL (2026-11-28).
+    HALO_FILL = re.compile(re.escape(B) + r"1a&H[Ff]{2}&")
+    def is_halo(e):
+        txt = e["text"]
+        cut = txt.find(B + "t(")
+        head = txt if cut < 0 else txt[:cut]
+        return bool(HALO_FILL.search(head))
+
     pairs = Counter()
     for ev1 in ev:
         if not is_text_event(ev1):
             continue                      # 图形/粒子事件
+        if is_halo(ev1):
+            continue                      # 填充全透明的光晕/垫底层
         sv = d["styles"].get(ev1["style"])
         if not has_outline(ev1, sv):
             continue                      # bord0 的发光层, 没有描边

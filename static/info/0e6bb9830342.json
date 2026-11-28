@@ -3862,7 +3862,7 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/cdn/subset/6f30df49c2cf/NotoSansSC-Regular.ttf",
         "/static/music/fonts/kfx-subset.ttf"
     ]
 }

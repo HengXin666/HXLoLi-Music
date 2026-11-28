@@ -4001,7 +4001,7 @@
         }
     ],
     "fonts": [
-        "/static/music/fonts/NotoSansSC-Regular.ttf",
+        "/static/cdn/subset/c4aa605c8641/NotoSansSC-Regular.ttf",
         "/static/music/fonts/kfx-subset.ttf"
     ]
 }

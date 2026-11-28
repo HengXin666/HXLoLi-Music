@@ -22,6 +22,26 @@ from .config import OUTPUT_FILE, PROJECT_ROOT, INFO_DIR
 from .cache import load_cache, save_cache
 from .fonts import ensure_cjk_fallback_font
 from .scanner import scan_music_dir
+from . import font_subset
+
+
+def ass_paths_of(*urls):
+    return [PROJECT_ROOT / u.lstrip('/') for u in urls if u and (PROJECT_ROOT / u.lstrip('/')).is_file()]
+
+
+def subset_detail_fonts(detail: dict, ass_urls: list) -> None:
+    """
+    把 detail 里的字体换成按本曲 ASS 用字裁出的子集 (font_subset.py), 原地改.
+    没有 ASS 的曲目不裁, 保持原字体.
+    """
+    paths = ass_paths_of(*ass_urls)
+    if not paths:
+        return
+    chars = font_subset.ass_chars(paths)
+    if detail.get('assFontMap'):
+        detail['assFontMap'] = {k: font_subset.subset_url(v, chars) for k, v in detail['assFontMap'].items()}
+    if detail.get('fonts'):
+        detail['fonts'] = [font_subset.subset_url(u, chars) for u in detail['fonts']]
 
 
 # 需要从 playlist.json 拆分到 info/{id}.json 的重字段
@@ -69,6 +89,16 @@ def main():
 
     tracks = scan_music_dir()
 
+    # 字体子集化: 默认歌词的字体按 assUrl 裁, 带标签的歌词按各自的 ASS 裁
+    print()
+    print("[信息] 字体子集化...")
+    for track in tracks:
+        subset_detail_fonts(track, [track.get('assUrl')])
+        by_detail = {l.get('detailId'): l.get('assUrl') for l in track.get('lyrics') or [] if l.get('detailId')}
+        for detail_id, vdetail in track.get('_lyricDetails', {}).items():
+            subset_detail_fonts(vdetail, [by_detail.get(detail_id)])
+    font_subset.cleanup_unused()
+
     print()
     print(f"[信息] 共 {len(tracks)} 首歌曲")
 
@@ -78,6 +108,11 @@ def main():
     INFO_DIR.mkdir(parents=True, exist_ok=True)
 
     for track in tracks:
+        # 带标签的歌词各自的详细配置 -> static/info/<id>.<标签>.json (lyrics.py)
+        for detail_id, vdetail in track.pop('_lyricDetails', {}).items():
+            with open(INFO_DIR / f"{detail_id}.json", 'w', encoding='utf-8') as f:
+                f.write(json.dumps(vdetail, ensure_ascii=False, indent=4) + '\n')
+            detail_count += 1
         meta, detail = split_track_detail(track)
         meta_tracks.append(meta)
 
@@ -105,7 +140,7 @@ def main():
 
     # 打印摘要
     for i, t in enumerate(tracks, 1):
-        ass_mark = "🎤" if "assUrl" in t else "  "
+        ass_mark = "🎤" if "assUrl" in t or "lyrics" in t else "  "
         cover_mark = "🖼️" if "coverUrl" in t else "  "
         font_mark = "🔤" if "assFonts" in t else "  "
         print(f"  {i:2d}. {ass_mark}{cover_mark}{font_mark} {t['title']} - {t['artist']}")
