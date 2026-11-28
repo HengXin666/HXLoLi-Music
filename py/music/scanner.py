@@ -19,7 +19,7 @@ from .ass_parser import (
 )
 from .ass_prescan import prescan_ass_bounds
 from .fonts import ensure_ass_fonts, find_fonts_in_dir
-from .lyrics import find_lyric_variants, lyric_label
+from .lyrics import find_lyric_variants, lyric_label, lyric_desc
 
 
 def anime_of(audio_path: Path) -> dict | None:
@@ -217,6 +217,8 @@ def scan_music_dir() -> list[dict]:
             lyrics = []
             if ass_path:
                 lyrics.append({"key": "default", "label": lyric_label(ass_path, "默认"), "assUrl": track["assUrl"]})
+                if lyric_desc(ass_path):
+                    lyrics[-1]["desc"] = lyric_desc(ass_path)
             for tag, vpath in variants:
                 print(f"    └─ 歌词 [{tag}]: {vpath.name}")
                 vdetail = ass_detail(vpath, audio_path, meta)
@@ -228,6 +230,8 @@ def scan_music_dir() -> list[dict]:
                     vdetail["fonts"] = [path_to_url(f) for f in all_fonts]
                 lyrics.append({"key": tag, "label": lyric_label(vpath, tag), "assUrl": path_to_url(vpath),
                                "detailId": detail_id})
+                if lyric_desc(vpath):
+                    lyrics[-1]["desc"] = lyric_desc(vpath)
                 track.setdefault("_lyricDetails", {})[detail_id] = vdetail
             if lyrics and (len(lyrics) > 1 or not ass_path):
                 track["lyrics"] = lyrics

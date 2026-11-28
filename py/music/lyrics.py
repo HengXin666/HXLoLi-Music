@@ -5,6 +5,7 @@
   <音频同名>.ass            默认歌词, key = "default", 排第一 (博客没选过时播它)
   <音频同名>.<标签>.ass     另一份歌词, key = 标签 (只允许 [A-Za-z0-9_-], 要进 URL 和 info 文件名), 按标签排序
 展示名: ASS [Script Info] 里一行注释 "; lyric-label: <名字>" (ASS 注释, 渲染器忽略); 没有时默认歌词叫 "默认", 其它用标签.
+风格说明: 同一处一行 "; lyric-desc: <一句话>", 写进 lyrics 条目的 desc, 博客悬停歌词按钮时显示; 没有就不写.
 有标签版本时 playlist 条目多一个 lyrics 数组; 每份带标签的歌词的字体 / 边界框写到 static/info/<id>.<标签>.json (detailId).
 """
 
@@ -15,6 +16,7 @@ from .config import ASS_EXTENSIONS
 
 TAG_RE = re.compile(r'^[A-Za-z0-9_-]+$')
 LABEL_RE = re.compile(r'^;\s*lyric-label:\s*(.+?)\s*$')
+DESC_RE = re.compile(r'^;\s*lyric-desc:\s*(.+?)\s*$')
 
 
 def find_lyric_variants(audio_path: Path) -> list[tuple[str, Path]]:
@@ -36,15 +38,24 @@ def find_lyric_variants(audio_path: Path) -> list[tuple[str, Path]]:
 
 def lyric_label(ass_path: Path, default: str) -> str:
     """[Script Info] 里 "; lyric-label: xxx" 注释给的展示名, 没有就用 default."""
+    return _header_comment(ass_path, LABEL_RE) or default
+
+
+def lyric_desc(ass_path: Path) -> str | None:
+    """[Script Info] 里 "; lyric-desc: xxx" 注释给的风格说明, 没有返回 None."""
+    return _header_comment(ass_path, DESC_RE)
+
+
+def _header_comment(ass_path: Path, pattern: re.Pattern) -> str | None:
     try:
         with open(ass_path, encoding='utf-8-sig', errors='replace') as fh:
             for i, line in enumerate(fh):
                 s = line.strip()
                 if i > 0 and s.startswith('['):
                     break
-                m = LABEL_RE.match(s)
+                m = pattern.match(s)
                 if m:
                     return m.group(1)
     except OSError:
         pass
-    return default
+    return None

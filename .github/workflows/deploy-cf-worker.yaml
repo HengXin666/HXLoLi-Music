@@ -39,7 +39,10 @@ jobs:
             echo "$OVERSIZED" | while read -r file; do
               echo "   ⚠️ $file ($(du -h "$file" | cut -f1))"
             done
-            # 不直接删除, 由 hx-cdn-forge 的切片机制处理
+            # Workers 静态资源单文件上限 25MiB, 有一个超限整次部署就失败, Worker 停在旧版本
+            # (2026-11-28 新歌全部 404). 这些文件前端走 static/cdn/all 切片或 static/cdn/gzip, 不需要原文件
+            echo "$OVERSIZED" | while read -r file; do rm -f "$file"; done
+            echo "🗑️ 已从部署目录移除上述文件"
           fi
 
       - name: ✍️ 生成 wrangler.toml 和 worker.js
