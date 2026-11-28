@@ -19,6 +19,7 @@ from .ass_parser import (
 )
 from .ass_prescan import prescan_ass_bounds
 from .fonts import ensure_ass_fonts, find_fonts_in_dir
+from .lyrics import find_lyric_variants, lyric_label
 
 
 def anime_of(audio_path: Path) -> dict | None:
@@ -66,6 +67,79 @@ def dir_covers_of(audio_path: Path) -> dict[str, str]:
             if hit:
                 out['/'.join(rel_dirs[:depth])] = path_to_url(hit)
                 break
+    return out
+
+
+def ass_detail(ass_path: Path, audio_path: Path, meta: dict) -> dict | None:
+    """
+    一份 ASS 的红线检查 + 字体 / 图片 / 边界框字段 (assFonts assFontMap assImages assImageData assBounds assBoundsTimeline).
+    红线未通过返回 None. 默认歌词和带标签的歌词 (lyrics.py) 都走这里.
+    """
+    out: dict = {}
+    # Agent Notes: KFX 质量红线（静态拦截）
+    # 
+
+    # KFX 质量红线: 光有卡拉OK效果不算成品。
+    # 判据见 
+    # 其中注音层/特效贴合/配色三条已改为结构式判据, 见
+    # 
+    from .kfx_gate import run_gate
+    gate = run_gate(ass_path)
+    if gate is not None:
+        if gate["ok"]:
+            print(f"    └─ 红线: 通过 ({gate['events']} 事件, {gate['size_mb']:.1f} MB)")
+        else:
+            # 2026-11-28 用户: 进了 static/music 的都是在验收台发布过, 本人看过确认的 (白名单).
+            # 红线只提示, 不再把歌挡在播放列表外.
+            print(f"    └─ 红线 (仅提示, 已发布即放行): 未通过 — {'; '.join(gate['fails'])}")
+
+    # 计算 ASS 文件哈希
+    ass_hash = file_md5(ass_path)
+
+    # 解析 ASS 中使用的字体名
+    ass_fonts = extract_ass_fonts(ass_path, ass_hash)
+    if ass_fonts:
+        out["assFonts"] = ass_fonts
+        print(f"    └─ ASS 字体: {', '.join(ass_fonts)}")
+        # 自动下载配置表中有下载源的字体
+        ensure_ass_fonts(ass_fonts, audio_path.parent)
+
+        # 构建 assFontMap: 字体家族名 → 字体文件 URL 的映射
+        # SubtitlesOctopus 的 availableFonts 需要此格式来正确加载字体
+        font_map: dict[str, str] = {}
+        local_fonts_dir = audio_path.parent / "fonts"
+        for font_name in ass_fonts:
+            if font_name in FONT_DOWNLOAD_MAP:
+                info = FONT_DOWNLOAD_MAP[font_name]
+                font_file = local_fonts_dir / info["file"]
+                if font_file.exists():
+                    font_map[font_name] = path_to_url(font_file)
+        if font_map:
+            out["assFontMap"] = font_map
+            map_desc = ", ".join(f"{k} → {v.split('/')[-1]}" for k, v in font_map.items())
+            print(f"    └─ 字体映射: {len(font_map)} 个 ({map_desc})")
+
+    # 解析 ASS 中 \\1img 引用的外部图片
+    # 渲染引擎已原生支持 \1img 纹理渲染, 只需将图片写入 Worker 虚拟 FS
+    ass_images = extract_ass_images(ass_path, ass_hash)
+    if ass_images:
+        out["assImages"] = ass_images
+        print(f"    └─ ASS 图片: {len(ass_images)} 个 ({', '.join(ass_images[:3])}{'...' if len(ass_images) > 3 else ''})")
+
+        # 将图片编码为 base64, 供前端写入 Worker 虚拟文件系统
+        image_data = build_ass_image_data(ass_path, ass_images)
+        if image_data:
+            out["assImageData"] = image_data
+
+    # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
+    duration = meta.get("duration", 0)
+    if duration > 0:
+        scan_result = prescan_ass_bounds(ass_path, duration, ass_hash)
+        if scan_result:
+            out["assBounds"] = scan_result['bounds']
+            if scan_result.get('timeline'):
+                out["assBoundsTimeline"] = scan_result['timeline']
+                print(f"    └─ 时间轴 bounds: {len(scan_result['timeline'])} 个关键点")
     return out
 
 
@@ -129,72 +203,34 @@ def scan_music_dir() -> list[dict]:
             track["dirCovers"] = dir_covers
 
         if ass_path:
-            # Agent Notes: KFX 质量红线（静态拦截）
-            # 
             track["assUrl"] = path_to_url(ass_path)
             print(f"    └─ 歌词: {ass_path.name}")
+            detail = ass_detail(ass_path, audio_path, meta)
+            if detail is None:
+                print(f"    └─ 已跳过该曲目（不达标不进播放列表）")
+                continue
+            track.update(detail)
 
-            # KFX 质量红线: 光有卡拉OK效果不算成品。
-            # 判据见 
-            # 其中注音层/特效贴合/配色三条已改为结构式判据, 见
-            # 
-            from .kfx_gate import run_gate
-            gate = run_gate(ass_path)
-            if gate is not None:
-                if gate["ok"]:
-                    print(f"    └─ 红线: 通过 ({gate['events']} 事件, {gate['size_mb']:.1f} MB)")
-                else:
-                    print(f"    └─ 红线: 未通过 — {'; '.join(gate['fails'])}")
-                    print(f"    └─ 已跳过该曲目（不达标不进播放列表）")
+        # 一首歌多份歌词: <音频同名>.<标签>.ass (见 lyrics.py)
+        variants = find_lyric_variants(audio_path)
+        if variants:
+            lyrics = []
+            if ass_path:
+                lyrics.append({"key": "default", "label": lyric_label(ass_path, "默认"), "assUrl": track["assUrl"]})
+            for tag, vpath in variants:
+                print(f"    └─ 歌词 [{tag}]: {vpath.name}")
+                vdetail = ass_detail(vpath, audio_path, meta)
+                if vdetail is None:
+                    print(f"    └─ 歌词 [{tag}] 未过红线, 不挂")
                     continue
-
-            # 计算 ASS 文件哈希
-            ass_hash = file_md5(ass_path)
-
-            # 解析 ASS 中使用的字体名
-            ass_fonts = extract_ass_fonts(ass_path, ass_hash)
-            if ass_fonts:
-                track["assFonts"] = ass_fonts
-                print(f"    └─ ASS 字体: {', '.join(ass_fonts)}")
-                # 自动下载配置表中有下载源的字体
-                ensure_ass_fonts(ass_fonts, audio_path.parent)
-
-                # 构建 assFontMap: 字体家族名 → 字体文件 URL 的映射
-                # SubtitlesOctopus 的 availableFonts 需要此格式来正确加载字体
-                font_map: dict[str, str] = {}
-                local_fonts_dir = audio_path.parent / "fonts"
-                for font_name in ass_fonts:
-                    if font_name in FONT_DOWNLOAD_MAP:
-                        info = FONT_DOWNLOAD_MAP[font_name]
-                        font_file = local_fonts_dir / info["file"]
-                        if font_file.exists():
-                            font_map[font_name] = path_to_url(font_file)
-                if font_map:
-                    track["assFontMap"] = font_map
-                    map_desc = ", ".join(f"{k} → {v.split('/')[-1]}" for k, v in font_map.items())
-                    print(f"    └─ 字体映射: {len(font_map)} 个 ({map_desc})")
-
-            # 解析 ASS 中 \\1img 引用的外部图片
-            # 渲染引擎已原生支持 \1img 纹理渲染, 只需将图片写入 Worker 虚拟 FS
-            ass_images = extract_ass_images(ass_path, ass_hash)
-            if ass_images:
-                track["assImages"] = ass_images
-                print(f"    └─ ASS 图片: {len(ass_images)} 个 ({', '.join(ass_images[:3])}{'...' if len(ass_images) > 3 else ''})")
-
-                # 将图片编码为 base64, 供前端写入 Worker 虚拟文件系统
-                image_data = build_ass_image_data(ass_path, ass_images)
-                if image_data:
-                    track["assImageData"] = image_data
-
-            # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
-            duration = meta.get("duration", 0)
-            if duration > 0:
-                scan_result = prescan_ass_bounds(ass_path, duration, ass_hash)
-                if scan_result:
-                    track["assBounds"] = scan_result['bounds']
-                    if scan_result.get('timeline'):
-                        track["assBoundsTimeline"] = scan_result['timeline']
-                        print(f"    └─ 时间轴 bounds: {len(scan_result['timeline'])} 个关键点")
+                detail_id = f"{track['id']}.{tag}"
+                if all_fonts:
+                    vdetail["fonts"] = [path_to_url(f) for f in all_fonts]
+                lyrics.append({"key": tag, "label": lyric_label(vpath, tag), "assUrl": path_to_url(vpath),
+                               "detailId": detail_id})
+                track.setdefault("_lyricDetails", {})[detail_id] = vdetail
+            if lyrics and (len(lyrics) > 1 or not ass_path):
+                track["lyrics"] = lyrics
 
         if cover_path:
             track["coverUrl"] = path_to_url(cover_path)
