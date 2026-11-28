@@ -18,6 +18,7 @@ from .ass_parser import (
     build_ass_image_data,
 )
 from .ass_prescan import prescan_ass_bounds
+from .lyric_box import declared_box, is_kfx, as_fixed
 from .fonts import ensure_ass_fonts, find_fonts_in_dir
 from .lyrics import find_lyric_variants, lyric_label, lyric_desc
 
@@ -131,11 +132,27 @@ def ass_detail(ass_path: Path, audio_path: Path, meta: dict) -> dict | None:
         if image_data:
             out["assImageData"] = image_data
 
-    # 用 ffmpeg 预扫描 ASS 字幕边界框 (滑动窗口 + EMA 平滑)
+    # 裁剪范围: 新版歌词有固定展示范围, 直接给常量矩形 (lyric_box.py);
+    # 老歌词才用 ffmpeg 预扫描的动态时间轴 (滑动窗口 + EMA 平滑)
+    decl = declared_box(ass_path)
+    if decl:
+        out["assBounds"] = b = decl['bounds']
+        if decl['timeline']:
+            out["assBoundsTimeline"] = decl['timeline']
+            print(f"    └─ 按声明裁剪 ({decl['source']}): 阶梯时间轴 {len(decl['timeline'])} 点, 不预扫描")
+        else:
+            print(f"    └─ 固定裁剪 ({decl['source']}): x {b['left']}-{b['right']}, y {b['btmYMin']}-{b['btmYMax']}")
+        return out
     duration = meta.get("duration", 0)
     if duration > 0:
         scan_result = prescan_ass_bounds(ass_path, duration, ass_hash)
         if scan_result:
+            if is_kfx(ass_path):
+                # kfx 成品没写声明, 但内容按规则都在一个固定矩形里: 用预扫描的全局并集当常量矩形, 不给时间轴
+                out["assBounds"] = as_fixed(scan_result['bounds'])
+                b = out["assBounds"]
+                print(f"    └─ 固定裁剪 (kfx, 预扫描并集): x {b['left']}-{b['right']}, y {b['btmYMin']}-{b['btmYMax']}")
+                return out
             out["assBounds"] = scan_result['bounds']
             if scan_result.get('timeline'):
                 out["assBoundsTimeline"] = scan_result['timeline']
